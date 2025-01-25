@@ -1,2 +1,2 @@
-# PSPL-6DOF
-PSP Liquids 6DoF
+# PSPL_CMS_6DOF
+Six Degrees-of-Freedom model for PSP Liquids' CraterMaker Special.
