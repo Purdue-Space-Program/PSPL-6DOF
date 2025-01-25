@@ -84,7 +84,12 @@ omega = [out(:,7), out(:,8), out(:,9)];
 
 quatArray = [out(:,10), out(:,11), out(:,12), out(:,13)];
 
-endTime = min((find(posArray(:,1) < 0, 1)) * dt, arrayLength * dt);
+
+if isempty((find(posArray(:,1) < 0, 1)))
+    endTime = length(AoArray) * dt;
+else
+    endTime = min((find(posArray(:,1) < 0, 1)) * dt, arrayLength * dt);
+end
 
 % grab parameters at max Q and off the rail
 [maxVel, maxIndex] = max(out(:,4));
@@ -264,7 +269,7 @@ posArray = posArray';
 
 function [value, isterminal, direction] = myEvent(tspan, Init)
 
-value = (Init(1) < 0);
+value = (Init(4) < 0);
 isterminal = 1;   % Stop the integration
 direction  = 0;
 end
