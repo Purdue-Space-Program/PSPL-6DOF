@@ -1,4 +1,4 @@
-function [totCoM, totMass, MoI] = VariableCoM(dt, tspan, graph)
+function [totCoM, totMass, MoI] = VariableCoM(dt, tspan, dryMass, graph)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
@@ -46,27 +46,28 @@ densImp2Met = 27679.9;                  % Imperial to metric density units
 %% Initializations
 
 % Propellant initializations
-massDry = 49.877;                       % Initial dry mass [kg]
-massWetInit = 19.252;                   % Initial wet mass [kg]
+massDry = dryMass;                      % Initial dry mass [kg]
+massWetInit = 325;                      % Initial wet mass [kg] DOES NOTHING
 ullageFactor = 0.95;                    % Tank fill factor 
-loxVol = 1201.10 * ullageFactor;        % Initial lox vol [in^3]
-fuelVol = 1299.95 * ullageFactor;       % Initial fuel vol [in^3]
+loxVol = 2416 * ullageFactor;           % Initial lox vol [in^3]
+fuelVol = 2473 * ullageFactor;          % Initial fuel vol [in^3]
 loxDens = 0.03922015;                   % Density of lox [kg/m^3]
 fuelDens = 0.01450439;                  % Density of fuel [kg/m^3]
 
 % Flow rate initializations
-loxFlow = 2.916 * LBM2KG;               % Flow rate of lox [kg/s]
-fuelFlow = 1.188 * LBM2KG;              % Flow rate of fuel [kg/s]
+loxFlow = 5.083 * LBM2KG;               % Flow rate of lox [kg/s]
+fuelFlow = 3.685 * LBM2KG;              % Flow rate of fuel [kg/s]
 rocketHeight = 16.81 * FT2M;            % Total height of rocket [m]
 tankResidual = 0.07;                    % Amount leftover 
 
 % Tank size initializations
-tankOD = 6.625 * IN2M;                  % Outer diameter of tank [m]
-wallThick = 0.134 * IN2M;               % Wall thickness [m]
+tankOD = 8.625 * IN2M;                  % Outer diameter of tank [m]
+wallThick = 0.148 * IN2M;               % Wall thickness [m]
 tankID = tankOD - 2 * wallThick;        % Inner diameter of tank [m]
 tankIArea = pi * (tankID/2)^2;          % Inner tank area [m^2]
 
-% Mass initializations
+%{ 
+Mass initializations
 noseMass = 11 * LBM2KG;                 % Nose mass [kg]
 heTMass = 18 * LBM2KG;                  % He tank mass [kg]
 midAFMass = 23 * LBM2KG;                % Inner stage mass [kg]
@@ -74,6 +75,17 @@ empLoxTMass = 9.05 * LBM2KG;            % Empty lox tank mass [kg]
 empFuelTMass = 9.91 * LBM2KG;           % Empty fuel tank mass [kg]
 finCanMass = 28 * LBM2KG;               % Fin can mass [kg]
 engineMass = 11 * LBM2KG;               % Engine mass [kg]
+%}
+
+ratioSum = 11+18+23+9.05+9.91+28+11;
+noseMass = 11/ratioSum * massDry;
+heTMass = 18/ratioSum * massDry;
+midAFMass = 23/ratioSum * massDry;
+empLoxTMass = 9.05/ratioSum * massDry;
+empFuelTMass = 9.91/ratioSum * massDry;
+finCanMass = 28/ratioSum * massDry;
+engineMass = 11/ratioSum * massDry;
+
 
 % Height initializations
 noseHeight = 33 * IN2M;                 % Height of the nose [m]
@@ -220,8 +232,6 @@ Jyy = 200;
 Jzz = 200;
 
 MoI = [Jxx,0,0;0,Jyy,0;0,0,Jzz];
-
-graph = 1
 
 %% Optional CoM graphing output
 if graph == 1

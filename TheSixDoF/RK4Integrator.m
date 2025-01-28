@@ -28,26 +28,19 @@ function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, totCoM, t
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pos = [input(1);input(2);input(3)];
-
 vel = [input(4);input(5);input(6)];
-
 omega = [input(7); input(8); input(9)];
-
 quat = [input(10); input(11); input(12); input(13)];
 
-g = 9.81;             % gravity constant, in m/s^2.
-A = 0.02224;          % reference area (m^2), as defined by RasAero (cross-sectional area)
-thrustMag = 4270.29;  % thrust of rocket in N.
-burnTime = 13;        % burn time of 13 seconds
-bodyVector = [1;0;0]; % vector in the body axis running through the nose.
-ExitA = 0.0070573;    % exit area of the nozzle [m^2]
-ExitP = 75842.3;      % exit pressure of the nozzle [Pa]
-radius = .0841375;    % radius of rocket [m]
-
-if nargin == 6
-    thrustMag = params(1);
-end
-
+g = 9.81;                        % gravity constant, in m/s^2.
+A = 0.02224;                     % reference area (m^2), as defined by RasAero (cross-sectional area)
+thrustMag = 1787 * 4.448;        % thrust of rocket in N.
+burnTime = 15.2;                 % burn time [s]
+bodyVector = [1;0;0];            % vector in the body axis running through the nose.
+ExitA = 0.0070573;               % exit area of the nozzle [m^2]
+ExitP = 101352.9;                % exit pressure of the nozzle [Pa]
+diameter = 8.625;                % diameter of rocket [in]
+radius = diameter * 0.5 / 39.37; % radius of rocket [m]
 
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
 
@@ -81,8 +74,9 @@ windDir = windDirList(heightIndex);
 windMag = windMagList(heightIndex);
 windVector = windMag * [sin(windDir);cos(windDir);0];
 
-windVel = vel - windVector;
-  
+%windVel = vel - windVector;
+windVel = vel; %turn off wind!  
+
 %% Center of mass update
 timeTableCoM = totCoM(:,1);
 CoMTable = totCoM(:,2);
