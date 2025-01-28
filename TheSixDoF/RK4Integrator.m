@@ -35,16 +35,19 @@ omega = [input(7); input(8); input(9)];
 
 quat = [input(10); input(11); input(12); input(13)];
 
-g = 9.81;             % gravity constant, in m/s^2.
-A = 0.02224;          % reference area (m^2), as defined by RasAero (cross-sectional area)
-thrustMag = 4270.29;  % thrust of rocket in N.
-burnTime = 13;        % burn time of 13 seconds
+g = 9.806;             % gravity constant, in m/s^2.
+A = 0.01026;          % reference area (m^2), as defined by RasAero (cross-sectional area)
+mInit = 34.9266;        % initial mass of the rocket
+massFlow = 0.641286;      % mass flow rate (kg/s)
+thrustMag = 1628.0491112*29;  % thrust of rocket in N.
+burnTime = 29;        % burn time of 13 seconds
 bodyVector = [1;0;0]; % vector in the body axis running through the nose.
-ExitA = 0.0070573;    % exit area of the nozzle [m^2]
-ExitP = 75842.3;      % exit pressure of the nozzle [Pa]
-radius = .0841375;    % radius of rocket [m]
+ExitA = 0.001645158;    % exit area of the nozzle [m^2]
+ExitP = 34778.2208767;      % exit pressure of the nozzle [Pa]
+radius = 0.05715;    % radius of rocket [m]
 
-if nargin == 6
+rngValue = 0;         % for later?
+if nargin == 6 %constants to modify
     thrustMag = params(1);
 end
 
@@ -54,13 +57,12 @@ bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial
 %% atmospheric conditions:
 height = pos(1);
 
-% long monte carlo can result in complex numbers here, take real component
 height = real(height);
 
-% get atmospheric parameters
 [~, a, P, rho] = atmosisa(height); 
 
 %% Wind:
+
 windAlt = wind(:,1) * 100;
 windMagList = wind(:,22);
 windMagList(isnan(windMagList)) = 0;
@@ -68,11 +70,17 @@ windDirList = wind(:,23);
 windDirList(isnan(windDirList)) = 0;
 
 %% Mass Update:
-timeTableMass = totMass(:,1);
-massTable = totMass(:,2);
+%timeTableMass = totMass(:,1);
+%massTable = totMass(:,2);
 
-[~,timeIndexMass] = min(abs(timeTableMass-time));
-mass = massTable(timeIndexMass);
+%[~,timeIndexMass] = min(abs(timeTableMass-time));
+%mass = massTable(timeIndexMass);
+
+if time <= burnTime
+    mass = mInit - time * massFlow;
+else
+    mass = 16.3293;
+end
 
 %% Wind calcs:
 [~, heightIndex] = min(abs(windAlt-height));
@@ -82,15 +90,27 @@ windMag = windMagList(heightIndex);
 windVector = windMag * [sin(windDir);cos(windDir);0];
 
 windVel = vel - windVector;
-  
-%% Center of mass update
-timeTableCoM = totCoM(:,1);
-CoMTable = totCoM(:,2);
 
-[~, timeIndexCoM] = min(abs(timeTableCoM-time));
-CoM = CoMTable(timeIndexCoM);
+%% Center of mass update
+%timeTableCoM = totCoM(:,1);
+%CoMTable = totCoM(:,2);
+
+%[~, timeIndexCoM] = min(abs(timeTableCoM-time));
+%CoM = CoMTable(timeIndexCoM);
+
+mach = norm(vel) / a;
+machTable = rasData(1:300,1);
+cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
+cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
+
+[~, machIndex2] = min(abs(machTable-mach));
+
+cP = cPTableMetric(machIndex2);
+
+CoM = cP - 3*radius;
 
 %% Gravitational Force:
+% at least this one is easy
 gravForce = mass * g * [-1;0;0];
 
 %% Thrust Forces:
@@ -114,22 +134,21 @@ AoA = acosd((dot(windVel,bodyVectorEarth)) / (norm(windVel) * norm(bodyVectorEar
 AoA(isnan(AoA)) = 0;
 
 % mach is used for airspeed dependent drag coefficient:
-mach = norm(vel) / a;
+%mach = norm(vel) / a;
 
-% read the coefficient of drag from RasAero data:
+% implementing a simple drag without angle-dependence for now:
+%rasData = readmatrix("RasAeroData.CSV"); %rasAero drag data based on mach at 0 AoA
 machTable = rasData(1:300,1); % mach values from 0.01 to 3
 cDTable = rasData(1:300,3); % coefficient of drag
 
-% find cD matching the closest mach value to table
 [~, machIndex] = min(abs(machTable-mach));
+
 cD = cDTable(machIndex);
 
-%determine the direction and magnitude of the drag force
 dragDir = -windVel / norm(windVel);
 dragMag = (0.5 * rho * norm(windVel)^2 * A * cD);
-
-% implement a simple quadratic model for drag increase with AoA:
-dragMag = min(dragMag + 0.075*dragMag*(AoA)^2, 3 * dragMag);
+% implement a simple exponential model for drag increase with AoA:
+dragMag = min(dragMag + dragMag * exp(1) * exp(0.05 * AoA), 2 * dragMag);
 
 dragForce = dragDir * dragMag;
 dragForce(isnan(dragForce)) = 0;
@@ -194,12 +213,12 @@ paraDragForceBody = RotationMatrix(paraDragForce, quat, 0);
 cL = min(1/8 * AoA, 2);
 
 % these act around the center of pressure, which is given in RasAero,
-cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
-cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
+%cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
+%cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
 
-[~, machIndex2] = min(abs(machTable-mach));
+%[~, machIndex2] = min(abs(machTable-mach));
 
-cP = cPTableMetric(machIndex2);
+%cP = cPTableMetric(machIndex2);
 
 % do some vector math to find the lift direction:
 lift = (0.5 * rho* norm(windVel)^2 * A * cL);

@@ -6,7 +6,7 @@
 %
 % Description: This is the overarching function that runs the 6-DoF,
 % calling all neccesary functions to run the simulation. The overarching
-% simulation structure uses an RK4 structure using ODE45.
+% simulation structure uses an RK4 structure using ODE45
 %
 % Inputs: N/A
 %
@@ -14,20 +14,15 @@
 % see subfunctions for specific outputs
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-%% Initialization:
-% clear the console and figures before running the code:
+% clear everything before running the code:
 clear
 clc
 close all
 
-% Constants initialization:
+%
 m2ft = 3.28084;
-railHeight = 18.29; % FAR rail height [m]
 
-% create a time array to span the entire simulation time. Use 500s or more
-% w/ recovery on.The code will self-terminate after reaching end condition so no
-% need to reduce this value for faster computation.
+% create a time array to span the entire simulation time. Use 500s or more w/ recovery on.
 dt = 0.1;
 time = 500;
 arrayLength = (time / dt);
@@ -36,42 +31,33 @@ tspan = linspace(0,time,arrayLength+1);
 % position (x,y,z)
 pos = [0;0;0];
 % velocity (xdot,ydot,zdot)
-vel = [0;0;0];    
-% initial angle(x angle, y angle, z angle)
-angleVector = [0;0.1;0.1];
-% initial rotation rate(x rate, y rate, z rate)
+svel = 150/m2ft; %starting velocity
+vel = [svel*sind(88);svel*cosd(88);0];    
+angleVector = [0;0;0];
 omega = [0;0;0];
 %initalize the quaternion based on the euler angle input:
 quatVector = eul2quat(angleVector.', "XYZ").';
-% initial state vector
+
 Init = [pos;vel;omega;quatVector];
 
-%import aerodynamics data
-rasData = readmatrix("Inputs/RasAeroData.CSV");
+%huge matrix
+rasData = readmatrix("arcasData.CSV");
 
-%import wind data
-windData = readmatrix("Inputs/WindData.xlsx");
+windData = readmatrix("WindData.xlsx");
 
-%create an array of the center of mass, mass, and moment of inertia of the
-%rocket
+%huge CoM and Mass array
 [totCoM, totMass, MoI] = VariableCoM(dt, tspan, 0);
 
-
-% additional options for RK4 (stop after reaching final condition)
-opt = odeset('Events', @myEvent);
-
-%% RK4:
+%run RK4:
 tic;
-[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,totCoM, totMass, MoI, windData, 1), tspan, Init, opt);
+[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,totCoM,totMass, MoI, windData, 1), tspan, Init);
 toc;
 
 for k = 1:numel(timeArray)
     [~, machArray(k,1), AoArray(k,1), accel(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData, totCoM, totMass, MoI, windData);
 end
 
-%% Outputs:
-
-% make the outputs real (long monte carlo runs can generate complex values)
+% make the outputs real as fuck
 out = real(out);
 AoArray = real(AoArray);
 
@@ -84,39 +70,7 @@ omega = [out(:,7), out(:,8), out(:,9)];
 
 quatArray = [out(:,10), out(:,11), out(:,12), out(:,13)];
 
-
-if isempty((find(posArray(:,1) < 0, 1)))
-    endTime = length(AoArray) * dt;
-else
-    endTime = min((find(posArray(:,1) < 0, 1)) * dt, arrayLength * dt);
-end
-
-% grab parameters at max Q and off the rail
-[maxVel, maxIndex] = max(out(:,4));
-maxqAccel = accel(maxIndex,1);
-maxqpos = posArray(maxIndex,1);
-
-machTable = rasData(1:300,1);
-cdTable = rasData(1:300,3);
-maxqMach = machArray(maxIndex);
-[~, maxqMachIndex] = min(abs(machTable-maxqMach));
-maxqCD = cdTable(maxqMachIndex);
-
-[~, railIndex] = min(abs(posArray(1:100,1)-railHeight));
-railVel = out(railIndex,4);
-railAccel = accel(railIndex,1);
-
-railMach = machArray(railIndex);
-[~, railMachIndex] = min(abs(machTable-railMach));
-railCD = cdTable(railMachIndex);
-
-apogee = max(posArray(:,1));
-
-fprintf("Parameters at Max Q:\n")
-fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",maxVel, maxqMach, maxqAccel, maxqCD);
-fprintf("Off-Rail Parameters:\n")
-fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",railVel, railMach, railAccel, railCD);
-fprintf("Rocket Apogee: %.2f\n", apogee)
+endTime = min((find(posArray(:,1) < 0, 1)) * dt, arrayLength * dt);
 
 %% Plotting:
 % Earth Frame XYZ position:
@@ -165,7 +119,7 @@ set(hfig,'Units','centimeters','Position',[3 3 picturewidth hw_ratio*picturewidt
 pos = get(hfig,'Position');
 set(hfig,'PaperPositionMode','Auto','PaperUnits','centimeters','PaperSize',[pos(3), pos(4)])
 %print(hfig,fname,'-dpdf','-painters','-fillpage')
-%print(hfig,fname,'-dpng','-r300')
+print(hfig,fname,'-dpng','-r300')
 
 % Euler Parameters:
 figure(3)
@@ -187,7 +141,7 @@ ylabel("Angle of Attack [deg]")
 % Rocket Trajectory Plot:
 
 figure(5)
-plot3(posArray(1:int32(endTime / dt),3), posArray(1:int32(endTime / dt),2), posArray(1:int32(endTime / dt),1))
+plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), posArray(1:endTime / dt,1))
 % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
 % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
 % plot3(zeros(endTime / dt), posArray(1:endTime / dt,2), posArray(1:endTime / dt,1), '--')
@@ -202,75 +156,9 @@ grid minor;
 
 output = horzcat(timeArray, machArray);
 
-writematrix(output, 'Outputs/MachTime.csv')
+writematrix(output, 'MachTime.csv')
 
 % run the rotation visualizer script
 playbackSpeed = 2;
 quatArray = quatArray';
 posArray = posArray';
-
-%RotationsVisualizer(posArray, quatArray, timeArray, endTime, dt, playbackSpeed, 0);
-
-
-%% English units for the trajectory plot
-% figure(2)
-% 
-% hfig = figure;  % save the figure handle in a variable
-% 
-% fname = 'Cartesian Elements English';
-% 
-% picturewidth = 20; % set this parameter and keep it forever
-% hw_ratio = .6; % feel free to play with this ratio
-% set(findall(hfig,'-property','FontSize'),'FontSize',16) % adjust fontsize to your document
-% set(hfig,'DefaultLineLineWidth',1)
-% 
-% posArrayFt = posArray * m2ft;
-% velArrayFt = velArray * m2ft;
-% 
-% hold on
-% plot(timeArray, posArrayFt(:,1), 'Color', colorlist(1));
-% plot(timeArray, posArrayFt(:,2), 'Color', colorlist(2));
-% plot(timeArray, posArrayFt(:,3), 'Color', colorlist(3));
-% 
-% xlim([0, 100]);
-% title("Rocket Cartesian Elements in Earth Frame (English Units)")
-% xlabel("Time (s)")
-% ylabel("Distance [ft]")
-% 
-% yyaxis right
-% plot(timeArray, velArrayFt(:,1), 'Color', colorlist(4), 'LineStyle','-');
-% plot(timeArray, velArrayFt(:,2), 'Color', colorlist(5), 'LineStyle','-');
-% plot(timeArray, velArrayFt(:,3), 'Color', colorlist(6), 'LineStyle','-');
-% ylabel("Velocity[ft/s]")
-% legend("$X$","$Y$","$Z$", "$V_x$", "$V_y$", "$V_z$");
-% 
-% ax = gca;
-% ax.YAxis(1).Color = 'k';
-% ax.YAxis(2).Color = 'k';
-% 
-% grid on
-% 
-% set(findall(hfig,'-property','Box'),'Box','off') % optional
-% set(findall(hfig,'-property','Interpreter'),'Interpreter','latex') 
-% set(findall(hfig,'-property','TickLabelInterpreter'),'TickLabelInterpreter','latex')
-% set(hfig,'Units','centimeters','Position',[3 3 picturewidth hw_ratio*picturewidth])
-% pos = get(hfig,'Position');
-% set(hfig,'PaperPositionMode','Auto','PaperUnits','centimeters','PaperSize',[pos(3), pos(4)])
-% %print(hfig,fname,'-dpdf','-painters','-fillpage')
-% print(hfig,fname,'-dpng','-r300')
-% % Earth Frame Rocket Velocity:
-% % figure(2)
-% % plot(timeArray, velArray);
-% % xlim([0, endTime]);
-% % title("Rocket velocity in Earth Frame")
-% % xlabel("Time (s)")
-% % ylabel("Velocity")
-% % legend("X","Y","Z");
-
-function [value, isterminal, direction] = myEvent(tspan, Init)
-
-value = (Init(4) < 0);
-isterminal = 1;   % Stop the integration
-direction  = 0;
-end
-
