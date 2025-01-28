@@ -32,11 +32,12 @@ dt = 0.1;
 time = 500;
 arrayLength = (time / dt);
 tspan = linspace(0,time,arrayLength+1);
+endCondition = 'apogee';
 
 % position (x,y,z)
 pos = [0;0;0];
 % velocity (xdot,ydot,zdot)
-vel = [0;0;0];    
+vel = [0;0;0];
 % initial angle(x angle, y angle, z angle)
 angleVector = [0;0.1;0.1];
 % initial rotation rate(x rate, y rate, z rate)
@@ -56,9 +57,8 @@ windData = readmatrix("Inputs/WindData.xlsx");
 %rocket
 [totCoM, totMass, MoI] = VariableCoM(dt, tspan, 0);
 
-
 % additional options for RK4 (stop after reaching final condition)
-opt = odeset('Events', @myEvent);
+opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, endCondition));
 
 %% RK4:
 tic;
@@ -266,11 +266,4 @@ posArray = posArray';
 % % xlabel("Time (s)")
 % % ylabel("Velocity")
 % % legend("X","Y","Z");
-
-function [value, isterminal, direction] = myEvent(tspan, Init)
-
-value = (Init(4) < 0);
-isterminal = 1;   % Stop the integration
-direction  = 0;
-end
 
