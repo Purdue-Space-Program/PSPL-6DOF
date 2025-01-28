@@ -1,17 +1,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEPRECATED
+% 
 % PSP FLIGHT DYNAMICS:
 %
-% Title: MainRK4
-% Author: Hudson Reynolds - Created: 9/21/2024
+% Title: TWRCalcs
+% Author: Hudson Reynolds
 %
-% Description: This is the overarching function that runs the 6-DoF,
-% calling all neccesary functions to run the simulation. The overarching
-% simulation structure uses an RK4 structure using ODE45
+% Description: Compares flight trajectories for different TWRs, used
 %
 % Inputs: N/A
 %
-% Outputs:
-% see subfunctions for specific outputs
+% Outputs: N/A
+%
+% DEPRECATED
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % clear everything before running the code:
@@ -20,7 +21,7 @@ clc
 close all
 
 %thrust to weight ratio calcs
-g = 9.81;             % gravity constant, in m/s^2.
+g = 9.81;             % gravity constant, in m/s^2
 mInit = 74.69;        % initial mass of the rocket
 
 for i = 2:0.2:8
@@ -28,7 +29,7 @@ for i = 2:0.2:8
     thrustMag = TWR * mInit * g;
 end
 
-% create a time array to span the entire simulation time. Use 500s or more w/ recovery on.
+% create a time array to span the entire simulation time. Use 500s or more w/ recovery on
 dt = 0.1;
 time = 500;
 arrayLength = (time / dt);
@@ -49,8 +50,6 @@ Init = [pos;vel;omega;quatVector];
 rasData = readmatrix("RasAeroData.CSV");
 
 windData = readmatrix("WindData.xlsx");
-
-
 
 %huge CoM and Mass array
 [totCoM, totMass] = VariableCoM(dt, tspan, 0);
