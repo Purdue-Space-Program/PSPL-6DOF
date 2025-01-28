@@ -221,8 +221,6 @@ Jzz = 200;
 
 MoI = [Jxx,0,0;0,Jyy,0;0,0,Jzz];
 
-graph = 1
-
 %% Optional CoM graphing output
 if graph == 1
 
