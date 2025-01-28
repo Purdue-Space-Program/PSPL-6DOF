@@ -1,4 +1,17 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PSP FLIGHT DYNAMICS:
 %
+% Title: MainRK4
+% Author: Hudson Reynolds
+%
+% Description: Runs the 6DoF with variable thrust-to-weight-ratio to analyze stability
+%
+% Inputs: N/A
+%
+% Outputs:
+% see subfunctions for specific outputs
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 clear
 clc
 close all
@@ -33,11 +46,10 @@ for i = 1:10
     tspan = linspace(0,time,arrayLength+1);
 
     %huge stuff
-    rasData = readmatrix("RasAeroData.CSV");
+    rasData = readmatrix("inputs\RasAeroData.CSV");
     [totCoM, totMass] = VariableCoM(dt, tspan, 0);
     
     windData = readmatrix("WindData.xlsx");
-
 
     for trial = 1:TRIALS
     %random angle

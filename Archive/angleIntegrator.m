@@ -1,5 +1,7 @@
 function [eulerRates] = angleIntegrator(omegaVector, angleVector)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEPRECATED
+%
 % PSP FLIGHT DYNAMICS:
 %
 % Title: angleIntegrator
@@ -18,6 +20,8 @@ function [eulerRates] = angleIntegrator(omegaVector, angleVector)
 %
 % Outputs:
 % eulerRates = the euler rate time derivative in the inertial frame
+%
+% DEPRECATED
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % initialize angles

@@ -16,7 +16,7 @@ function [paraDragForce, mainChuteTime] = PostApogeeDragForces(alt, vel, time, r
 %         time - current time the simulation is at                     [s]
 %         rho - current air density                               [kg/m^3]
 %         mainChuteTime - time of simulation main chute opens          [s]
-%         output - 0 to turn off recovery, 1 to turn on
+%         output - 0 to turn off recovery, 1 to turn on                [-]
 %
 % Outputs: paraForceBody - parachute drag force in the body frame      [N]
 %          mainChuteTime - time of simulation main chute opens: this
