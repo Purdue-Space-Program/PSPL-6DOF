@@ -2,25 +2,25 @@ function [value, isterminal, direction] = stoppingCondition(tspan, Init, conditi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
-% Title: VariableCoM
-% Author: Preston Wright - Created: 9/28/2024
+% Title: stoppingCondition
+% Author: Hudson Reynodls - Created: 1/28/2025
 %
-% Description: This function calculates an array for the center of mass in 
-% meters from the nose of the rocket. Uses given initialized parameters for 
-% the rocket to approximate the center of mass 
+% Description: This function stops the rk4 integration once a certain
+% condition is met. Currently accepts apogee and full run as cases, but is
+% generally extensible to any state.
 %
 % Inputs: 
-% dt = given simulation time step [s]
 % tspan = array of time values for total simulation run time for the given
 %         time step [s]
-% graph = boolean operator that controls the output of CoM visualizations:
-%         1 will output visuals, 0 will not
+%
+% Init = initial cartesian elements vector
+%
+% condition = stopping condition expression
 %
 % Outputs:
-% totCoM  = array of all center of mass values for the rocket with respect
-%           to time [s|m]
-% totMass = array of all total mass values for the rocket with respect to
-%           time
+% value  = value which has met condition
+% isterminal = 1 when the integration is stopped
+% direction = 0 in nominal case.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 

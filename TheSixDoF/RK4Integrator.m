@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, totCoM, totMass, J, wind, params)
+function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, J, wind, params)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
@@ -35,7 +35,6 @@ omega = [input(7); input(8); input(9)];
 
 quat = [input(10); input(11); input(12); input(13)];
 
-g = 9.81;             % gravity constant, in m/s^2.
 A = 0.02224;          % reference area (m^2), as defined by RasAero (cross-sectional area)
 thrustMag = 4270.29;  % thrust of rocket in N.
 burnTime = 13;        % burn time of 13 seconds
@@ -58,14 +57,18 @@ height = pos(1);
 height = real(height);
 
 % get atmospheric parameters
-[~, a, P, rho] = atmosisa(height); 
+%[~, a, P, rho] = atmosisa(height);
+heightIndex = int32(height)+1;
+a = atmosphere(heightIndex, 1);
+rho = atmosphere(heightIndex,2);
+P = atmosphere(heightIndex, 3);
+
+
 
 %% Wind:
-windAlt = wind(:,1) * 100;
-windMagList = wind(:,22);
-windMagList(isnan(windMagList)) = 0;
-windDirList = wind(:,23);
-windDirList(isnan(windDirList)) = 0;
+windAlt = wind(:,1);
+windMagList = wind(:,2);
+windDirList = wind(:,3);
 
 %% Mass Update:
 timeTableMass = totMass(:,1);
@@ -91,7 +94,7 @@ CoMTable = totCoM(:,2);
 CoM = CoMTable(timeIndexCoM);
 
 %% Gravitational Force:
-gravForce = mass * g * [-1;0;0];
+gravForce = mass * constant.g * [-1;0;0];
 
 %% Thrust Forces:
 % thrust lies along long axis of the rocket [1;0;0], which we then convert into
