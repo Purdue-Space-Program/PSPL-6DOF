@@ -63,8 +63,6 @@ a = atmosphere(heightIndex, 1);
 rho = atmosphere(heightIndex,2);
 P = atmosphere(heightIndex, 3);
 
-
-
 %% Wind:
 windAlt = wind(:,1);
 windMagList = wind(:,2);
@@ -140,8 +138,6 @@ dragForceBody = RotationMatrix(dragForce, quat, 0);
 
 
 %% Parachute Drag
-% Conversion Constants
-ft2m = 0.3048;                      % ft to m conversion
 
 % Other Constants
 deformVal = 0.70;                   % Deformation value of inflated chute area
@@ -150,10 +146,10 @@ deformVal = 0.70;                   % Deformation value of inflated chute area
 
 % Parachute parameters
 drogueCd = 0.97;                    % cD for the drogue chute
-drogueDia = 4.166666667 * ft2m;     % drogue  diameter [m]
+drogueDia = (25/6) * constant.ft2m; % drogue  diameter [m]
 
 mainCd = 2.2;                       % cD for the main parachute
-mainDia = 16.66666667 * ft2m;       % main chute diameter [m]
+mainDia = (97/6) * constant.ft2m;   % main chute diameter [m]
 mainDeployAlt = 304.8;              % main chute deployment altitude [m]
 
 if vel(1) < 0
@@ -189,7 +185,7 @@ paraDragForceBody = RotationMatrix(paraDragForce, quat, 0);
 % difficult to calculate accurately
 
 % a simple linear model for the coefficient of lift wrt on AoA is
-% being used right now, in the future vspAero or CFD data may be used.
+% being used right now, in the future VSPaero or CFD data may be used.
 % These values are loosely based on DATCOM / RasAero data we have
 % previously gathered. Currently there is no dependence on mach either,
 % which should be implemented at some point
@@ -219,7 +215,6 @@ forceVector = gravForce + thrustForceEarth + dragForce + liftForce + paraDragFor
 accel = forceVector / mass;
 
 %% Stability Caliber Calculations
-
 % difference between CoM and cP divided by diameter of the rocket
 %fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / 0.168275);
 

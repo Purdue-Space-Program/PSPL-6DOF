@@ -34,10 +34,6 @@ rotationVis = 'off';
 % change the month for wind data (First 3 letters of month):
 month = 'Nov';
 
-% Constants initialization:
-m2ft = 3.28084;
-railHeight = 18.29; % FAR rail height [m]
-
 % create a time array to span the entire simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end condition so no
 % need to reduce this value for faster computation.
@@ -45,7 +41,6 @@ dt = 0.1;
 time = 500;
 arrayLength = (time / dt);
 tspan = linspace(0,time,arrayLength+1);
-
 
 % position (x,y,z)
 pos = [0;0;0];
@@ -82,14 +77,11 @@ tic;
 [timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,1), tspan, Init, opt);
 toc;
 
-
 %% Outputs:
-
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
     [~, machArray(k,1), AoArray(k,1), accel(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput);
 end
-
 
 if strcmpi('on', outputs) == 1
     % make the outputs real (long monte carlo runs can generate complex values)
@@ -124,7 +116,7 @@ if strcmpi('on', outputs) == 1
     [~, maxqMachIndex] = min(abs(machTable-maxqMach));
     maxqCD = cdTable(maxqMachIndex);
     
-    [~, railIndex] = min(abs(posArray(1:100,1)-railHeight));
+    [~, railIndex] = min(abs(posArray(1:100,1)-constant.railHeight));
     railVel = out(railIndex,4);
     railAccel = accel(railIndex,1);
     
@@ -155,7 +147,6 @@ if strcmpi('on', outputs) == 1
     hw_ratio = .6; % feel free to play with this ratio
     set(findall(hfig,'-property','FontSize'),'FontSize',16) % adjust fontsize to your document
     set(hfig,'DefaultLineLineWidth',1)
-    
     
     hold on
     plot(timeArray, posArray(:,1), 'Color', colorlist(1));
@@ -207,7 +198,6 @@ if strcmpi('on', outputs) == 1
     ylabel("Angle of Attack [deg]")
     
     % Rocket Trajectory Plot:
-    
     figure(4)
     plot3(posArray(1:int32(endTime / dt),3), posArray(1:int32(endTime / dt),2), posArray(1:int32(endTime / dt),1))
     % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
