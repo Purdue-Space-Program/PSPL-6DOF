@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, totCoM, totMass, J, wind, params)
+function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, theMass, J, wind, params)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
@@ -54,35 +54,29 @@ height = real(height);
 [~, a, P, rho] = atmosisa(height); 
 
 %% Wind:
-windAlt = wind(:,1) * 100;
-windMagList = wind(:,22);
-windMagList(isnan(windMagList)) = 0;
-windDirList = wind(:,23);
-windDirList(isnan(windDirList)) = 0;
+%windAlt = wind(:,1) * 100;
+%windMagList = wind(:,22);
+%windMagList(isnan(windMagList)) = 0;
+%windDirList = wind(:,23);
+%windDirList(isnan(windDirList)) = 0;
 
 %% Mass Update:
-timeTableMass = totMass(:,1);
-massTable = totMass(:,2);
-
-[~,timeIndexMass] = min(abs(timeTableMass-time));
-mass = massTable(timeIndexMass);
+%FLOW_RATE = ( 5.083 + 3.389 + 0.508 ); %Lox + fuel
+FLOW_RATE = (325-178) / burnTime;
+mass = theMass - FLOW_RATE*min([time,burnTime]);
 
 %% Wind calcs:
-[~, heightIndex] = min(abs(windAlt-height));
+%[~, heightIndex] = min(abs(windAlt-height));
 
-windDir = windDirList(heightIndex);
-windMag = windMagList(heightIndex);
-windVector = windMag * [sin(windDir);cos(windDir);0];
+%windDir = windDirList(heightIndex);
+%windMag = windMagList(heightIndex);
+%windVector = windMag * [sin(windDir);cos(windDir);0];
 
 %windVel = vel - windVector;
 windVel = vel; %turn off wind!  
 
 %% Center of mass update
-timeTableCoM = totCoM(:,1);
-CoMTable = totCoM(:,2);
-
-[~, timeIndexCoM] = min(abs(timeTableCoM-time));
-CoM = CoMTable(timeIndexCoM);
+CoM = 0; %zero
 
 %% Gravitational Force:
 gravForce = mass * g * [-1;0;0];
@@ -92,7 +86,6 @@ gravForce = mass * g * [-1;0;0];
 % earth frame
 
 presThrust = thrustMag + (ExitP - P) * ExitA;
-
 if time <= burnTime
     thrustForceBody = presThrust * bodyVector;
     thrustForceEarth = RotationMatrix(thrustForceBody, quat, 1);

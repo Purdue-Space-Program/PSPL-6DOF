@@ -12,7 +12,7 @@ Xdata = []; %contains massDry
 Ydata = []; %contains max height
 
 tic;
-for i = -50:50
+for i = 0:0
     dt = 0.1;
     maxTime = 50;
     tspan = linspace(0,maxTime,maxTime/dt+1);
@@ -24,20 +24,18 @@ for i = -50:50
 
     %huge stuff
     rasData = readmatrix("Inputs/Final_with_pumps.CSV");
-
-    mInit = 178 + i;
-    [totCoM, totMass] = VariableCoM(dt, tspan, mInit, 0);
-
     windData = readmatrix("Inputs/WindData.xlsx");
 
     %run the simulation
-    [timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,totCoM,totMass,J,windData), tspan, Init);
+    mInit = 325 + i;
+    [timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,mInit,J,windData), tspan, Init);
 
     %collect the results
     posArray = [out(:,1), out(:,2), out(:,3)];
 
     Xdata(end+1) = mInit;
     Ydata(end+1) = max(posArray(:,1));
+    display( [Xdata(end),Ydata(end)] )
 end
 toc;
 
