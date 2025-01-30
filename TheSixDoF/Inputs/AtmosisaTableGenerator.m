@@ -1,4 +1,4 @@
-for i = 1:12000
+for i = 1:20000
     [T(i), a(i), P(i), rho(i)] = atmosisa(i);
     h(i) = i;
 end

@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, J, wind, params)
+function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, J, wind, windOnOff, params)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
@@ -21,6 +21,7 @@ function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmospher
 % totMass - Array of total mass values at different time steps [s|kg]
 % J - Moment of Inertia of the rocket [m^4]
 % wind - Array of data with wind information
+% windOnOff - string to turn the wind on and off
 % params - extraneous parameters to be passed into function
 %
 % Outputs:
@@ -57,11 +58,15 @@ height = pos(1);
 height = real(height);
 
 % get atmospheric parameters
-%[~, a, P, rho] = atmosisa(height);
-heightIndex = int32(height)+1;
-a = atmosphere(heightIndex, 1);
-rho = atmosphere(heightIndex,2);
-P = atmosphere(heightIndex, 3);
+[~, a, P, rho] = atmosisa(height);
+
+% importing the atmosphere saves simulation time, but this functionality currently has
+% a few bugs.
+
+% atmoIndex = min(round(height,0)+1,length(atmosphere))
+% a = atmosphere(atmoIndex, 1);
+% rho = atmosphere(atmoIndex,2);
+% P = atmosphere(atmoIndex, 3);
 
 %% Wind:
 windAlt = wind(:,1);
@@ -82,7 +87,11 @@ windDir = windDirList(heightIndex);
 windMag = windMagList(heightIndex);
 windVector = windMag * [sin(windDir);cos(windDir);0];
 
-windVel = vel - windVector;
+if strcmpi('on', windOnOff) == 1
+    windVel = vel - windVector;
+else
+    windVel = vel;
+end
   
 %% Center of mass update
 timeTableCoM = totCoM(:,1);
@@ -130,7 +139,7 @@ dragDir = -windVel / norm(windVel);
 dragMag = (0.5 * rho * norm(windVel)^2 * A * cD);
 
 % implement a simple quadratic model for drag increase with AoA:
-dragMag = min(dragMag + 0.075*dragMag*(AoA)^2, 3 * dragMag);
+dragMag = min(dragMag + 0.1*dragMag*(AoA)^2, 5 * dragMag);
 
 dragForce = dragDir * dragMag;
 dragForce(isnan(dragForce)) = 0;

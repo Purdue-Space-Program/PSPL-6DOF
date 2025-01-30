@@ -3,6 +3,7 @@
 %
 % Title: MainRK4
 % Author: Hudson Reynolds - Created: 9/21/2024
+% Last Modified: 1-28-2025
 %
 % Description: This is the overarching function that runs the 6-DoF,
 % calling all neccesary functions to run the simulation. The overarching
@@ -11,8 +12,18 @@
 % Inputs: N/A
 %
 % Outputs:
-% see subfunctions for specific outputs
+% Graph and value outputs. See subfunctions for specific outputs
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% KNOWN ISSUES:
+% post apogee attitude dynamics are not fully finished, attitude in this
+% regime is likely incorrect
+
+% non-zero AoA calculations for lift and drag need better modelling
+
+% Monte Script is not up to date with main.
+
+% wind seems more powerful than in should be.
 
 %% Initialization:
 % clear the console and figures before running the code:
@@ -22,17 +33,21 @@ close all
 
 %% Simulation Settings:
 
-%change whether to go until apogee or all the way to ground
-endCondition = 'apogee';
+%change whether to go until apogee (apogee) or full flight (any other
+%input)
+endCondition = 'full';
 
 %turn outputs on and off
-outputs = 'off';
+outputs = 'on';
 
 % run rotation visualization (outputs must be on also)
-rotationVis = 'off';
+rotationVis = 'on';
 
 % change the month for wind data (First 3 letters of month):
 month = 'Nov';
+
+% turn wind on and off
+windOnOff = 'on';
 
 % create a time array to span the entire simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end condition so no
@@ -74,13 +89,13 @@ opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, endConditio
 
 %% RK4:
 tic;
-[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,1), tspan, Init, opt);
+[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,windOnOff,1), tspan, Init, opt);
 toc;
 
 %% Outputs:
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
-    [~, machArray(k,1), AoArray(k,1), accel(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput);
+    [~, machArray(k,1), AoArray(k,1), accel(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff);
 end
 
 if strcmpi('on', outputs) == 1
@@ -181,7 +196,7 @@ if strcmpi('on', outputs) == 1
     %print(hfig,fname,'-dpng','-r300')
     
     % Euler Parameters:
-    figure(2)
+    figure(3)
     plot(timeArray, quatArray);
     xlim([0,endTime]);
     title("Euler Parameters")
@@ -190,7 +205,7 @@ if strcmpi('on', outputs) == 1
     legend('q0', 'q1', 'q2', 'q3');
     
     % Angle of Attack:
-    figure(3)
+    figure(4)
     plot(timeArray, AoArray);
     xlim([0,endTime]);
     title("Angle of Attack")
@@ -198,7 +213,7 @@ if strcmpi('on', outputs) == 1
     ylabel("Angle of Attack [deg]")
     
     % Rocket Trajectory Plot:
-    figure(4)
+    figure(5)
     plot3(posArray(1:int32(endTime / dt),3), posArray(1:int32(endTime / dt),2), posArray(1:int32(endTime / dt),1))
     % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
     % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
@@ -217,7 +232,7 @@ if strcmpi('on', outputs) == 1
         quatArray = quatArray';
         posArray = posArray';
         
-        %RotationsVisualizer(posArray, quatArray, timeArray, endTime, dt, playbackSpeed, 0);
+        RotationsVisualizer(posArray, quatArray, timeArray, endTime, dt, playbackSpeed, 0);
     
         %% csv outputs:
     
