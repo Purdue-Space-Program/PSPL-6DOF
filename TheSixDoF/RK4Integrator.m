@@ -103,22 +103,6 @@ CoM = CoMTable(timeIndexCoM);
 %% Gravitational Force:
 gravForce = mass * constant.g * [-1;0;0];
 
-%% Thrust Forces:
-% thrust lies along long axis of the rocket [1;0;0], which we then convert into
-% earth frame
-
-presThrust = thrustMag + (ExitP - P) * ExitA;
-
-if time <= burnTime
-    thrustForceBody = presThrust * bodyVector;
-    thrustForceEarth = RotationMatrix(thrustForceBody, quat, 1);
-else
-    thrustForceEarth = [0;0;0];
-end
-
-%% Drag Forces:
-% drag lies parellel and opposite to the velocity vector
-
 % calculate the angle between the velocity vector and the rocket nose
 AoA = acosd((dot(windVel,bodyVectorEarth)) / (norm(windVel) * norm(bodyVectorEarth)));
 AoA(isnan(AoA)) = 0;
@@ -134,12 +118,58 @@ cDTable = rasData(1:300,3); % coefficient of drag
 [~, machIndex] = min(abs(machTable-mach));
 cD = cDTable(machIndex);
 
+%% Thrust Forces:
+% thrust lies along long axis of the rocket [1;0;0], which we then convert into
+% earth frame
+
+presThrust = thrustMag + (ExitP - P) * ExitA;
+
+if time <= burnTime
+    thrustForceBody = presThrust * bodyVector;
+    thrustForceEarth = RotationMatrix(thrustForceBody, quat, 1);
+else
+    thrustForceEarth = [0;0;0];
+end
+
+%% Lift Forces:
+% lift forces lie perpendicular to the velocity, these are the most
+% difficult to calculate accurately
+
+% a simple linear model for the coefficient of lift wrt on AoA is
+% being used right now, in the future VSPaero or CFD data may be used.
+% These values are loosely based on DATCOM / RasAero data we have
+% previously gathered. Currently there is no dependence on mach either,
+% which should be implemented at some point
+
+cL = min(1/8 * AoA, 2);
+
+% these act around the center of pressure, which is given in RasAero,
+cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
+cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
+
+[~, machIndex2] = min(abs(machTable-mach));
+
+cP = cPTableMetric(machIndex2);
+
+% do some vector math to find the lift direction:
+lift = (0.5 * rho* norm(windVel)^2 * A * cL);
+
+liftDir = cross(cross(windVel, bodyVectorEarth), windVel) / norm(cross(cross(windVel,bodyVectorEarth),windVel));
+
+liftForce = lift * liftDir;
+liftForce(isnan(liftForce)) = 0;
+liftForceBody = RotationMatrix(liftForce, quat, 0);
+
+
+%% Drag Forces:
+% drag lies parellel and opposite to the velocity vector
+
 %determine the direction and magnitude of the drag force
 dragDir = -windVel / norm(windVel);
 dragMag = (0.5 * rho * norm(windVel)^2 * A * cD);
 
 % implement a simple quadratic model for drag increase with AoA:
-dragMag = min(dragMag + 0.1*dragMag*(AoA)^2, 5 * dragMag);
+dragMag = min(dragMag + 0.3*(cL)^2, 5 * dragMag);
 
 dragForce = dragDir * dragMag;
 dragForce(isnan(dragForce)) = 0;
@@ -188,35 +218,6 @@ end
 % Convert to body frame for moments calculations
 paraDragForceBody = RotationMatrix(paraDragForce, quat, 0);
 
-
-%% Lift Forces:
-% lift forces lie perpendicular to the velocity, these are the most
-% difficult to calculate accurately
-
-% a simple linear model for the coefficient of lift wrt on AoA is
-% being used right now, in the future VSPaero or CFD data may be used.
-% These values are loosely based on DATCOM / RasAero data we have
-% previously gathered. Currently there is no dependence on mach either,
-% which should be implemented at some point
-
-cL = min(1/8 * AoA, 2);
-
-% these act around the center of pressure, which is given in RasAero,
-cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
-cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
-
-[~, machIndex2] = min(abs(machTable-mach));
-
-cP = cPTableMetric(machIndex2);
-
-% do some vector math to find the lift direction:
-lift = (0.5 * rho* norm(windVel)^2 * A * cL);
-
-liftDir = cross(cross(windVel, bodyVectorEarth), windVel) / norm(cross(cross(windVel,bodyVectorEarth),windVel));
-
-liftForce = lift * liftDir;
-liftForce(isnan(liftForce)) = 0;
-liftForceBody = RotationMatrix(liftForce, quat, 0);
 
 %% Total Forces:
 forceVector = gravForce + thrustForceEarth + dragForce + liftForce + paraDragForce;

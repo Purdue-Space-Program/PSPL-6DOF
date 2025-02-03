@@ -35,7 +35,7 @@ close all
 
 %change whether to go until apogee (apogee) or full flight (any other
 %input)
-endCondition = 'full';
+endCondition = 'apogee';
 
 %turn outputs on and off
 outputs = 'on';
@@ -44,10 +44,10 @@ outputs = 'on';
 rotationVis = 'on';
 
 % change the month for wind data (First 3 letters of month):
-month = 'Nov';
+month = 'Mar';
 
 % turn wind on and off
-windOnOff = 'on';
+windOnOff = 'off';
 
 % create a time array to span the entire simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end condition so no

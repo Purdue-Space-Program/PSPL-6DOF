@@ -1,5 +1,21 @@
 %Misc figures and code that we often reuse
 
+%% HEADER FOR FUNCTIONS AND FILES:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PSP FLIGHT DYNAMICS:
+%
+% Title: FILENAME
+% Author: INSERT NAME - Created: INSERT DATE
+%
+% Description: INSERT FUNCTION DESCRIPTION
+%
+% Inputs: 
+% VAR = DESRIPTION [UNITS], REPEAT FOR ALL
+%
+% Outputs:
+% VAR = DESCRIPTION [UNITS], REPEAT FOR ALL
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 
 %% English units for the trajectory plot
