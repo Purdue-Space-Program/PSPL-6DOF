@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, totCoM, totMass, J, wind, params)
+function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, J, wind, windOnOff, params)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
@@ -21,6 +21,7 @@ function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, totCoM, t
 % totMass - Array of total mass values at different time steps [s|kg]
 % J - Moment of Inertia of the rocket [m^4]
 % wind - Array of data with wind information
+% windOnOff - string to turn the wind on and off
 % params - extraneous parameters to be passed into function
 %
 % Outputs:
@@ -35,19 +36,15 @@ omega = [input(7); input(8); input(9)];
 
 quat = [input(10); input(11); input(12); input(13)];
 
-g = 9.806;             % gravity constant, in m/s^2.
-A = 0.01026;          % reference area (m^2), as defined by RasAero (cross-sectional area)
-mInit = 34.9266;        % initial mass of the rocket
-massFlow = 0.641286;      % mass flow rate (kg/s)
-thrustMag = 1628.0491112*29;  % thrust of rocket in N.
-burnTime = 29;        % burn time of 13 seconds
+A = 0.02224;          % reference area (m^2), as defined by RasAero (cross-sectional area)
+thrustMag = 4270.29;  % thrust of rocket in N.
+burnTime = 13;        % burn time of 13 seconds
 bodyVector = [1;0;0]; % vector in the body axis running through the nose.
-ExitA = 0.001645158;    % exit area of the nozzle [m^2]
-ExitP = 34778.2208767;      % exit pressure of the nozzle [Pa]
-radius = 0.05715;    % radius of rocket [m]
+ExitA = 0.0070573;    % exit area of the nozzle [m^2]
+ExitP = 75842.3;      % exit pressure of the nozzle [Pa]
+radius = .0841375;    % radius of rocket [m]
 
-rngValue = 0;         % for later?
-if nargin == 6 %constants to modify
+if nargin == 6
     thrustMag = params(1);
 end
 
@@ -57,30 +54,31 @@ bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial
 %% atmospheric conditions:
 height = pos(1);
 
+% long monte carlo can result in complex numbers here, take real component
 height = real(height);
 
-[~, a, P, rho] = atmosisa(height); 
+% get atmospheric parameters
+[~, a, P, rho] = atmosisa(height);
+
+% importing the atmosphere saves simulation time, but this functionality currently has
+% a few bugs.
+
+% atmoIndex = min(round(height,0)+1,length(atmosphere))
+% a = atmosphere(atmoIndex, 1);
+% rho = atmosphere(atmoIndex,2);
+% P = atmosphere(atmoIndex, 3);
 
 %% Wind:
-
-windAlt = wind(:,1) * 100;
-windMagList = wind(:,22);
-windMagList(isnan(windMagList)) = 0;
-windDirList = wind(:,23);
-windDirList(isnan(windDirList)) = 0;
+windAlt = wind(:,1);
+windMagList = wind(:,2);
+windDirList = wind(:,3);
 
 %% Mass Update:
-%timeTableMass = totMass(:,1);
-%massTable = totMass(:,2);
+timeTableMass = totMass(:,1);
+massTable = totMass(:,2);
 
-%[~,timeIndexMass] = min(abs(timeTableMass-time));
-%mass = massTable(timeIndexMass);
-
-if time <= burnTime
-    mass = mInit - time * massFlow;
-else
-    mass = 16.3293;
-end
+[~,timeIndexMass] = min(abs(timeTableMass-time));
+mass = massTable(timeIndexMass);
 
 %% Wind calcs:
 [~, heightIndex] = min(abs(windAlt-height));
@@ -89,30 +87,36 @@ windDir = windDirList(heightIndex);
 windMag = windMagList(heightIndex);
 windVector = windMag * [sin(windDir);cos(windDir);0];
 
-windVel = vel - windVector;
-windVel = 0;
-
+if strcmpi('on', windOnOff) == 1
+    windVel = vel - windVector;
+else
+    windVel = vel;
+end
+  
 %% Center of mass update
-%timeTableCoM = totCoM(:,1);
-%CoMTable = totCoM(:,2);
+timeTableCoM = totCoM(:,1);
+CoMTable = totCoM(:,2);
 
-%[~, timeIndexCoM] = min(abs(timeTableCoM-time));
-%CoM = CoMTable(timeIndexCoM);
-
-mach = norm(vel) / a;
-machTable = rasData(1:300,1);
-cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
-cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
-
-[~, machIndex2] = min(abs(machTable-mach));
-
-cP = cPTableMetric(machIndex2);
-
-CoM = cP - 3*radius;
+[~, timeIndexCoM] = min(abs(timeTableCoM-time));
+CoM = CoMTable(timeIndexCoM);
 
 %% Gravitational Force:
-% at least this one is easy
-gravForce = mass * g * [-1;0;0];
+gravForce = mass * constant.g * [-1;0;0];
+
+% calculate the angle between the velocity vector and the rocket nose
+AoA = acosd((dot(windVel,bodyVectorEarth)) / (norm(windVel) * norm(bodyVectorEarth)));
+AoA(isnan(AoA)) = 0;
+
+% mach is used for airspeed dependent drag coefficient:
+mach = norm(vel) / a;
+
+% read the coefficient of drag from RasAero data:
+machTable = rasData(1:300,1); % mach values from 0.01 to 3
+cDTable = rasData(1:300,3); % coefficient of drag
+
+% find cD matching the closest mach value to table
+[~, machIndex] = min(abs(machTable-mach));
+cD = cDTable(machIndex);
 
 %% Thrust Forces:
 % thrust lies along long axis of the rocket [1;0;0], which we then convert into
@@ -127,29 +131,45 @@ else
     thrustForceEarth = [0;0;0];
 end
 
+%% Lift Forces:
+% lift forces lie perpendicular to the velocity, these are the most
+% difficult to calculate accurately
+
+% a simple linear model for the coefficient of lift wrt on AoA is
+% being used right now, in the future VSPaero or CFD data may be used.
+% These values are loosely based on DATCOM / RasAero data we have
+% previously gathered. Currently there is no dependence on mach either,
+% which should be implemented at some point
+
+cL = min(1/8 * AoA, 2);
+
+% these act around the center of pressure, which is given in RasAero,
+cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
+cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
+
+[~, machIndex2] = min(abs(machTable-mach));
+
+cP = cPTableMetric(machIndex2);
+
+% do some vector math to find the lift direction:
+lift = (0.5 * rho* norm(windVel)^2 * A * cL);
+
+liftDir = cross(cross(windVel, bodyVectorEarth), windVel) / norm(cross(cross(windVel,bodyVectorEarth),windVel));
+
+liftForce = lift * liftDir;
+liftForce(isnan(liftForce)) = 0;
+liftForceBody = RotationMatrix(liftForce, quat, 0);
+
+
 %% Drag Forces:
 % drag lies parellel and opposite to the velocity vector
 
-% calculate the angle between the velocity vector and the rocket nose
-AoA = acosd((dot(windVel,bodyVectorEarth)) / (norm(windVel) * norm(bodyVectorEarth)));
-AoA(isnan(AoA)) = 0;
-
-% mach is used for airspeed dependent drag coefficient:
-%mach = norm(vel) / a;
-
-% implementing a simple drag without angle-dependence for now:
-%rasData = readmatrix("RasAeroData.CSV"); %rasAero drag data based on mach at 0 AoA
-machTable = rasData(1:300,1); % mach values from 0.01 to 3
-cDTable = rasData(1:300,3); % coefficient of drag
-
-[~, machIndex] = min(abs(machTable-mach));
-
-cD = cDTable(machIndex);
-
+%determine the direction and magnitude of the drag force
 dragDir = -windVel / norm(windVel);
 dragMag = (0.5 * rho * norm(windVel)^2 * A * cD);
-% implement a simple exponential model for drag increase with AoA:
-dragMag = min(dragMag + dragMag * exp(1) * exp(0.05 * AoA), 2 * dragMag);
+
+% implement a simple quadratic model for drag increase with AoA:
+dragMag = min(dragMag + 0.3*(cL)^2, 5 * dragMag);
 
 dragForce = dragDir * dragMag;
 dragForce(isnan(dragForce)) = 0;
@@ -157,8 +177,6 @@ dragForceBody = RotationMatrix(dragForce, quat, 0);
 
 
 %% Parachute Drag
-% Conversion Constants
-ft2m = 0.3048;                      % ft to m conversion
 
 % Other Constants
 deformVal = 0.70;                   % Deformation value of inflated chute area
@@ -167,10 +185,10 @@ deformVal = 0.70;                   % Deformation value of inflated chute area
 
 % Parachute parameters
 drogueCd = 0.97;                    % cD for the drogue chute
-drogueDia = 4.166666667 * ft2m;     % drogue  diameter [m]
+drogueDia = (25/6) * constant.ft2m; % drogue  diameter [m]
 
 mainCd = 2.2;                       % cD for the main parachute
-mainDia = 16.66666667 * ft2m;       % main chute diameter [m]
+mainDia = (97/6) * constant.ft2m;   % main chute diameter [m]
 mainDeployAlt = 304.8;              % main chute deployment altitude [m]
 
 if vel(1) < 0
@@ -201,42 +219,12 @@ end
 paraDragForceBody = RotationMatrix(paraDragForce, quat, 0);
 
 
-%% Lift Forces:
-% lift forces lie perpendicular to the velocity, these are the most
-% difficult to calculate accurately
-
-% a simple linear model for the coefficient of lift wrt on AoA is
-% being used right now, in the future vspAero or CFD data may be used.
-% These values are loosely based on DATCOM / RasAero data we have
-% previously gathered. Currently there is no dependence on mach either,
-% which should be implemented at some point
-
-cL = min(1/8 * AoA, 2);
-
-% these act around the center of pressure, which is given in RasAero,
-%cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
-%cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
-
-%[~, machIndex2] = min(abs(machTable-mach));
-
-%cP = cPTableMetric(machIndex2);
-
-% do some vector math to find the lift direction:
-lift = (0.5 * rho* norm(windVel)^2 * A * cL);
-
-liftDir = cross(cross(windVel, bodyVectorEarth), windVel) / norm(cross(cross(windVel,bodyVectorEarth),windVel));
-
-liftForce = lift * liftDir;
-liftForce(isnan(liftForce)) = 0;
-liftForceBody = RotationMatrix(liftForce, quat, 0);
-
 %% Total Forces:
 forceVector = gravForce + thrustForceEarth + dragForce + liftForce + paraDragForce;
 %accel:
 accel = forceVector / mass;
 
 %% Stability Caliber Calculations
-
 % difference between CoM and cP divided by diameter of the rocket
 %fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / 0.168275);
 
