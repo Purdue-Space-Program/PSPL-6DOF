@@ -90,6 +90,7 @@ windMag = windMagList(heightIndex);
 windVector = windMag * [sin(windDir);cos(windDir);0];
 
 windVel = vel - windVector;
+windVel = 0;
 
 %% Center of mass update
 %timeTableCoM = totCoM(:,1);
