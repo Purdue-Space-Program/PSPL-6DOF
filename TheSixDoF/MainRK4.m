@@ -71,7 +71,7 @@ quatVector = eul2quat(angleVector.', "XYZ").';
 Init = [pos;vel;omega;quatVector];
 
 %import aerodynamics data
-rasData = readmatrix("Inputs/RasAeroData.CSV");
+rasData = readmatrix("arcasData.CSV");
 
 %import wind data
 windData = readmatrix("Inputs/WindData.xlsx");

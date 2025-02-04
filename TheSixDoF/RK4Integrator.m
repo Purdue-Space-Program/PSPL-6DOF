@@ -36,13 +36,27 @@ omega = [input(7); input(8); input(9)];
 
 quat = [input(10); input(11); input(12); input(13)];
 
-A = 0.02224;          % reference area (m^2), as defined by RasAero (cross-sectional area)
-thrustMag = 4270.29;  % thrust of rocket in N.
-burnTime = 13;        % burn time of 13 seconds
+%% rocket 4 numbers
+%A = 0.02224;          % reference area (m^2), as defined by RasAero (cross-sectional area)
+%thrustMag = 4270.29;  % thrust of rocket in N.
+%burnTime = 13;        % burn time of 13 seconds
+%bodyVector = [1;0;0]; % vector in the body axis running through the nose.
+%ExitA = 0.0070573;    % exit area of the nozzle [m^2]
+%ExitP = 75842.3;      % exit pressure of the nozzle [Pa]
+%radius = .0841375;    % radius of rocket [m]
+
+%% validation numbers
+%g = 9.806;             % gravity constant, in m/s^2.
+A = 0.01026;          % reference area (m^2), as defined by RasAero (cross-sectional area)
+mInit = 34.9266;        % initial mass of the rocket
+massFlow = 0.641286;      % mass flow rate (kg/s)
+thrustMag = 1628.0491112*29;  % thrust of rocket in N.
+burnTime = 29;        % burn time of 13 seconds
 bodyVector = [1;0;0]; % vector in the body axis running through the nose.
-ExitA = 0.0070573;    % exit area of the nozzle [m^2]
-ExitP = 75842.3;      % exit pressure of the nozzle [Pa]
-radius = .0841375;    % radius of rocket [m]
+ExitA = 0.001645158;    % exit area of the nozzle [m^2]
+ExitP = 34778.2208767;      % exit pressure of the nozzle [Pa]
+radius = 0.05715;    % radius of rocket [m]
+
 
 if nargin == 6
     thrustMag = params(1);
@@ -74,11 +88,17 @@ windMagList = wind(:,2);
 windDirList = wind(:,3);
 
 %% Mass Update:
-timeTableMass = totMass(:,1);
-massTable = totMass(:,2);
+%timeTableMass = totMass(:,1);
+%massTable = totMass(:,2);
 
-[~,timeIndexMass] = min(abs(timeTableMass-time));
-mass = massTable(timeIndexMass);
+%[~,timeIndexMass] = min(abs(timeTableMass-time));
+%mass = massTable(timeIndexMass);
+
+if time <= burnTime
+    mass = mInit - (massFlow * time);
+else
+    mass = mInit - (massFlow * burnTime);    
+end
 
 %% Wind calcs:
 [~, heightIndex] = min(abs(windAlt-height));
@@ -94,11 +114,17 @@ else
 end
   
 %% Center of mass update
-timeTableCoM = totCoM(:,1);
-CoMTable = totCoM(:,2);
+%timeTableCoM = totCoM(:,1);
+%CoMTable = totCoM(:,2);
 
-[~, timeIndexCoM] = min(abs(timeTableCoM-time));
-CoM = CoMTable(timeIndexCoM);
+%[~, timeIndexCoM] = min(abs(timeTableCoM-time));
+%CoM = CoMTable(timeIndexCoM);
+
+%% no variable center of mass
+
+CoP = rasData(:, 13);
+
+CoM = CoP - radius*6;
 
 %% Gravitational Force:
 gravForce = mass * constant.g * [-1;0;0];
