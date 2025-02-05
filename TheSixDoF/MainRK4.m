@@ -41,7 +41,7 @@ endCondition = 'apogee';
 outputs = 'on';
 
 % run rotation visualization (outputs must be on also)
-rotationVis = 'on';
+rotationVis = 'off';
 
 % change the month for wind data (First 3 letters of month):
 month = 'Mar';
@@ -74,11 +74,11 @@ Init = [pos;vel;omega;quatVector];
 rasData = readmatrix("arcasData.CSV");
 
 %import wind data
-windData = readmatrix("Inputs/WindData.xlsx");
+windData = readmatrix("WindData.csv");
 windDataInput = parseWind(windData, month);
 
 %import atmosphere;
-atmosphere = readmatrix("Inputs/AtmosphereModel.csv");
+atmosphere = readmatrix("AtmosphereModel.csv");
 
 %create an array of the center of mass, mass, and moment of inertia of the
 %rocket
