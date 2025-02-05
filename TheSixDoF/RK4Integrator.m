@@ -37,10 +37,10 @@ A = 0.02224;                     % reference area (m^2), as defined by RasAero (
 thrustMag = 1787 * 4.448;        % thrust of rocket in N.
 burnTime = 15.2;                 % burn time [s]
 bodyVector = [1;0;0];            % vector in the body axis running through the nose.
-ExitA = 0.0070573;               % exit area of the nozzle [m^2]
 ExitP = 101352.9;                % exit pressure of the nozzle [Pa]
 diameter = 8.625;                % diameter of rocket [in]
 radius = diameter * 0.5 / 39.37; % radius of rocket [m]
+ExitA = pi * radius * radius;    % exit area of the nozzle [m^2]
 
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
 
@@ -62,7 +62,7 @@ height = real(height);
 
 %% Mass Update:
 %FLOW_RATE = ( 5.083 + 3.389 + 0.508 ); %Lox + fuel
-FLOW_RATE = (325-178) / burnTime;
+FLOW_RATE = (325 - 178) / burnTime;
 mass = theMass - FLOW_RATE*min([time,burnTime]);
 
 %% Wind calcs:

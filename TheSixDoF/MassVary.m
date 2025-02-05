@@ -8,12 +8,12 @@ pos = [0;0;0];
 vel = [0;0;0];
 omega = [0;0;0];
 
-Xdata = []; %contains massDry
+Xdata = []; %contains mass
 Ydata = []; %contains max height
 
 tic;
-for i = 0:0
-    dt = 0.1;
+for i = -50:50:50
+    dt = 0.04;
     maxTime = 50;
     tspan = linspace(0,maxTime,maxTime/dt+1);
 
@@ -39,4 +39,8 @@ for i = 0:0
 end
 toc;
 
-plot( Xdata,Ydata );
+plot( Xdata,Ydata, Marker='.',MarkerSize=5,Color='#00aa00' );
+xlabel( "Starting dry mass (lbm)", fontSize=18 )
+ylabel( "Apogee no-wind (m)", fontSize=18  )
+title( "Apogees for different variations in starting mass",fontSize=20 )
+grid on
