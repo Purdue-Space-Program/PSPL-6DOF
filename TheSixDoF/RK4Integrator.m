@@ -58,15 +58,10 @@ height = pos(1);
 height = real(height);
 
 % get atmospheric parameters
-[~, a, P, rho] = atmosisa(height);
-
-% importing the atmosphere saves simulation time, but this functionality currently has
-% a few bugs.
-
-% atmoIndex = min(round(height,0)+1,length(atmosphere))
-% a = atmosphere(atmoIndex, 1);
-% rho = atmosphere(atmoIndex,2);
-% P = atmosphere(atmoIndex, 3);
+atmosIndex = min(max(round(height,0)+1, 1),length(atmosphere));
+a = atmosphere(atmosIndex, 1);
+rho = atmosphere(atmosIndex,2);
+P = atmosphere(atmosIndex, 3);
 
 %% Wind:
 windAlt = wind(:,1);
