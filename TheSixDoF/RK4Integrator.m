@@ -120,11 +120,16 @@ end
 %[~, timeIndexCoM] = min(abs(timeTableCoM-time));
 %CoM = CoMTable(timeIndexCoM);
 
-%% no variable center of mass
+%% no variable center of mass, get just the one cP needed
+machTable = rasData(1:300,1);
+mach = norm(vel) / a;
+cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
+cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
 
-CoP = rasData(:, 13);
+[~, machIndex2] = min(abs(machTable-mach));
 
-CoM = CoP - radius*6;
+cP = cPTableMetric(machIndex2);
+CoM = cP - radius * 6; % assume stability = 3
 
 %% Gravitational Force:
 gravForce = mass * constant.g * [-1;0;0];
@@ -134,10 +139,10 @@ AoA = acosd((dot(windVel,bodyVectorEarth)) / (norm(windVel) * norm(bodyVectorEar
 AoA(isnan(AoA)) = 0;
 
 % mach is used for airspeed dependent drag coefficient:
-mach = norm(vel) / a;
+% mach = norm(vel) / a;
 
 % read the coefficient of drag from RasAero data:
-machTable = rasData(1:300,1); % mach values from 0.01 to 3
+% machTable = rasData(1:300,1); % mach values from 0.01 to 3
 cDTable = rasData(1:300,3); % coefficient of drag
 
 % find cD matching the closest mach value to table
@@ -170,12 +175,12 @@ end
 cL = min(1/8 * AoA, 2);
 
 % these act around the center of pressure, which is given in RasAero,
-cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
-cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
+%cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
+%cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
 
-[~, machIndex2] = min(abs(machTable-mach));
+%[~, machIndex2] = min(abs(machTable-mach));
 
-cP = cPTableMetric(machIndex2);
+%cP = cPTableMetric(machIndex2);
 
 % do some vector math to find the lift direction:
 lift = (0.5 * rho* norm(windVel)^2 * A * cL);
