@@ -60,9 +60,11 @@ tspan = linspace(0,time,arrayLength+1);
 % position (x,y,z)
 pos = [0;0;0];
 % velocity (xdot,ydot,zdot)
-vel = [0;0;0];
+% angle at 85 degrees
+% add initial velocity of 150 fps
+vel = [150*0.3048*cosd(85);150*0.3048*sind(85);0];
 % initial angle(x angle, y angle, z angle)
-angleVector = [0;0.1;0.1];
+angleVector = [0;0;0]; %chuck the angle into this place
 % initial rotation rate(x rate, y rate, z rate)
 omega = [0;0;0];
 %initalize the quaternion based on the euler angle input:
