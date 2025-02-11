@@ -33,12 +33,15 @@ close all
 
 %% Simulation Settings:
 
-%change whether to go until apogee (apogee) or full flight (any other
-%input)
-endCondition = 'full';
+% endCondition
+% set to 'apogee' for apogee
+% set to 'burnout' for burnout
+% set to 'full' for full simulation w/ recovery
+% set to '#.#' for a custom run time (numeric inputs only)
+endCondition = 'apogee';
 
 %turn outputs on and off
-outputs = 'off';
+outputs = 'on';
 
 % run rotation visualization (outputs must be on also)
 rotationVis = 'off';
@@ -49,11 +52,20 @@ month = 'Mar';
 % turn wind on and off
 windOnOff = 'off';
 
-% create a time array to span the entire simulation time. Use 500s or more
+% create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end condition so no
 % need to reduce this value for faster computation.
+
 dt = 0.1;
-time = 500;
+
+if strcmpi('burnout', endCondition) == 1
+    time = constant.burnTime;
+elseif ~isnan(str2double(endCondition)) == 1
+    time = round(str2double(endCondition),1);
+else
+    time = 500;
+end
+
 arrayLength = (time / dt);
 tspan = linspace(0,time,arrayLength+1);
 

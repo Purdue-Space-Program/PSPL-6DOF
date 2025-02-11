@@ -25,10 +25,12 @@ function [value, isterminal, direction] = stoppingCondition(tspan, Init, conditi
 
 
 if strcmpi('apogee', condition) == 1
+    % if velocity is less than 0.
     value = (Init(4) < 0);
     isterminal = 1;   % Stop the integration
     direction  = 0;
 else
+    % if position is less than 0.
     value = (Init(1) < 0);
     isterminal = 1;   % Stop the integration
     direction  = 0;

@@ -5,9 +5,7 @@
          ft2m = 0.3048;  % ft to m conversion
          m2inch = 39.37; %
          railHeight = 18.29; % FAR rail height [m]
-
          burnTime = 13 %burn time [s]
-
 
     end
  end
