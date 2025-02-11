@@ -38,7 +38,6 @@ quat = [input(10); input(11); input(12); input(13)];
 
 A = 0.02224;          % reference area (m^2), as defined by RasAero (cross-sectional area)
 thrustMag = 4270.29;  % thrust of rocket in N.
-burnTime = 13;        % burn time of 13 seconds
 bodyVector = [1;0;0]; % vector in the body axis running through the nose.
 ExitA = 0.0070573;    % exit area of the nozzle [m^2]
 ExitP = 75842.3;      % exit pressure of the nozzle [Pa]
@@ -119,7 +118,7 @@ cD = cDTable(machIndex);
 
 presThrust = thrustMag + (ExitP - P) * ExitA;
 
-if time <= burnTime
+if time <= constant.burnTime
     thrustForceBody = presThrust * bodyVector;
     thrustForceEarth = RotationMatrix(thrustForceBody, quat, 1);
 else
