@@ -34,6 +34,7 @@ close all
 %% Simulation Settings:
 
 % endCondition
+% possible:
 % set to 'apogee' for apogee
 % set to 'burnout' for burnout
 % set to 'full' for full simulation w/ recovery
@@ -41,7 +42,7 @@ close all
 endCondition = 'apogee';
 
 %turn outputs on and off
-outputs = 'on';
+outputs = 'off';
 
 % run rotation visualization (outputs must be on also)
 rotationVis = 'off';
@@ -51,6 +52,12 @@ month = 'Mar';
 
 % turn wind on and off
 windOnOff = 'off';
+
+% CMS or Rocket 4, more options possible in future
+% possible:
+% CMS
+% R4
+rocket = 'CMS';
 
 % create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end condition so no
@@ -83,7 +90,13 @@ quatVector = eul2quat(angleVector.', "XYZ").';
 Init = [pos;vel;omega;quatVector];
 
 %import aerodynamics data
-rasData = readmatrix("Inputs/RasAeroDataCulled.CSV");
+
+if strcmpi(rocket, 'CMS') == 1
+    rasData = readmatrix("Inputs/RasAeroDataCulled.CSV");
+elseif strcmpi(rocket, 'R4') == 1
+    rasData = readmatrix("RASAero\Final_with_pumps.CSV");
+else
+end
 
 %import wind data
 windData = readmatrix("Inputs/WindData.xlsx");
