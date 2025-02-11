@@ -35,13 +35,13 @@ close all
 
 %change whether to go until apogee (apogee) or full flight (any other
 %input)
-endCondition = 'apogee';
+endCondition = 'full';
 
 %turn outputs on and off
-outputs = 'on';
+outputs = 'off';
 
 % run rotation visualization (outputs must be on also)
-rotationVis = 'on';
+rotationVis = 'off';
 
 % change the month for wind data (First 3 letters of month):
 month = 'Mar';
@@ -71,7 +71,7 @@ quatVector = eul2quat(angleVector.', "XYZ").';
 Init = [pos;vel;omega;quatVector];
 
 %import aerodynamics data
-rasData = readmatrix("Inputs/RasAeroData.CSV");
+rasData = readmatrix("Inputs/RasAeroDataCulled.CSV");
 
 %import wind data
 windData = readmatrix("Inputs/WindData.xlsx");
