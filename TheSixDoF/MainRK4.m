@@ -35,7 +35,7 @@ close all
 
 %change whether to go until apogee (apogee) or full flight (any other
 %input)
-endCondition = 'apogee';
+endCondition = 'full';
 
 %turn outputs on and off
 outputs = 'on';
@@ -44,10 +44,10 @@ outputs = 'on';
 rotationVis = 'off';
 
 % change the month for wind data (First 3 letters of month):
-month = 'Mar';
+month = 'Jun';
 
 % turn wind on and off
-windOnOff = 'off';
+windOnOff = 'on';
 
 % create a time array to span the entire simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end condition so no
@@ -62,9 +62,9 @@ pos = [0;0;0];
 % velocity (xdot,ydot,zdot)
 % angle at 85 degrees
 % add initial velocity of 150 fps
-vel = [150*0.3048*cosd(85);150*0.3048*sind(85);0];
+vel = [150*0.3048*cosd(85); 150*0.3048*sind(85) ;0]; % THIS IS CORRECT
 % initial angle(x angle, y angle, z angle)
-angleVector = [0;0;0]; %chuck the angle into this place
+angleVector = [0;0;deg2rad(5)]; %chuck the angle into this place
 % initial rotation rate(x rate, y rate, z rate)
 omega = [0;0;0];
 %initalize the quaternion based on the euler angle input:

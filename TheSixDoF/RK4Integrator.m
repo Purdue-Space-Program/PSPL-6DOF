@@ -46,16 +46,17 @@ quat = [input(10); input(11); input(12); input(13)];
 %radius = .0841375;    % radius of rocket [m]
 
 %% validation numbers
+%% sfhasbjf
 %g = 9.806;             % gravity constant, in m/s^2.
-A = 0.01026;          % reference area (m^2), as defined by RasAero (cross-sectional area)
-mInit = 34.9266;        % initial mass of the rocket
-massFlow = 0.641286;      % mass flow rate (kg/s)
-thrustMag = 1628.0491112*29;  % thrust of rocket in N.
-burnTime = 29;        % burn time of 13 seconds
-bodyVector = [1;0;0]; % vector in the body axis running through the nose.
-ExitA = 0.001645158;    % exit area of the nozzle [m^2]
+A = 0.01026;          % reference area (m^2), as defined by RasAero (cross-sectional area) THIS IS PROBABLY GOOD BUT RASAERO HATES ME
+mInit = 34.9266;        % initial mass of the rocket THIS IS GOOD
+massFlow = 0.641286;      % mass flow rate (kg/s)  THIS IS GOOD
+thrustMag = 4122.701;  % thrust of rocket in N. THIS IS GOOD
+burnTime = 29;        % burn time of 13 seconds THERE IS NO WAY THIS IS WRONG
+bodyVector = [1;0;0]; % vector in the body axis running through the nose. THERE IS NO WAY THIS IS WRONG
+ExitA = 0.001645158;    %% exit area of the nozzle [m^2] THIS IS GOOD
 ExitP = 34778.2208767;      % exit pressure of the nozzle [Pa]
-radius = 0.05715;    % radius of rocket [m]
+radius = 0.05715;    % radius of rocket [m] THIS IS GOOD
 
 
 if nargin == 6
@@ -129,7 +130,7 @@ cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nos
 [~, machIndex2] = min(abs(machTable-mach));
 
 cP = cPTableMetric(machIndex2);
-CoM = cP - radius * 6; % assume stability = 3
+CoM = cP - radius * 5; % assume stability = 2.5
 
 %% Gravitational Force:
 gravForce = mass * constant.g * [-1;0;0];
