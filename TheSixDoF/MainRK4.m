@@ -39,19 +39,19 @@ close all
 % set to 'burnout' for burnout
 % set to 'full' for full simulation w/ recovery
 % set to '#.#' for a custom run time (numeric inputs only)
-endCondition = 'apogee';
+endCondition = 'full';
 
 %turn outputs on and off
-outputs = 'off';
+outputs = 'on';
 
 % run rotation visualization (outputs must be on also)
-rotationVis = 'off';
+rotationVis = 'on';
 
 % change the month for wind data (First 3 letters of month):
 month = 'Mar';
 
 % turn wind on and off
-windOnOff = 'off';
+windOnOff = 'on';
 
 % CMS or Rocket 4, more options possible in future
 % possible:

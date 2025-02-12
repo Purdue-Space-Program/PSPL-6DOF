@@ -79,7 +79,7 @@ mass = massTable(timeIndexMass);
 
 windDir = windDirList(heightIndex);
 windMag = windMagList(heightIndex);
-windVector = windMag * [sin(windDir);cos(windDir);0];
+windVector = windMag * [0;sin(windDir);cos(windDir)];
 
 if strcmpi('on', windOnOff) == 1
     windVel = vel - windVector;
