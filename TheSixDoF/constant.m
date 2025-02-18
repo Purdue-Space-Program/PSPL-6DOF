@@ -6,7 +6,5 @@
          m2inch = 39.37; %
          railHeight = 18.29; % FAR rail height [m]
          burnTime = 13 %burn time [s]
-         
-
     end
  end

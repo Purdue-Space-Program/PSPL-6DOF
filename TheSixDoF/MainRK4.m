@@ -39,7 +39,7 @@ close all
 % set to 'burnout' for burnout
 % set to 'full' for full simulation w/ recovery
 % set to '#.#' for a custom run time (numeric inputs only)
-endCondition = 'full';
+endCondition = 'apogee';
 
 %turn outputs on and off
 outputs = 'on';
@@ -114,13 +114,13 @@ opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, endConditio
 
 %% RK4:
 tic;
-[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,windOnOff,1), tspan, Init, opt);
+[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,windOnOff, rocket, 1), tspan, Init, opt);
 toc;
 
 %% Outputs:
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
-    [~, machArray(k,1), AoArray(k,1), accel(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff);
+    [~, machArray(k,1), AoArray(k,1), accel(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket);
 end
 
 if strcmpi('on', outputs) == 1
