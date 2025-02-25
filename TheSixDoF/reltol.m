@@ -56,36 +56,33 @@ atmosphere = readmatrix("Inputs/AtmosphereModel.csv"); %import atmosphere;
 X_data = [];
 Y_data = [];
 Z_data = [];
+T_data = [];
 
-for lk = 0.25:0.25:10
-
-    rt = 0.1^lk;
-    opt = odeset( ...
-        Events=@(tspan, Init) stoppingCondition(tspan, Init, endCondition), ...
-        RelTol=rt ...
-    );
-
-    tic;
-    [timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,windOnOff,1), tspan, Init, opt);
-    Z_data(end+1) = toc; %runtime
-
-    out = real(out);
-    apogee = max(out(:,1));
+for rt = 1:0.25:7
+    for at = 1:0.25:7
+        opt = odeset( ...
+            Events=@(tspan, Init) stoppingCondition(tspan, Init, endCondition), ...
+            RelTol=0.1^rt, ...
+            AbsTol=0.1^at...
+        );
     
-    X_data(end+1) = rt;
-    Y_data(end+1) = max(out(:,1)); %apogee
-    disp(lk)
+        tic;
+        [timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,windOnOff,1), tspan, Init, opt);
+        T_data(end+1) = toc; %runtime
+    
+        out = real(out);
+        apogee = max(out(:,1));
+        
+        X_data(end+1) = rt;
+        Y_data(end+1) = at;
+        Z_data(end+1) = apogee; %apogee
+        fprintf("rt: %.2f at: %.2f Time: %f Apogee: %f\n",rt,at,T_data(end),apogee);
+    end
 end
 
 %% Plots
 figure(1);
-semilogx(X_data,Y_data,MarkerSize=30,Marker='.');
-xlabel("Relative Tolerance (log scale)",FontSize=16)
-ylabel("Apogee (m)",FontSize=16)
-title("Apogee vs Relative Tolerance",FontSize=18)
-
+scatter3(X_data,Y_data,Z_data,150,'.','b')
 figure(2);
-semilogx(X_data,Z_data,Color='red',MarkerSize=30,Marker='.');
-xlabel("Relative Tolerance (log scale)",FontSize=16)
-ylabel("Runtime (s)",FontSize=16)
-title("Runtime vs Relative Tolerance",FontSize=18)
+scatter3(X_data,Y_data,T_data,150,'.','r')
+zlim([0,inf])
