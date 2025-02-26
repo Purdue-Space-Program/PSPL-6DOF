@@ -33,40 +33,40 @@ qs = quaternion([45,0,0],'eulerd','ZYX','frame');
 qf = quaternion([-45,0,0],'eulerd','ZYX','frame');
 
 ps = [0 0 0];
-pf = [10 0 0];
+pf = [0 0 0];
 
-patch = poseplot(qs,ps,'ENU', MeshFileName="Inputs/CMSRocketModel.stl", ScaleFactor= .1);
+patch = poseplot(qs,ps,'ENU', MeshFileName="Model.stl", ScaleFactor= 1, PatchFaceColor='r');
 %xlim([0,1000]);
 %ylim([0,max(posArray(2,:))]);
 %zlim([0,max(posArray(1,:))]);
 view(45,25);
 axis square
-camroll(113)
+%camroll(113)
 
 
-xlabel("Up-z (m)")
-ylabel("East-x (m)")
-zlabel("North-y (m)");
+xlabel("x")
+ylabel("y")
+zlabel("z");
 
 
-for i = 1:endTime / dt
+for i = 1:5:length(posArray)
     q = quaternion(quatArray(:,i)');
     %position = [posArrayTrans(i,3),posArrayTrans(i,2),posArrayTrans(i,1)];
     position = posArrayTrans(i,:);
     set(patch,Orientation=q,Position=position);
     
-    title(sprintf('Vehicle Rotation at time %.1f s',timeArray(i)))
+    title(sprintf('Orientation at time %.1f s',timeArray(i)))
     drawnow
-    %pause(dt/playbackSpeed);
+    pause(1/100);
 
     if output == 1
         frame = getframe(gcf);
         img =  frame2im(frame);
         [img,cmap] = rgb2ind(img,256);
         if i == 1
-            imwrite(img,cmap,'RotationAnimation.gif','gif','LoopCount',Inf,'DelayTime',dt/playbackSpeed);
+            imwrite(img,cmap,'RotationAnimation.gif','gif','LoopCount',Inf,'DelayTime',1/20);
         else
-            imwrite(img,cmap,'RotationAnimation.gif','gif','WriteMode','append','DelayTime',dt/playbackSpeed);
+            imwrite(img,cmap,'RotationAnimation.gif','gif','WriteMode','append','DelayTime',1/20);
         end
     end
 end
