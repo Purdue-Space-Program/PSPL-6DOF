@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, J, wind, params)
+function [out, mach, AoA, accel] = RK4Integrator(time, input, aeroArray, rocketParams, atmosphere, totCoM, totMass, J, wind, params)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
@@ -15,7 +15,7 @@ function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmospher
 % time - current simulation time [s]
 % input - Array of position, velocity, rotational velocity, and quaternions
 %         [m|m/s|rad/s|unitless] 
-% rasData - Array of data pulled from ras aero [lots of units]
+% aeroData - Array of mach, Cd, and Cp from CdModel and CpModel
 % totCoM - Array of center of mass measurements at different time steps
 %          [s|m]
 % totMass - Array of total mass values at different time steps [s|kg]
@@ -35,13 +35,13 @@ omega = [input(7); input(8); input(9)];
 
 quat = [input(10); input(11); input(12); input(13)];
 
-A = 0.02224;          % reference area (m^2), as defined by RasAero (cross-sectional area)
-thrustMag = 4270.29;  % thrust of rocket in N.
-burnTime = 13;        % burn time of 13 seconds
+radius = rocketParams(2,3) / 2;    % radius of rocket [m]
+A = (pi * radius ^ 2) + (rocketParams(2,5) * rocketParams(2,6) * rocketParams(2,11));          % reference area (m^2)
+thrustMag = rocketParams(2,14);  % average thrust of rocket [N].
+burnTime = rocketParams(2,15);        % burn time of motor [s]
 bodyVector = [1;0;0]; % vector in the body axis running through the nose.
-ExitA = 0.0070573;    % exit area of the nozzle [m^2]
-ExitP = 75842.3;      % exit pressure of the nozzle [Pa]
-radius = .0841375;    % radius of rocket [m]
+ExitA = rocketParams(2,16);    % exit area of the nozzle [m^2]
+ExitP = rocketParams(2,17);      % exit pressure of the nozzle [Pa]
 
 if nargin == 6
     thrustMag = params(1);
@@ -118,8 +118,8 @@ AoA(isnan(AoA)) = 0;
 mach = norm(vel) / a;
 
 % read the coefficient of drag from RasAero data:
-machTable = rasData(1:300,1); % mach values from 0.01 to 3
-cDTable = rasData(1:300,3); % coefficient of drag
+machTable = aeroData(1:300,1); % mach values from 0.01 to 3
+cDTable = aeroData(1:300,3); % coefficient of drag
 
 % find cD matching the closest mach value to table
 [~, machIndex] = min(abs(machTable-mach));
@@ -187,13 +187,12 @@ paraDragForceBody = RotationMatrix(paraDragForce, quat, 0);
 % a simple linear model for the coefficient of lift wrt on AoA is
 % being used right now, in the future VSPaero or CFD data may be used.
 % These values are loosely based on DATCOM / RasAero data we have
-% previously gathered. Currently there is no dependence on mach either,
-% which should be implemented at some point
+% previously gathered.
 
 cL = min(1/8 * AoA, 2);
 
 % these act around the center of pressure, which is given in RasAero,
-cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
+cPTable = aeroData(1:300,13); % center of pressure in inches, defined from nose
 cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
 
 [~, machIndex2] = min(abs(machTable-mach));

@@ -20,20 +20,6 @@ clear
 clc
 close all
 
-%% Simulation Settings:
-
-%change whether to go until apogee or all the way to ground
-endCondition = 'apogee';
-
-%turn outputs on and off
-outputs = 'off';
-
-% run rotation visualization (outputs must be on also)
-rotationVis = 'off';
-
-% change the month for wind data (First 3 letters of month):
-month = 'Nov';
-
 % create a time array to span the entire simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end condition so no
 % need to reduce this value for faster computation.
@@ -44,43 +30,73 @@ tspan = linspace(0,time,arrayLength+1);
 
 % position (x,y,z)
 pos = [0;0;0];
+
 % velocity (xdot,ydot,zdot)
 vel = [0;0;0];
+
 % initial angle(x angle, y angle, z angle)
 angleVector = [0;0.1;0.1];
+
 % initial rotation rate(x rate, y rate, z rate)
 omega = [0;0;0];
-%initalize the quaternion based on the euler angle input:
+
+% initalize the quaternion based on the euler angle input:
 quatVector = eul2quat(angleVector.', "XYZ").';
+
 % initial state vector
 Init = [pos;vel;omega;quatVector];
 
-%import aerodynamics data
-rasData = readmatrix("Inputs/RasAeroData.CSV");
+%% Simulation Settings:
 
-%import wind data
+% change whether to go until apogee or all the way to ground
+endCondition = 'apogee';
+
+% turn outputs on and off
+outputs = 'off';
+
+% run rotation visualization (outputs must be on also)
+rotationVis = 'off';
+
+% change the month for wind data (First 3 letters of month):
+month = 'Nov';
+
+%% Data Import
+% import rocket parameters
+rocketParams = readmatrix("../Inputs/CopperheadParameters.xlsx");
+
+% import wind data
 windData = readmatrix("Inputs/WindData.xlsx");
 windDataInput = parseWind(windData, month);
 
 %import atmosphere;
 atmosphere = readmatrix("Inputs/AtmosphereModel.csv");
 
-%create an array of the center of mass, mass, and moment of inertia of the
-%rocket
+%create an array of the CoM, mass, and MoI of the rocket
 [totCoM, totMass, MoI] = VariableCoM(dt, tspan, 0);
 
 % additional options for RK4 (stop after reaching final condition)
 opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, endCondition));
 
+%% Aero Calcs
+
+% get Cd vs mach array from CdModel
+dragCoeff = CdModel(rocketParams);
+
+% get Cp vs mach array from CpModel
+CoP = CpModel(rocketParams);
+
+% concatenate arrays to get one array of aerodynamic properties
+aeroArray = [dragCoeff CoP(:,2)];
+
 %% RK4:
 tic;
-[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,1), tspan, Init, opt);
+[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,aeroArray,rocketParams,atmosphere,totCoM,totMass,MoI,windDataInput,1), tspan, Init, opt);
 toc;
 
 %% Outputs:
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
-    [~, machArray(k,1), AoArray(k,1), accel(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput);
+    [~, machArray(k,1), AoArray(k,1), accel(k,:)] = RK4Integrator(timeArray(k), out(k,:), aeroArray, rocketParams,atmosphere,totCoM, totMass, MoI, windDataInput);
 end
 
 if strcmpi('on', outputs) == 1
@@ -98,7 +114,6 @@ if strcmpi('on', outputs) == 1
     quatArray = [out(:,10), out(:,11), out(:,12), out(:,13)];
     
     % find end conditions for graphs / animations
-    
     if isempty((find(posArray(:,1) < 0, 1)))
         endTime = length(AoArray) * dt;
     else

@@ -1,8 +1,8 @@
-function [dragCoeff] = dragModel()
+function [dragCoeff] = CdModel(rocketParams)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
-% Title: dragModel
+% Title: CdModel
 % Author: Caleb Rice - Created: 2/26/2025
 %
 % Description: Calculates drag coefficient of the rocket vs mach number using formulas for

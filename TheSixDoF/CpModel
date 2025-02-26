@@ -1,0 +1,16 @@
+function [CoP] = CpModel(rocketParams)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PSP FLIGHT DYNAMICS:
+%
+% Title: CpModel
+% Author: Caleb Rice - Created: 2/26/2025
+%
+% Description: Calculates center of pressure of the rocket vs mach number using formulas
+%              from Barrowman/OpenRocket Thesis
+%
+% Inputs:
+% rocketParams - array, rocket dimensions/parameters, from .xlsx or passed from MainRK4
+%
+% Outputs:
+% CoP - array, center of pressure vs mach #
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

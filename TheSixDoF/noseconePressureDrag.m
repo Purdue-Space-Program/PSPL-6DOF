@@ -1,9 +1,24 @@
-%% Caleb Rice
-% creating piecewise drag models for nose cone pressure drag
-
 function dragFunc = noseconePressureDrag(radius, length, param, type)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PSP FLIGHT DYNAMICS:
+%
+% Title: noseconePressureDrag
+% Author: Caleb Rice - Created: 2/26/2025
+%
+% Description: Calculates pressure drag coefficient vs mach for the nosecone given the
+%              radius, length, shape parameter, and shape
+%
+% Inputs:
+% radius - scalar, nosecone radius [m]
+% length - scalar, nosecone length [m]
+% param - scalar, nosecone shape parameter (if applicable) [-]
+% type - scalar, indicates nosecone type (conical, ogive, power, parabolic, LV-Haack) [-]
+%
+% Outputs:
+% dragFunc - array, nosecone pressure drag coefficient vs mach number [-]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % Initialization
+    %% Initialization
     a = sym("a");
     b = sym("b");
     M = sym("M");
@@ -12,6 +27,7 @@ function dragFunc = noseconePressureDrag(radius, length, param, type)
     fineness = length / (2 * radius);
     gamma = 1.4;
 
+    %% Selection Structure & Calculations
     if type == 2
 
         % Subsonic interpolation
