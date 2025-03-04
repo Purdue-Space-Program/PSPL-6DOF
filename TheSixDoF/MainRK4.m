@@ -27,9 +27,7 @@
 
 %% Initialization:
 % clear the console and figures before running the code:
-clear
-clc
-close all
+clear;clc;close all
 
 %% Simulation Settings:
 
@@ -39,10 +37,10 @@ close all
 % set to 'burnout' for burnout
 % set to 'full' for full simulation w/ recovery
 % set to '#.#' for a custom run time (numeric inputs only)
-endCondition = 'burnout';
+endCondition = 'apogee';
 
 %turn outputs on and off
-outputs = 'off';
+outputs = 'on';
 
 % run rotation visualization (outputs must be on also)
 rotationVis = 'off';
@@ -176,7 +174,7 @@ if strcmpi('on', outputs) == 1
 
     colorlist = ["#ff595e", "#ff924c", "#ffbe0b", "#8ac926", "#1982c4", "#6a4c93", "#06402B"];
     
-    figure(1)
+    %figure(1)
     % Earth Frame XYZ position:
     
     hfig = figure;  % save the figure handle in a variable

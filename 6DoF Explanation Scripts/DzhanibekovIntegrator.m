@@ -44,9 +44,9 @@ I = [Ixx,0,0;0,Iyy,0;0,0,Izz] * 1e-9;
 momentVector = zeros(3,1);
 % use euler equations to find the final moments:
 
-momentVector(1) = momentVector(1) - omega(2)*omega(3)*(Jzz-Jyy);
-momentVector(2) = momentVector(2) - omega(1)*omega(3)*(Jxx-Jzz);
-momentVector(3) = momentVector(3) - omega(1)*omega(2)*(Jyy-Jxx);
+momentVector(1) = omega(2)*omega(3)*(Jyy-Jzz);
+momentVector(2) = omega(1)*omega(3)*(Jzz-Jxx);
+momentVector(3) = omega(1)*omega(2)*(Jxx-Jyy);
 
 alpha = inv(J) * momentVector;
 alpha(isnan(alpha)) = 0;

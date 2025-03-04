@@ -20,23 +20,22 @@ function [vecOut] = RotationMatrix(vecIn, quatIn, bodyOrEarth)
 % Outputs:
 % vecOut = 3x1 vector in the converted frame
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%disp(quatIn.')
 
-% do this for some weird ass edge cases
-rotIn = real(quatIn.');
-
-R = quat2dcm(rotIn);
-
-%perform transformation:
-if bodyOrEarth == 0
-    vecOut = R * vecIn;
-
-elseif bodyOrEarth == 1
-    vecOut = R.' * vecIn;
-else
-    fprintf("Input for body or earth frame is invalid\n");
-end
-
+    % make the input real for edge cases in Monte Carlo:
+    rotIn = real(quatIn.');
+    
+    % create the rotation matrix
+    R = quat2dcm(rotIn);
+    
+    %perform transformation:
+    if bodyOrEarth == 0
+        vecOut = R * vecIn;
+    
+    elseif bodyOrEarth == 1
+        vecOut = R.' * vecIn;
+    else
+        fprintf("Input for body or earth frame is invalid\n");
+    end
 end
 
 
