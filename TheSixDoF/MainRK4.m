@@ -39,10 +39,10 @@ close all
 % set to 'burnout' for burnout
 % set to 'full' for full simulation w/ recovery
 % set to '#.#' for a custom run time (numeric inputs only)
-endCondition = 'burnout';
+endCondition = 'apogee';
 
 %turn outputs on and off
-outputs = 'off';
+outputs = 'on';
 
 % run rotation visualization (outputs must be on also)
 rotationVis = 'off';
@@ -51,13 +51,13 @@ rotationVis = 'off';
 month = 'Mar';
 
 % turn wind on and off
-windOnOff = 'on';
+windOnOff = 'off';
 
 % CMS or Rocket 4, more options possible in future
 % possible:
 % CMS
 % R4
-rocket = 'CMS';
+rocket = 'R4';
 
 % create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end condition so no
@@ -94,7 +94,15 @@ Init = [pos;vel;omega;quatVector];
 if strcmpi(rocket, 'CMS') == 1
     rasData = readmatrix("Inputs/RasAeroDataCulled.CSV");
 elseif strcmpi(rocket, 'R4') == 1
-    rasData = readmatrix("RASAero\Final_with_pumps.CSV");
+    rasData = readmatrix("RasAero/Final_with_pumps.CSV");
+else
+end
+
+%import params
+if strcmpi(rocket,'CMS') == 1
+    rocket_params = constant.PARAMS_CMS;
+elseif strcmpi(rocket, 'R4') == 1
+    rocket_params = constant.PARAMS_R4;
 else
 end
 
@@ -114,13 +122,13 @@ opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, endConditio
 
 %% RK4:
 tic;
-[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,windOnOff, rocket, 1), tspan, Init, opt);
+[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,windOnOff, rocket_params, 1), tspan, Init, opt);
 toc;
 
 %% Outputs:
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
-    [~, machArray(k,1), AoArray(k,1), accel(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket);
+    [~, machArray(k,1), AoArray(k,1), accel(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket_params);
 end
 
 if strcmpi('on', outputs) == 1
