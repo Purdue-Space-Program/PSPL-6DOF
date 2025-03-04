@@ -36,12 +36,12 @@ omega = [input(7); input(8); input(9)];
 
 quat = [input(10); input(11); input(12); input(13)];
 
-A          = rocketp.A;
-thrustMag  = rocketp.thrustMag;
-bodyVector = rocketp.bodyVector;
-ExitA      = rocketp.ExitA;
-ExitP      = rocketp.ExitP;
-radius     = rocketp.radius;
+A          = rocketp.A;          % reference area (m^2), as defined by RasAero (cross-sectional area)
+thrustMag  = rocketp.thrustMag;  % thrust of rocket in N.
+bodyVector = rocketp.bodyVector; % vector in the body axis running through the nose.
+ExitA      = rocketp.ExitA;      % exit area of the nozzle [m^2]
+ExitP      = rocketp.ExitP;      % exit pressure of the nozzle [Pa]
+radius     = rocketp.radius;     % radius of rocket [m]
 
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
 
