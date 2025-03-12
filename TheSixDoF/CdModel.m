@@ -9,7 +9,7 @@ function [dragCoeff] = CdModel(rocketParams)
 %              friction, pressure, and parasitic drag from Barrowman/OpenRocket Thesis
 %
 % Inputs:
-% rocketParams - array, rocket dimensions/parameters, from .xlsx or passed from MainRK4
+% rocketParams - array, rocket dimensions & parameters, passed from MainRK4
 %
 % Outputs:
 % dragCoeff - array, drag coefficient vs mach #
@@ -42,7 +42,8 @@ rocketSmoothness = rocketParams(2,5); % specifies surface roughness of rocket bo
 kinematicViscAir = 1.5 * (10 ^ -5); % [m2/s]
 
 % Other Parameters
-mach = 0.01:0.05:5.01;
+velocity = 0.01:5:680.01;
+mach = velocity / 340;
 
 %% Initializations
 % Surface Finishes
@@ -67,7 +68,6 @@ noseconeShapes = [
     "Von Karman"
     "Conical"
     "Ogive"
-    "Elliptical"
     "Parabolic"
     "Power Series"
 ];
@@ -85,7 +85,7 @@ finShapes = [
 
 % fin leading edge and trailing edge angles
 if finShape < 1 || finShape > 3
-    fprintf("ERROR: finShape must be between 1 and 3")
+    fprintf("ERROR: finShape must be between 1 and 3\n")
 elseif finShapes(finShape) == "Delta"
     leadingAngle = atan((rootChord - tipChord) / finHeight);
 elseif finShapes(finShape) == "Trapezoidal - Symmetric"
@@ -106,7 +106,7 @@ elseif finShapes(finShape) == "Trapezoidal - Assymmetric"
         trailingEdgeLength = finHeight * tan(trailingAngle);
         leadingAngle = atan((rootChord - trailingEdgeLength - tipChord) / finHeight);
     else
-        fprintf("ERROR: the angle measure in radians must be followed by a single space and then either LE or TE and nothing else")
+        fprintf("ERROR: the angle measure in radians must be followed by a single space and then either LE or TE and nothing else\n")
     end
 end
 
@@ -126,10 +126,6 @@ elseif noseconeShapes(noseconeType) == "Ogive"
     parameter = input("Input a value between 0 and 1 for the ogive parameter (0 is conical, 1 is tangent ogive). k = ", "s");
     r = symfun(sqrt((((L^2 + R^2) * (((2 - K) * L)^2 + (K * R)^2)) / (4 * (K * R)^2)) - ((L / K) - x)^2) - sqrt((((L^2 + R^2) * (((2 - K) * L)^2 + (K * R)^2)) / (4 * (K * R)^2)) - (L / K)^2), [x L R K]);
 
-elseif noseconeShapes(noseconeType) == "Elliptical"
-    parameter = 0;
-    r = symfun(R * sqrt(1 - (1 - (x / L))^2), [x L R K]);
-
 elseif noseconeShapes(noseconeType) == "Parabolic"
     parameter = input("Input a value between 0 and 1 for the parabolic parameter (0 is conical, 1 is a full parabola). k = ", "s");
     r = symfun(R * (x / L) * ((1 - K * (x / L)) / (2 - K)), [x L R K]);
@@ -139,7 +135,7 @@ elseif noseconeShapes(noseconeType) == "Power Series"
     r = symfun(R * (x / L)^K, [x L R K]);
 
 else
-    fprintf("ERROR: invalid nosecone shape, noseconeType must be between 1 and 6.")
+    fprintf("ERROR: invalid nosecone shape, noseconeType must be between 1 and 5\n")
 end
 
 r(x) = r(x, noseconeLength, bodyDia/2, parameter);
@@ -154,7 +150,7 @@ wetArea = bodyWetArea + 2 * finCount * finWetArea;
 
 %% Friction Drag
 critReynolds = 51 * ((10^-6) * roughnessValues(rocketSmoothness) / bodyLength) ^ -1.039;
-reynolds = (velocity .* bodyLength) ./ kinematicViscAir;
+reynolds = (velocity .* bodyLength) ./ kinematicViscAir;    % not fully accurate since speed of sound & viscosity will vary with altitude
 CF = zeros([1 length(velocity)]);
 
 for x = 1:length(velocity)
@@ -179,13 +175,13 @@ for x = 1:length(velocity)
             CF(x) = roughnessLimitedFriction * (1 - 0.1 * mach(x) ^ 2);         % subsonic roughness-limited friction coeff
 
         elseif supersonicTurbulent >= supersonicRoughnessLimited
-            CF(x) = supersonicTurbulent;                                        % turbulent used if it is larger than
+            CF(x) = supersonicTurbulent;                                        % turbulent used if it is larger than roughness-limited
 
         else
             CF(x) = supersonicRoughnessLimited;                                 % supersonic roughness-limited friction coeff
         end
     else
-        fprintf("ERROR: reynolds number was outside the allowed bounds (not even sure how you did this tbh)")
+        fprintf("ERROR: reynolds number was outside the allowed bounds (not even sure how you did this tbh)\n")
     end
 end
 
@@ -207,12 +203,12 @@ for x = 1:length(velocity)
 end
 
 % fins
-CLE = 1:length(mach);
-
+CLE = zeros([1 length(mach)]);
+CLE_blunt = 0.85 * stagPress;
 if leadingEdgeProfile < 1 || leadingEdgeProfile > 2
-    fprintf("ERROR: fin type must be either 1 or 2")
+    fprintf("ERROR: fin type must be either 1 or 2\n")
 elseif finProfiles(leadingEdgeProfile) == "Blunt"
-    CLE = 0.85 * stagPress;
+    CLE = CLE_blunt;
 elseif finProfiles(leadingEdgeProfile) == "Rounded"
     for x = 1:length(mach)
         if mach(x) < 0.9
@@ -228,7 +224,11 @@ end
 CLE = CLE * (cos(leadingAngle) ^ 2);
 
 % nose cone
-noseconeDragFunc = noseconePressureDrag(bodyDia / 2, noseconeLength, parameter, noseconeType);
+noseconeDragFunc = noseconePressureDrag(bodyDia / 2, noseconeLength, parameter, noseconeType, noseconeFineness, stagPress);
+if noseconeDragFunc == "ERROR"
+    fprintf("ERROR: noseconePressureDrag returned invalid\n")
+    quit;
+end
 noseconePressure = noseconeDragFunc(mach);
 
 % final scaling
