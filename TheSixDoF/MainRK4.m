@@ -43,7 +43,7 @@ endCondition = 'apogee';
 outputs = 'on';
 
 % run rotation visualization (outputs must be on also)
-rotationVis = 'off';
+rotationVis = 'on';
 
 % change the month for wind data (First 3 letters of month):
 month = 'Mar';
@@ -90,7 +90,7 @@ Init = [pos;vel;omega;quatVector];
 %import aerodynamics data
 
 if strcmpi(rocket, 'CMS') == 1
-    rasData = readmatrix("Inputs/RasAeroDataCulled.CSV");
+    rasData = readmatrix("Inputs/RasAeroDataCulled2.CSV");
 elseif strcmpi(rocket, 'R4') == 1
     rasData = readmatrix("RASAero\Final_with_pumps.CSV");
 else
@@ -178,13 +178,10 @@ if strcmpi('on', outputs) == 1
     % Earth Frame XYZ position:
     
     hfig = figure;  % save the figure handle in a variable
-    
     fname = 'Cartesian Elements';
     
     picturewidth = 20; % set this parameter and keep it forever
     hw_ratio = .6; % feel free to play with this ratio
-    set(findall(hfig,'-property','FontSize'),'FontSize',16) % adjust fontsize to your document
-    set(hfig,'DefaultLineLineWidth',1)
     
     hold on
     plot(timeArray, posArray(:,1), 'Color', colorlist(1));
@@ -209,9 +206,6 @@ if strcmpi('on', outputs) == 1
     
     grid on
     
-    set(findall(hfig,'-property','Box'),'Box','off') % optional
-    set(findall(hfig,'-property','Interpreter'),'Interpreter','latex') 
-    set(findall(hfig,'-property','TickLabelInterpreter'),'TickLabelInterpreter','latex')
     set(hfig,'Units','centimeters','Position',[3 3 picturewidth hw_ratio*picturewidth])
     pos = get(hfig,'Position');
     set(hfig,'PaperPositionMode','Auto','PaperUnits','centimeters','PaperSize',[pos(3), pos(4)])
@@ -219,7 +213,7 @@ if strcmpi('on', outputs) == 1
     %print(hfig,fname,'-dpng','-r300')
     
     % Euler Parameters:
-    figure(3)
+    hfig = figure;
     plot(timeArray, quatArray);
     xlim([0,endTime]);
     title("Euler Parameters")
@@ -228,7 +222,7 @@ if strcmpi('on', outputs) == 1
     legend('q0', 'q1', 'q2', 'q3');
     
     % Angle of Attack:
-    figure(4)
+    hfig = figure;
     plot(timeArray, AoArray);
     xlim([0,endTime]);
     title("Angle of Attack")
@@ -236,7 +230,7 @@ if strcmpi('on', outputs) == 1
     ylabel("Angle of Attack [deg]")
     
     % Rocket Trajectory Plot:
-    figure(5)
+    hfig = figure;
     plot3(posArray(1:int32(endTime / dt),3), posArray(1:int32(endTime / dt),2), posArray(1:int32(endTime / dt),1))
     % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
     % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
@@ -251,7 +245,7 @@ if strcmpi('on', outputs) == 1
 
     if strcmpi('on', rotationVis) == 1
         % run the rotation visualizer script
-        playbackSpeed = 2;
+        playbackSpeed = 1;
         quatArray = quatArray';
         posArray = posArray';
         

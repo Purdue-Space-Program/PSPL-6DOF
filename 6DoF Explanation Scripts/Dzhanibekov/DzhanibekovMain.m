@@ -38,6 +38,7 @@ vel = [0;0;0];
 angleVector = [0;0;0];
 % initial rotation rate(x rate, y rate, z rate)
 omega = [0.05;0.05;pi];
+
 %initalize the quaternion based on the euler angle input:
 quatVector = eul2quat(angleVector.', "XYZ").';
 % initial state vector

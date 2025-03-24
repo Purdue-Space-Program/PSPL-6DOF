@@ -1,5 +1,4 @@
 function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, J, wind, windOnOff, rocket, params)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator
@@ -26,7 +25,6 @@ function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmospher
 %
 % Outputs:
 % out = derivative of state vector [m/s|m/s^2|rad/s^2|unitless^2]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pos = [input(1);input(2);input(3)];
 
@@ -110,6 +108,11 @@ mach = norm(vel) / a;
 machTable = rasData(1:300,1); % mach values from 0.01 to 3
 cDTable = rasData(1:300,3); % coefficient of drag
 
+% cL vs. AoA:
+cLAoA0 = rasData(1:300, 6);
+cLAoA2 = rasData(301:600, 6);
+cLAoA4 = rasData(601:900, 6);
+
 % find cD matching the closest mach value to table
 [~, machIndex] = min(abs(machTable-mach));
 cD = cDTable(machIndex);
@@ -137,19 +140,34 @@ end
 % previously gathered. Currently there is no dependence on mach either,
 % which should be implemented at some point
 
-cL = min(1/8 * AoA, 2);
+% find the lift coeff. at closest mach number
+cL0 = cLAoA0(machIndex);
+cL2 = cLAoA2(machIndex);
+cL4 = cLAoA4(machIndex);
+
+if AoA <= 2
+    cL = interp1([0,2],[cL0, cL2], AoA);
+elseif AoA > 2 && AoA <= 4
+    cL = interp1([2,4],[cL2, cL4], AoA);
+else
+    slope = (cL4 - cL0) / 4;
+    cL = min(slope * AoA, 4);
+end
+
+%cL = min(1/8 * AoA, 2);
 
 % these act around the center of pressure, which is given in RasAero,
-cPTable = rasData(1:300,13); % center of pressure in inches, defined from nose
+cPTable = rasData(1:300,7); % center of pressure in inches, defined from nose
 cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
 
 [~, machIndex2] = min(abs(machTable-mach));
 
 cP = cPTableMetric(machIndex2);
 
-% do some vector math to find the lift direction:
+%find the magnitude of lift
 lift = (0.5 * rho* norm(windVel)^2 * A * cL);
 
+% do some vector math to find the lift direction:
 liftDir = cross(cross(windVel, bodyVectorEarth), windVel) / norm(cross(cross(windVel,bodyVectorEarth),windVel));
 
 liftForce = lift * liftDir;
@@ -164,8 +182,8 @@ liftForceBody = RotationMatrix(liftForce, quat, 0);
 dragDir = -windVel / norm(windVel);
 dragMag = (0.5 * rho * norm(windVel)^2 * A * cD);
 
-% implement a simple quadratic model for drag increase with AoA:
-dragMag = min(dragMag + 0.3*(cL)^2, 5 * dragMag);
+% implement a simple drag polar model for drag increase with AoA:
+dragMag = dragMag + 0.5*(cL)^2;
 
 dragForce = dragDir * dragMag;
 dragForce(isnan(dragForce)) = 0;
@@ -252,13 +270,10 @@ dragMomentBody = cross(AeroMomentArm,dragForceBody);
 %% Roll Moment Test:
 
 finCpLocation = 0.02486256; % 1/3 of the span of fins [m]
-missAlpha = 1; % [degrees]
-coefficiantLift = 0.0005 * missAlpha;
+missAlpha = 0.1; % [degrees]
+coefficientLift = 5e-5 * missAlpha;
 
-missAlpha = 0; %degrees
-coefficiantLift = 0.0005*missAlpha;
-
-forceRoll = 3 / 2 * coefficiantLift * rho * norm(vel)^2;
+forceRoll = 3 / 2 * coefficientLift * rho * norm(vel)^2;
 rollMomentBody = (radius + finCpLocation) * forceRoll * bodyVector;
 
 momentVector = liftMomentBody + dragMomentBody + rollMomentBody; %+ paraMomentBody;
