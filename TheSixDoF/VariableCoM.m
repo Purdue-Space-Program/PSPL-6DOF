@@ -1,4 +1,4 @@
-function [totCoM, totMass, MoI] = VariableCoM(dt, tspan, graph)
+%function [totCoM, totMass, MoI] = VariableCoM(dt, tspan, graph)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
@@ -17,20 +17,19 @@ function [totCoM, totMass, MoI] = VariableCoM(dt, tspan, graph)
 %         1 will output visuals, 0 will not
 %
 % Outputs:
-% totCoM  = array of all center of mass values for the rocket with respect
-%           to time [s|m]
-% totMass = array of all total mass values for the rocket with respect to
-%           time
+% totCoM  = array of (time, x coordinate of center of mass)
+% totMass = array of (time, total mass)
+% MoI     = array of (3x3 moment of inertia tensor)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Individual testing
     % Comment the function header out, uncomment this for testing
     % Uncomment function header, comment this out for normal use
-% dt = 0.1;
-% time = 500;
-% arrayLength = (time / dt);
-% tspan = linspace(0,time,arrayLength+1);
-% graph = 1;
+dt = 0.1;
+time = 500;
+arrayLength = (time / dt);
+tspan = linspace(0,time,arrayLength+1);
+graph = 0;
 
 %% Conversions
 
@@ -97,6 +96,7 @@ loxCoM = zeros(length(tspan),1);        % Lox CoM [m]
 fuelCoM = zeros(length(tspan),1);       % Fuel CoM [m]
 totCoM = zeros(length(tspan),2);        % Total CoM [m]
 totMass = zeros(length(tspan),2);       % Total Mass [m]
+MoI = zeros(length(tspan),3,3);         % Moment of Inertia
 
 %% Initial Calculations
 
@@ -213,13 +213,22 @@ for i = 1:length(tspan)
         totCoM(i,1) = tspan(i);
         totMass(i,1) = tspan(i);
     end
+    % Update inertia
+    com = totCoM(i,2);
+    MoI(i,1,1) = 1/2 * totMass(i,2) * (tankOD/2)^2;
+    acc = 0;
+    acc = acc + loxMassArr(i) * (1/4*(tankOD/2)^2 + 1/12*loxTHeight^2 + (loxCoM(i)-com)^2);
+    acc = acc + fuelMassArr(i) * (1/4*(tankOD/2)^2 + 1/12*fuelTHeight^2 + (fuelCoM(i)-com)^2);
+    acc = acc + engineMass * (1/4*(tankOD/2)^2 + 1/12*engineHeight^2 + (engineHFore-com)^2);
+    acc = acc + finCanMass * (1/4*(tankOD/2)^2 + 1/12*finCanHeight^2 + (finCanHFore-com)^2);
+    acc = acc + midAFMass * (1/4*(tankOD/2)^2 + 1/12*midAFHeight^2 + (midAFHFore-com)^2);
+    acc = acc + heTMass * (1/4*(tankOD/2)^2 + 1/12*heHeight^2 + (heHFore-com)^2);
+    %the nose is currently a cylinder
+    acc = acc + noseMass * (1/4*(tankOD/2)^2 + 1/12*noseHeight^2 + (noseHFore-com)^2);
+    
+    MoI(i,2,2) = acc;
+    MoI(i,3,3) = acc;
 end
-
-Jxx = 1;
-Jyy = 200;
-Jzz = 200;
-
-MoI = [Jxx,0,0;0,Jyy,0;0,0,Jzz];
 
 %% Optional CoM graphing output
 if graph == 1
