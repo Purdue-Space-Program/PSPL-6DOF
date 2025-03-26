@@ -1,16 +1,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
-%
+% 
 % Title: MainRK4
 % Author: Hudson Reynolds - Created: 9/21/2024
-% Last Modified: 1-28-2025
-%
+% Last Modified: 3-26-2025
+% 
 % Description: This is the overarching function that runs the 6-DoF,
 % calling all neccesary functions to run the simulation. The overarching
 % simulation structure uses an RK4 structure using ODE45.
-%
+% 
 % Inputs: N/A
-%
+% 
 % Outputs:
 % Graph and value outputs. See subfunctions for specific outputs
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,16 +78,16 @@ tspan = linspace(0,time,arrayLength+1);
 pos = [0;0;0];
 % velocity (xdot,ydot,zdot)
 vel = [0;0;0];
-% initial angle(x angle, y angle, z angle)
-angleVector = [0;0.1;0.1];
-% initial rotation rate(x rate, y rate, z rate)
+% initial angle (z angle, y angle, x angle) - following 3-2-1 sequence
+angleVector = [0.1;0.1;0];
+% initial rotation rate (x rate, y rate, z rate)
 omega = [0;0;0];
-%initalize the quaternion based on the euler angle input:
-quatVector = eul2quat(angleVector.', "XYZ").';
+% initalize the quaternion based on the euler angle input:
+quatVector = eul2quat(angleVector.', "ZYX").';
 % initial state vector
 Init = [pos;vel;omega;quatVector];
 
-%import aerodynamics data
+% import aerodynamics data
 
 if strcmpi(rocket, 'CMS') == 1
     rasData = readmatrix("Inputs/RasAeroDataCulled2.CSV");
@@ -96,15 +96,15 @@ elseif strcmpi(rocket, 'R4') == 1
 else
 end
 
-%import wind data
+% import wind data
 windData = readmatrix("Inputs/WindData.xlsx");
 windDataInput = parseWind(windData, month);
 
-%import atmosphere;
+% import atmosphere;
 atmosphere = readmatrix("Inputs/AtmosphereModel.csv");
 
-%create an array of the center of mass, mass, and moment of inertia of the
-%rocket
+% create an array of the center of mass, mass, and moment of inertia of the
+% rocket
 [totCoM, totMass, MoI] = VariableCoM(dt, tspan, 0);
 
 % additional options for RK4 (stop after reaching final condition)
