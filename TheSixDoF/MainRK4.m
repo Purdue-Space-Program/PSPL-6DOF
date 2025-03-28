@@ -1,4 +1,3 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 % 
 % Title: MainRK4
@@ -13,7 +12,6 @@
 % 
 % Outputs:
 % Graph and value outputs. See subfunctions for specific outputs
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% KNOWN ISSUES:
 % post apogee attitude dynamics are not fully finished, attitude in this
