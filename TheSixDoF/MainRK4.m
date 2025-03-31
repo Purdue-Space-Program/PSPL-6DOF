@@ -85,7 +85,7 @@ atmosphere = readmatrix("Inputs/AtmosphereModel.csv");
 [totCoM, totMass, MoI] = VariableCoM(dt, tspan, 0);
 
 % additional options for RK4 (stop after reaching final condition)
-opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, endCondition));
+opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, endCondition), 'RelTol',1e-6);
 
 %% RK4:
 tic;
