@@ -26,7 +26,7 @@
     % Comment the function header out, uncomment this for testing
     % Uncomment function header, comment this out for normal use
 dt = 0.1;
-time = 500;
+time = 13;
 arrayLength = (time / dt);
 tspan = linspace(0,time,arrayLength+1);
 graph = 0;
@@ -216,18 +216,18 @@ for i = 1:length(tspan)
     % Update inertia
     com = totCoM(i,2);
     MoI(i,1,1) = 1/2 * totMass(i,2) * (tankOD/2)^2;
-    acc = 0;
-    acc = acc + loxMassArr(i) * (1/4*(tankOD/2)^2 + 1/12*loxTHeight^2 + (loxCoM(i)-com)^2);
-    acc = acc + fuelMassArr(i) * (1/4*(tankOD/2)^2 + 1/12*fuelTHeight^2 + (fuelCoM(i)-com)^2);
-    acc = acc + engineMass * (1/4*(tankOD/2)^2 + 1/12*engineHeight^2 + (engineHFore-com)^2);
-    acc = acc + finCanMass * (1/4*(tankOD/2)^2 + 1/12*finCanHeight^2 + (finCanHFore-com)^2);
-    acc = acc + midAFMass * (1/4*(tankOD/2)^2 + 1/12*midAFHeight^2 + (midAFHFore-com)^2);
-    acc = acc + heTMass * (1/4*(tankOD/2)^2 + 1/12*heHeight^2 + (heHFore-com)^2);
+    transverseMoI = 0;
+    transverseMoI = transverseMoI + loxMassArr(i) * (1/4*(tankOD/2)^2 + 1/12*loxTHeight^2 + (loxCoM(i)-com)^2);
+    transverseMoI = transverseMoI + fuelMassArr(i) * (1/4*(tankOD/2)^2 + 1/12*fuelTHeight^2 + (fuelCoM(i)-com)^2);
+    transverseMoI = transverseMoI + engineMass * (1/4*(tankOD/2)^2 + 1/3*engineHeight^2 + (engineHFore-com)^2);
+    transverseMoI = transverseMoI + finCanMass * (1/4*(tankOD/2)^2 + 1/3*finCanHeight^2 + (finCanHFore-com)^2);
+    transverseMoI = transverseMoI + midAFMass * (1/4*(tankOD/2)^2 + 1/3*midAFHeight^2 + (midAFHFore-com)^2);
+    transverseMoI = transverseMoI + heTMass * (1/4*(tankOD/2)^2 + 1/3*heHeight^2 + (heHFore-com)^2);
     %the nose is currently a cylinder
-    acc = acc + noseMass * (1/4*(tankOD/2)^2 + 1/12*noseHeight^2 + (noseHFore-com)^2);
+    transverseMoI = transverseMoI + noseMass * (1/4*(tankOD/2)^2 + 1/3*noseHeight^2 + (noseHFore-com)^2);
     
-    MoI(i,2,2) = acc;
-    MoI(i,3,3) = acc;
+    MoI(i,2,2) = transverseMoI;
+    MoI(i,3,3) = transverseMoI;
 end
 
 %% Optional CoM graphing output
