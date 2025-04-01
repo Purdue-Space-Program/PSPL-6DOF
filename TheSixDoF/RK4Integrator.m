@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, J, wind, windOnOff, rocket, params)
+function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, InertMatrix, wind, windOnOff, rocket, params)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator
@@ -243,10 +243,15 @@ accel = forceVector / mass;
 %fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / 0.168275);
 
 %% Moments:
-% just putting in values based on a cylinder moment of inertia for now.
-Jxx = 1;
-Jyy = 200;
-Jzz = 200;
+% pull the moments from the CoM MoI data:
+
+Jxx = InertMatrix(timeIndexMass,1,1);
+Jyy = InertMatrix(timeIndexMass,2,2);
+Jzz = InertMatrix(timeIndexMass,3,3);
+
+I = [Jxx, 0, 0;
+     0, Jyy, 0;
+     0, 0, Jzz];
 
 %% Aerodynamic Moments:
 
@@ -271,7 +276,7 @@ dragMomentBody = cross(AeroMomentArm,dragForceBody);
 
 finCpLocation = 0.02486256; % 1/3 of the span of fins [m]
 missAlpha = 0.1; % [degrees]
-coefficientLift = 5e-5 * missAlpha;
+coefficientLift = 5e-6 * missAlpha;
 
 forceRoll = 3 / 2 * coefficientLift * rho * norm(vel)^2;
 rollMomentBody = (radius + finCpLocation) * forceRoll * bodyVector;
@@ -284,7 +289,7 @@ momentVector(1) = momentVector(1) - omega(2)*omega(3)*(Jzz-Jyy);
 momentVector(2) = momentVector(2) - omega(1)*omega(3)*(Jxx-Jzz);
 momentVector(3) = momentVector(3) - omega(1)*omega(2)*(Jyy-Jxx);
 
-alpha = inv(J) * momentVector;
+alpha = inv(I) * momentVector;
 alpha(isnan(alpha)) = 0;
 
 wx = omega(1);
