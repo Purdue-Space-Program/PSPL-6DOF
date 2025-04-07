@@ -25,11 +25,11 @@ function [totCoM, totMass, MoI] = VariableCoM(dt, tspan, graph)
 %% Individual testing
     % Comment the function header out, uncomment this for testing
     % Uncomment function header, comment this out for normal use
-dt = 0.1;
-time = 13;
-arrayLength = (time / dt);
-tspan = linspace(0,time,arrayLength+1);
-graph = 0;
+% dt = 0.1;
+% time = 13;
+% arrayLength = (time / dt);
+% tspan = linspace(0,time,arrayLength+1);
+% graph = 1;
 
 %% Conversions
 
@@ -267,10 +267,28 @@ if graph == 1
     plot(tspan, fuelRelCoM, lineWidth=1.5)
     hold on
     plot(tspan, fuelRelCoMIndividual, lineWidth=1.5)
+   
     text(25,0.45,txtFuel)
     grid on
     title("fuelCoM from top of tank")
     xlabel("time")
     ylabel("fuelCoM from top of fuel tank")
     legend("From top", "From bottom", location="best")
+    hold off
+
+    figure(4)
+    plot(tspan, MoI(:,1,1))
+    hold on
+    title('Dynamic MoI values')
+    xlabel('time [s]')
+    ylabel('MoI $I_{xx}$ [$kg \cdot m^2$]')
+
+    yyaxis right
+    
+    plot(tspan,MoI(:,2,2))
+    ylabel('MoI $I_{yy}$ [$kg \cdot m^2$]')
+
+
+    
+    legend('$I_{xx}$','$I_{yy}$/$I_{zz}$')
 end
