@@ -245,13 +245,13 @@ accel = forceVector / mass;
 %% Moments:
 % pull the moments from the CoM MoI data:
 
-Jxx = InertMatrix(timeIndexMass,1,1);
-Jyy = InertMatrix(timeIndexMass,2,2);
-Jzz = InertMatrix(timeIndexMass,3,3);
+Ixx = InertMatrix(timeIndexMass,1,1);
+Iyy = InertMatrix(timeIndexMass,2,2);
+Izz = InertMatrix(timeIndexMass,3,3);
 
-I = [Jxx, 0, 0;
-     0, Jyy, 0;
-     0, 0, Jzz];
+I = [Ixx, 0, 0;
+     0, Iyy, 0;
+     0, 0, Izz];
 
 %% Aerodynamic Moments:
 
@@ -285,21 +285,25 @@ momentVector = liftMomentBody + dragMomentBody + rollMomentBody; %+ paraMomentBo
 
 % use euler equations to find the final moments:
 
-momentVector(1) = momentVector(1) - omega(2)*omega(3)*(Jzz-Jyy);
-momentVector(2) = momentVector(2) - omega(1)*omega(3)*(Jxx-Jzz);
-momentVector(3) = momentVector(3) - omega(1)*omega(2)*(Jyy-Jxx);
+omegaX = omega(1);
+omegaY = omega(2);
+omegaZ = omega(3);
+
+momentVector(1) = momentVector(1) - omegaY*omegaZ*(Izz-Iyy);
+momentVector(2) = momentVector(2) - omegaX*omegaZ*(Ixx-Izz);
+momentVector(3) = momentVector(3) - omegaX*omegaY*(Iyy-Ixx);
 
 alpha = inv(I) * momentVector;
 alpha(isnan(alpha)) = 0;
 
-wx = omega(1);
-wy = omega(2);
-wz = omega(3);
+omegaX = omega(1);
+omegaY = omega(2);
+omegaZ = omega(3);
 
-B = [0, -wx, -wy, -wz;
-     wx, 0, wz, -wy;
-     wy, -wz, 0, wx;
-     wz, wy, -wx, 0];
+B = [0, -omegaX, -omegaY, -omegaZ;
+     omegaX, 0, omegaZ, -omegaY;
+     omegaY, -omegaZ, 0, omegaX;
+     omegaZ, omegaY, -omegaX, 0];
 
 quatRates = 0.5 * B * quat;
 
