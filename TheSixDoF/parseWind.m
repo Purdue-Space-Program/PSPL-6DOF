@@ -24,53 +24,57 @@ function [windDataOut] = parseWind(windData, month)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %output the wind height in meters
-windHeight = windData(:,1) * 100;
+%windHeight = windData(:,1) * 100;
 
-switch lower(month)
-    case 'jan'
-        mag = 2;
-        dir = 3;
-    case 'feb'
-        mag = 4;
-        dir = 5;
-    case 'mar'
-        mag = 6;
-        dir = 7;
-    case 'apr'
-        mag = 8;
-        dir = 9;
-    case 'may'
-        mag = 10;
-        dir = 11;
-    case 'jun'
-        mag = 12;
-        dir = 13;
-    case 'jul'
-        mag = 14;
-        dir = 15;
-    case 'aug'
-        mag = 16;
-        dir = 17;
-    case 'sep'
-        mag = 18;
-        dir = 19;
-    case 'oct'
-        mag = 20;
-        dir = 21;
-    case 'nov'
-        mag = 22;
-        dir = 23;
-    case 'dec'
-        mag = 24;
-        dir = 25;
-end
+%switch lower(month)
+%    case 'jan'
+%        mag = 2;
+%        dir = 3;
+%    case 'feb'
+%        mag = 4;
+%        dir = 5;
+%    case 'mar'
+%        mag = 6;
+%        dir = 7;
+%    case 'apr'
+%        mag = 8;
+%        dir = 9;
+%    case 'may'
+%        mag = 10;
+%        dir = 11;
+%    case 'jun'
+%        mag = 12;
+%        dir = 13;
+%    case 'jul'
+%        mag = 14;
+%        dir = 15;
+%    case 'aug'
+%        mag = 16;
+%        dir = 17;
+%    case 'sep'
+%        mag = 18;
+%        dir = 19;
+%    case 'oct'
+%        mag = 20;
+%        dir = 21;
+%    case 'nov'
+%        mag = 22;
+%        dir = 23;
+%    case 'dec'
+%        mag = 24;
+%        dir = 25;
+%end
 
 
-windMag = windData(:,mag);
-windMag(isnan(windMag)) = 0;
+%windMag = windData(:,mag);
+%windMag(isnan(windMag)) = 0;
 
-windDir = windData(:,dir);
-windDir(isnan(windDir)) = 0;
+%windDir = windData(:,dir);
+%windDir(isnan(windDir)) = 0;
+
+windHeight = windData(:, 4); 
+windMag = (windData(:, 9))/10;
+windDir = windData(:, 8);
 
 windDataOut = [windHeight, windMag, windDir];
 

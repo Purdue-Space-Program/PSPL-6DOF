@@ -95,7 +95,7 @@ else
 end
 
 % import wind data
-windData = readmatrix("Inputs/WindData.xlsx");
+windData = readmatrix("4-9-2025 wind data edwards afb.txt");
 windDataInput = parseWind(windData, month);
 
 % import atmosphere;
