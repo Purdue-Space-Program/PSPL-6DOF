@@ -14,29 +14,31 @@ function [dragCoeff] = CdModel(rocketParams)
 % Outputs:
 % dragCoeff - array, drag coefficient vs mach #
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+close all
+clc
 
 %% Inputs
 
 % Rocket Parameters
-rocketParams = readmatrix("../Inputs/CopperheadParameters.xlsx");
+rocketParams = readmatrix("TheSixDoF\Inputs\CopperheadParameters.xlsx")
 
-bodyDia = rocketParams(2,3);
-bodyLength = rocketParams(2,2);
+bodyDia = rocketParams(3);
+bodyLength = rocketParams(2);
 bodyFineness = bodyLength / bodyDia;
 
-noseconeLength = rocketParams(2,13);
-noseconeType = rocketParams(2,14);
+noseconeLength = rocketParams(13);
+noseconeType = rocketParams(14);
 noseconeFineness = noseconeLength / bodyDia;
 
-finCount = rocketParams(2,6);
-finHeight = rocketParams(2,7);
-tipChord = rocketParams(2,8);
-rootChord = rocketParams(2,9);
-finThickness = rocketParams(2,12);
-leadingEdgeProfile = rocketParams(2,10);
-finShape = rocketParams(2,11);
+finCount = rocketParams(6);
+finHeight = rocketParams(7);
+tipChord = rocketParams(8);
+rootChord = rocketParams(9);
+finThickness = rocketParams(12);
+leadingEdgeProfile = rocketParams(10);
+finShape = rocketParams(11);
 
-rocketSmoothness = rocketParams(2,5); % specifies surface roughness of rocket body
+rocketSmoothness = rocketParams(5); % specifies surface roughness of rocket body
 
 % Environment
 kinematicViscAir = 1.5 * (10 ^ -5); % [m2/s]
@@ -188,7 +190,6 @@ end
 CFriction = CF .* (((1 + (1 / (2 * bodyFineness))) * bodyWetArea + (1 + (2 * finThickness / finMAC)) * (2 * finCount * finWetArea)) / wetArea);
 
 %% Pressure Drag
-
 % base drag
 baseDrag = zeros([1 length(velocity)]);
 stagPress = zeros([1 length(velocity)]);
@@ -240,8 +241,40 @@ dragCoeff = CPressure + CFriction;
 
 %% Plotting
 figure(1)
-title("Total Drag Coefficient")
-plot(mach, dragCoeff, "r.")
+subplot(2,2,1)
+title("Total Drag")
+hold on
+plot(mach, dragCoeff, "r-")
 xlabel("Mach Number")
 ylabel("Drag Coefficient")
 grid on
+hold off
+
+subplot(2,2,2)
+title("Nose Cone Pressure Drag")
+hold on
+plot(mach, noseconePressure, "b-")
+xlabel("Mach Number")
+ylabel("Drag Coefficient")
+grid on
+hold off
+
+subplot(2,2,3)
+title("Fin Pressure Drag")
+hold on
+plot(mach, finsPressure, "g-")
+xlabel("Mach Number")
+ylabel("Drag Coefficient")
+grid on
+hold off
+
+subplot(2,2,4)
+title("Friction vs Pressure Drag")
+hold on
+plot(mach, CFriction, "k-", mach, CPressure, 'm-')
+xlabel("Mach Number")
+ylabel("Drag Coefficient")
+grid on
+hold off
+
+sgtitle("Drag From Various Sources")
