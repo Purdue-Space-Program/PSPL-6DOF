@@ -1,4 +1,4 @@
-function [dragCoeff] = CdModel(rocketParams)
+function [dragCoeff] = CdModel()
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
@@ -19,26 +19,26 @@ clc
 
 %% Inputs
 
-% Rocket Parameters
-rocketParams = readmatrix("TheSixDoF\Inputs\CopperheadParameters.xlsx")
+% Rocket Parameters, all units are metric (m, N)
+%rocketParams = readmatrix("TheSixDoF\Inputs\CopperheadParameters.xlsx")
 
-bodyDia = rocketParams(3);
-bodyLength = rocketParams(2);
+bodyDia = 0.219075;
+bodyLength = 6.76656;
 bodyFineness = bodyLength / bodyDia;
 
-noseconeLength = rocketParams(13);
-noseconeType = rocketParams(14);
+noseconeLength = 1.1;
+noseconeType = 2;
 noseconeFineness = noseconeLength / bodyDia;
 
-finCount = rocketParams(6);
-finHeight = rocketParams(7);
-tipChord = rocketParams(8);
-rootChord = rocketParams(9);
-finThickness = rocketParams(12);
-leadingEdgeProfile = rocketParams(10);
-finShape = rocketParams(11);
+finCount = 3;
+finHeight = 0.15;
+tipChord = 0.075;
+rootChord = 0.5;
+finThickness = 0.007;
+leadingEdgeProfile = 2;
+finShape = 1;
 
-rocketSmoothness = rocketParams(5); % specifies surface roughness of rocket body
+rocketSmoothness = 1; % specifies surface roughness of rocket body
 
 % Environment
 kinematicViscAir = 1.5 * (10 ^ -5); % [m2/s]
@@ -116,33 +116,35 @@ end
 finMAC = (2/3) * ((tipChord^3 - rootChord^3) / (tipChord^2 - rootChord^2));
 
 % nose cone lateral area
+syms r(d, L, R, K)
+
 if noseconeShapes(noseconeType) == "Von Karman"
     parameter = input("Input a value between 0 and 1/3 for the LV-Haack parameter (0 is VK, 1/3 is haack). k = ", "s");
-    r = symfun((R / sqrt(pi))*sqrt(acos(1 - ((2 * x) / L)) - (0.5 * sin(2 * acos(1 - ((2 * x) / L)))) + (K * (sin(acos(1 - (2 * x / L)))) ^ 3)), [x L R K]);
+    r(d, L, R, K) = (R / sqrt(pi))*sqrt(acos(1 - ((2 * d) / L)) - (0.5 * sin(2 * acos(1 - ((2 * d) / L)))) + (K * (sin(acos(1 - (2 * d / L)))) ^ 3));
 
 elseif noseconeShapes(noseconeType) == "Conical"
     parameter = 0;
-    r = symfun((x * R) / L, [x L R K]);
+    r(d, L, R, K) = (d * R) / L;
 
 elseif noseconeShapes(noseconeType) == "Ogive"
     parameter = input("Input a value between 0 and 1 for the ogive parameter (0 is conical, 1 is tangent ogive). k = ", "s");
-    r = symfun(sqrt((((L^2 + R^2) * (((2 - K) * L)^2 + (K * R)^2)) / (4 * (K * R)^2)) - ((L / K) - x)^2) - sqrt((((L^2 + R^2) * (((2 - K) * L)^2 + (K * R)^2)) / (4 * (K * R)^2)) - (L / K)^2), [x L R K]);
+    r(d, L, R, K) = sqrt((((L^2 + R^2) * (((2 - K) * L)^2 + (K * R)^2)) / (4 * (K * R)^2)) - ((L / K) - d)^2) - sqrt((((L^2 + R^2) * (((2 - K) * L)^2 + (K * R)^2)) / (4 * (K * R)^2)) - (L / K)^2);
 
 elseif noseconeShapes(noseconeType) == "Parabolic"
     parameter = input("Input a value between 0 and 1 for the parabolic parameter (0 is conical, 1 is a full parabola). k = ", "s");
-    r = symfun(R * (x / L) * ((1 - K * (x / L)) / (2 - K)), [x L R K]);
+    r(d, L, R, K) = R * (d / L) * ((1 - K * (d / L)) / (2 - K));
 
 elseif noseconeShapes(noseconeType) == "Power Series"
     parameter = input("Input a value between 0 and 1 for the power parameter (0 is a blunt cylinder, 1 is conical). k = ", "s");
-    r = symfun(R * (x / L)^K, [x L R K]);
+    r(d, L, R, K) = R * (d / L)^K;
 
 else
     fprintf("ERROR: invalid nosecone shape, noseconeType must be between 1 and 5\n")
 end
 
-r(x) = r(x, noseconeLength, bodyDia/2, parameter);
-rPrime(x) = sqrt(1 + (diff(r(x)))^2);
-noseconeArea = 2 * pi * vpaintegral(r(x)*rPrime(x), 0, noseconeLength);
+r(d) = r(d, noseconeLength, bodyDia/2, parameter);
+rPrime(d) = sqrt(1 + (diff(r(d)))^2);
+noseconeArea = 2 * pi * vpaintegral(r(d)*rPrime(d), 0, noseconeLength);
 noseconeArea = simplify(noseconeArea);
 
 % total lateral area
@@ -213,11 +215,11 @@ elseif finProfiles(leadingEdgeProfile) == "Blunt"
 elseif finProfiles(leadingEdgeProfile) == "Rounded"
     for x = 1:length(mach)
         if mach(x) < 0.9
-            CLE(x) = (1 - mach(x) .^ 2) ^ -0.417 - 1;
+            CLE(x) = (1 - mach(x) ^ 2) ^ -0.417 - 1;
         elseif mach(x) >= 0.9 & mach(x) < 1
-            CLE(x) = 1 - 1.786 * (mach - 0.9);
+            CLE(x) = 1 - 1.786 * (mach(x) - 0.9);
         else
-            CLE(x) = 1.214 - (0.502 / mach .^ 2) + (0.1095 / mach .^ 4) + (0.0231 / mach .^ 6);
+            CLE(x) = 1.214 - (0.502 / mach(x) ^ 2) + (0.1095 / mach(x) ^ 4) + (0.0231 / mach(x) ^ 6);
         end
     end
 end
@@ -226,7 +228,7 @@ CLE = CLE * (cos(leadingAngle) ^ 2);
 
 % nose cone
 noseconeDragFunc = noseconePressureDrag(bodyDia / 2, noseconeLength, parameter, noseconeType, noseconeFineness, stagPress);
-if noseconeDragFunc == "ERROR"
+if noseconeDragFunc(1) == 0
     fprintf("ERROR: noseconePressureDrag returned invalid\n")
     quit;
 end
@@ -278,3 +280,5 @@ grid on
 hold off
 
 sgtitle("Drag From Various Sources")
+
+saveas(1, 'Drag Graphs.png')

@@ -100,6 +100,6 @@ function dragFunc = noseconePressureDrag(radius, length, param, type, fineness, 
 
     else
         fprintf("ERROR: value of nc_type must be an integer between 1 and 5\n")
-        dragFunc = 0;
+        dragFunc(M) = M*0;
 
     end
