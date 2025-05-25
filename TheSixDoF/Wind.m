@@ -1,6 +1,6 @@
-classdef Wind
-    %UNTITLED4 Summary of this class goes here
-    %   Detailed explanation goes here
+classdef Wind < Environment
+    % The wind class pulls in the data for the wind at a particular
+    % location,
 
     properties
         windData (:,:) = readmatrix("Inputs/WindData.xlsx")
