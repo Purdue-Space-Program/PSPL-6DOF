@@ -2,12 +2,11 @@ function [windDataOut] = parseWind(windData, month)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
-% Title: stoppingCondition
+% Title: parseWind
 % Author: Hudson Reynolds - Created: 1/28/2025
 %
-% Description: This function stops the rk4 integration once a certain
-% condition is met. Currently accepts apogee and full run as cases, but is
-% generally extensible to any state.
+% Description: This function parses the wind data and outputs the correct
+% wind model given the input month
 %
 % Inputs: 
 % tspan = array of time values for total simulation run time for the given

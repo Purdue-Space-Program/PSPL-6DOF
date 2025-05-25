@@ -34,13 +34,13 @@ omega = [input(7); input(8); input(9)];
 
 quat = [input(10); input(11); input(12); input(13)];
 
-if strcmpi(rocket, 'CMS') == 1
-    A = 0.02224;          % reference area (m^2), as defined by RasAero (cross-sectional area)
-    thrustMag = 4270.29;  % thrust of rocket in N.
+if strcmpi(rocket.name, 'CMS') == 1
+    A = rocket.refArea;          % reference area (m^2), as defined by RasAero (cross-sectional area)
+    thrustMag = rocket.thrust;  % thrust of rocket in N.
     bodyVector = [1;0;0]; % vector in the body axis running through the nose.
-    ExitA = 0.0070573;    % exit area of the nozzle [m^2]
-    ExitP = 75842.3;      % exit pressure of the nozzle [Pa]
-    radius = .0841375;    % radius of rocket [m]
+    ExitA = rocket.exitArea;    % exit area of the nozzle [m^2]
+    ExitP = rocket.exitPressure;      % exit pressure of the nozzle [Pa]
+    radius = rocket.radius;    % radius of rocket [m]
 end
 
 if nargin == 6

@@ -49,11 +49,8 @@ month = 'Mar';
 % turn wind on and off
 windOnOff = 'on';
 
-% CMS or Rocket 4, more options possible in future
-% possible:
-% CMS
-% R4
-rocket = 'CMS';
+% Import the data for the rocket, the default values are for CMS:
+rocket = Rocket;
 
 % create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end condition so no
@@ -87,15 +84,18 @@ Init = [pos;vel;omega;quatVector];
 
 % import aerodynamics data
 
-if strcmpi(rocket, 'CMS') == 1
+if strcmpi(rocket.name, 'CMS') == 1
     rasData = readmatrix("Inputs/RasAeroDataCulled2.CSV");
-elseif strcmpi(rocket, 'R4') == 1
+elseif strcmpi(rocket.name, 'R4') == 1
     rasData = readmatrix("RASAero\Final_with_pumps.CSV");
 else
 end
 
 % import wind data
-windData = readmatrix("Inputs/WindData.xlsx");
+%wind = Wind;
+%windData = readmatrix("Inputs/WindData.xlsx");
+wind = Wind;
+windData = wind.windData;
 windDataInput = parseWind(windData, month);
 
 % import atmosphere;

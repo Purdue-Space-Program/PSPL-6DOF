@@ -1,5 +1,5 @@
  classdef constant
-    properties( Constant = true )
+    properties (Constant = true)
          g = 9.806; % gravitional acceleration [m/s^2]
          m2ft = 3.28084; % meters to feet conversion
          ft2m = 0.3048;  % ft to m conversion
