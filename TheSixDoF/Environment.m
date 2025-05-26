@@ -3,21 +3,16 @@ classdef Environment
     % including the sea level height of the location, local gravity, 
 
     properties
-        date datetime = datetime
-
+        date (1,1) datetime = datetime("today");
+        Elevation (1,1) double = 614;
+        latlong (1,2) double = [35.3462082, -117.8166643]
     end
 
     methods
-        function obj = Environment(inputArg1,inputArg2)
-            %UNTITLED5 Construct an instance of this class
-            %   Detailed explanation goes here
-            obj.Property1 = inputArg1 + inputArg2;
-        end
-
-        function outputArg = method1(obj,inputArg)
-            %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
-            outputArg = obj.Property1 + inputArg;
-        end
+        % this shit not working rn
+        % function elev = getElevation(lat,long)
+        %     loc = txsite("Latitude", lat,"Longitude",long);
+        %     elev = elevation(loc);
+        % end
     end
 end

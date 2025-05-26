@@ -30,8 +30,9 @@ if strcmpi('apogee', condition) == 1
     isterminal = 1;   % Stop the integration
     direction  = 0;
 else
-    % if position is less than 0.
-    value = (Init(1) < 0);
+    env = Environment;
+    % if position is less than the ground level.
+    value = (Init(1) < env.Elevation);
     isterminal = 1;   % Stop the integration
     direction  = 0;
 end
