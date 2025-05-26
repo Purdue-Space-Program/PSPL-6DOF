@@ -57,7 +57,7 @@ for i = 1:endTime / dt
     
     title(sprintf('Vehicle Rotation at time %.1f s',timeArray(i)))
     drawnow
-    %pause(dt/playbackSpeed);
+    pause(dt/playbackSpeed);
 
     if output == 1
         frame = getframe(gcf);

@@ -13,7 +13,7 @@
 % Outputs:
 % Graph and value outputs. See subfunctions for specific outputs
 
-%% KNOWN ISSUES:
+%% KNOWN ISSUES (WIP):
 % post apogee attitude dynamics are not fully finished, attitude in this
 % regime is likely incorrect
 
@@ -21,74 +21,78 @@
 
 % Monte Script is not up to date with main.
 
-% wind seems more powerful than in should be.
+% Wind seems more powerful than in should be.
 
 %% Initialization:
 % clear the console and figures before running the code:
 clear;clc;close all
 
+% Import the data for the rocket, the default values are for CMS:
+rocket = Rocket;
+
+% Import the environment, the default values give a location of Mojave
+% Desert with the current date and weather.
+env = Environment;
+
 %% Simulation Settings:
 
-% endCondition
-% possible:
-% set to 'apogee' for apogee
-% set to 'burnout' for burnout
-% set to 'full' for full simulation w/ recovery
-% set to '#.#' for a custom run time (numeric inputs only)
-endCondition = 'apogee';
+% Set the basic simulation settings:
+% set the end condition, timestep, simulation fidelity, and outputs
+% run 'help Simulation' for more details
 
-%turn outputs on and off
-outputs = 'on';
+simSetting = Simulation('apogee', 0.1, 'medium', 1);
 
 % run rotation visualization (outputs must be on also)
-rotationVis = 'on';
+rotationVis = 'off';
 
+
+% Update this to use the wind class instead
 % change the month for wind data (First 3 letters of month):
 month = 'Mar';
 
 % turn wind on and off
 windOnOff = 'on';
 
-% Import the data for the rocket, the default values are for CMS:
-rocket = Rocket;
-env = Environment;
-
 % create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end condition so no
 % need to reduce this value for faster computation.
 
-dt = 0.1;
-
-if strcmpi('burnout', endCondition) == 1
+if strcmpi('burnout', simSetting.EndCondition) == 1
     time = constant.burnTime;
-elseif ~isnan(str2double(endCondition)) == 1
+elseif ~isnan(str2double(simSetting.EndCondition)) == 1
     time = round(str2double(endCondition),1);
 else
     time = 500;
 end
 
-arrayLength = (time / dt);
+arrayLength = (time / simSetting.Timestep);
 tspan = linspace(0,time,arrayLength+1);
 
-% position (x,y,z)
+% set the initial position (x,y,z). Accounts for starting elevation.
 pos = [env.Elevation;0;0];
-% velocity (xdot,ydot,zdot)
+
+% set the initial velocity (xdot,ydot,zdot).
 vel = [0;0;0];
+
 % initial angle (z angle, y angle, x angle) - following 3-2-1 sequence
-angleVector = [0;0;0];
+angleVector = [0;0.1;0];
+
 % initial rotation rate (x rate, y rate, z rate)
 omega = [0;0;0];
+
 % initalize the quaternion based on the euler angle input:
 quatVector = eul2quat(angleVector.', "ZYX").';
+
 % initial state vector
 Init = [pos;vel;omega;quatVector];
 
-% import aerodynamics data
-
+% import aerodynamics data for CMS / R4
 if strcmpi(rocket.name, 'CMS') == 1
     rasData = readmatrix("Inputs/RasAeroDataCulled2.CSV");
+
 elseif strcmpi(rocket.name, 'R4') == 1
     rasData = readmatrix("RASAero\Final_with_pumps.CSV");
+
 else
 end
 
@@ -104,10 +108,10 @@ atmosphere = readmatrix("Inputs/AtmosphereModel.csv");
 
 % create an array of the center of mass, mass, and moment of inertia of the
 % rocket
-[totCoM, totMass, MoI] = VariableCoM(dt, tspan, 0);
+[totCoM, totMass, MoI] = VariableCoM(simSetting.Timestep, tspan, 0);
 
 % additional options for RK4 (stop after reaching final condition)
-opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, endCondition));
+opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, simSetting.EndCondition));
 
 %% RK4:
 tic;
@@ -117,10 +121,11 @@ toc;
 %% Outputs:
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
-    [~, machArray(k,1), AoArray(k,1), accel(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket);
+    [~, machArray(k,1), AoArray(k,1), accel(k,:), cD(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket);
 end
 
-if strcmpi('on', outputs) == 1
+
+if simSetting.Output == 1
     % make the outputs real (long monte carlo runs can generate complex values)
     out = real(out);
     AoArray = real(AoArray);
@@ -134,12 +139,27 @@ if strcmpi('on', outputs) == 1
 
     quatArray = [out(:,10), out(:,11), out(:,12), out(:,13)];
 
+    % convert to lat and long for plotting on map:
+
+    E = wgs84Ellipsoid;
+    [lats,longs, ~] = ned2geodetic(out(:,2),out(:,3),-out(:,1),env.latlong(1),env.latlong(2),E.SemimajorAxis,E);
+
+    figure()
+    uif = uifigure;
+    g = geoglobe(uif);
+    
+    geoplot3(g, lats, longs, out(:,1), 'r-', LineWidth= 1)
+    campitch(g,-30)
+    camheading(g,45)
+
+
+
     % find end conditions for graphs / animations
 
     if isempty((find(posArray(:,1) < 0, 1)))
-        endTime = length(AoArray) * dt;
+        endTime = length(AoArray) * simSetting.Timestep;
     else
-        endTime = min((find(posArray(:,1) < 0, 1)) * dt, arrayLength * dt);
+        endTime = min((find(posArray(:,1) < 0, 1)) * simSetting.Timestep, arrayLength * simSetting.Timestep);
     end
 
     % grab parameters at max Q and off the rail
@@ -178,11 +198,8 @@ if strcmpi('on', outputs) == 1
     %figure(1)
     % Earth Frame XYZ position:
 
-    hfig = figure;  % save the figure handle in a variable
+    hfig = figure; % save the figure handle in a variable
     fname = 'Cartesian Elements';
-
-    picturewidth = 20; % set this parameter and keep it forever
-    hw_ratio = .6; % feel free to play with this ratio
 
     hold on
     plot(timeArray, posArray(:,1), 'Color', colorlist(1));
@@ -207,11 +224,8 @@ if strcmpi('on', outputs) == 1
 
     grid on
 
-    set(hfig,'Units','centimeters','Position',[3 3 picturewidth hw_ratio*picturewidth])
-    pos = get(hfig,'Position');
-    set(hfig,'PaperPositionMode','Auto','PaperUnits','centimeters','PaperSize',[pos(3), pos(4)])
     %print(hfig,fname,'-dpdf','-painters','-fillpage')
-    %print(hfig,fname,'-dpng','-r300')
+    %print(hfig,fname,'-dpng','-r00')
 
     % Euler Parameters:
     hfig = figure;
@@ -232,7 +246,7 @@ if strcmpi('on', outputs) == 1
 
     % Rocket Trajectory Plot:
     hfig = figure;
-    plot3(posArray(1:int32(endTime / dt),3), posArray(1:int32(endTime / dt),2), posArray(1:int32(endTime / dt),1))
+    plot3(posArray(1:int32(endTime / simSetting.Timestep),3), posArray(1:int32(endTime / simSetting.Timestep),2), posArray(1:int32(endTime / simSetting.Timestep),1))
     % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
     % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
     % plot3(zeros(endTime / dt), posArray(1:endTime / dt,2), posArray(1:endTime / dt,1), '--')
@@ -250,7 +264,7 @@ if strcmpi('on', outputs) == 1
         quatArray = quatArray';
         posArray = posArray';
 
-        RotationsVisualizer(posArray, quatArray, timeArray, endTime, dt, playbackSpeed, 0);
+        RotationsVisualizer(posArray, quatArray, timeArray, endTime, simSetting.Timestep, playbackSpeed, 0);
 
         %% csv outputs:
 

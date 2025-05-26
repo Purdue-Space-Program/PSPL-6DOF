@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, InertMatrix, wind, windOnOff, rocket, params)
+function [out, mach, AoA, accel, cD] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, InertMatrix, wind, windOnOff, rocket, params)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator
@@ -98,7 +98,7 @@ CoM = CoMTable(timeIndexCoM);
 env = Environment;
 r = env.geocentricRadius;
 
-g = gravitywgs84(env.Elevation + height, env.latlong(1), env.latlong(2), 'Exact')
+g = gravitywgs84(env.Elevation + height, env.latlong(1), env.latlong(2), 'Exact');
 
 gravForce = mass * g * [-1;0;0];
 
@@ -185,11 +185,10 @@ liftForceBody = RotationMatrix(liftForce, quat, 0);
 
 %determine the direction and magnitude of the drag force
 dragDir = -windVel / norm(windVel);
-dragMag = (0.5 * rho * norm(windVel)^2 * A * cD);
-
 % implement a simple drag polar model for drag increase with AoA:
-dragMag = dragMag + 0.5*(cL)^2;
+cD = cD + 0.1*(cL)^2;
 
+dragMag = (0.5 * rho * norm(windVel)^2 * A * cD);
 dragForce = dragDir * dragMag;
 dragForce(isnan(dragForce)) = 0;
 dragForceBody = RotationMatrix(dragForce, quat, 0);
