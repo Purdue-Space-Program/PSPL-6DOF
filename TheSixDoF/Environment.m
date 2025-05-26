@@ -6,6 +6,7 @@ classdef Environment
         date (1,1) datetime = datetime("today");
         Elevation (1,1) double = 614;
         latlong (1,2) double = [35.3462082, -117.8166643]
+        geocentricRadius (1,1) double = 6.371077849286893e6;
     end
 
     methods

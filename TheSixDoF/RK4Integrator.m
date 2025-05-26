@@ -95,7 +95,12 @@ CoMTable = totCoM(:,2);
 CoM = CoMTable(timeIndexCoM);
 
 %% Gravitational Force:
-gravForce = mass * constant.g * [-1;0;0];
+env = Environment;
+r = env.geocentricRadius;
+
+g = gravitywgs84(env.Elevation + height, env.latlong(1), env.latlong(2), 'Exact')
+
+gravForce = mass * g * [-1;0;0];
 
 % calculate the angle between the velocity vector and the rocket nose
 AoA = acosd((dot(windVel,bodyVectorEarth)) / (norm(windVel) * norm(bodyVectorEarth)));
