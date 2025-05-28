@@ -21,21 +21,23 @@ classdef Altimeter < Sensor
             % height = true height (scalar or vector) [m]
             %
             % Optional Inputs:
-            % dt = timestep between height datapoints, must be constant
+            % dt = timestep between height datapoints, must be constant.
+            % The timestep must also be smaller than the smallest sensor sampling
+            % rate to work properly.
             % vel = velocity input for fluctutations in accuracy based on
             % velocity [m/s]
             arguments
                 sensor Sensor
                 height double
                 dt double = 0 %ignore if no input
-                vel double = 0 %ignore if no input
+                vel double = zeros(1,length(height)) %ignore if no input
             end
             var = sensor.Variance;
 
             if (dt == 0)
                 alt = zeros(1,length(height));
                 for k = 1:length(height)
-                    alt(k) = height(k) + randn(1)*sqrt(var) + randn(1)*sqrt(var)*sqrt(vel(k));
+                    alt(k) = height(k) + randn(1)*sqrt(var) + 0.1*randn(1)*sqrt(var)*sqrt(vel(k));
                 end
             else
                 sampleSkip = sensor.SamplingRate/dt;
@@ -44,7 +46,7 @@ classdef Altimeter < Sensor
                 alt = NaN(1,length(height));
 
                 for k = sampleSkipArray
-                    alt(k) = height(k) + randn(1)*sqrt(var) + randn(1)*sqrt(var)*sqrt(vel(k));
+                    alt(k) = height(k) + randn(1)*sqrt(var) + 0.1*randn(1)*sqrt(var)*sqrt(vel(k));
                 end
             end
         end

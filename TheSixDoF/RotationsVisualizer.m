@@ -27,7 +27,7 @@ playbackSpeed = 2;
 
 posArrayTrans = transpose(posArray);
 
-figure(6)
+figure(10)
 
 qs = quaternion([45,0,0],'eulerd','ZYX','frame');
 qf = quaternion([-45,0,0],'eulerd','ZYX','frame');

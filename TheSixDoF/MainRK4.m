@@ -45,10 +45,10 @@ env = Environment;
 % set the end condition, timestep, simulation fidelity, and outputs
 % run 'help Simulation' for more details
 
-sim = Simulation('burnout', 0.1, 'medium', 1);
+sim = Simulation('apogee', 0.1, 'medium', 1);
 
 % run rotation visualization (outputs must be on also)
-rotationVis = 'off';
+rotationVis = 'on';
 
 %% Update this to use the wind class instead
 
@@ -144,7 +144,8 @@ if sim.Output == 1
 
     quatArray = [out(:,10), out(:,11), out(:,12), out(:,13)];
 
-    heightEst = AltitudeMeasurement(altimeter,posArray(:,1),0.1, velArray(:,1));
+    % get the height measurement based on the sensor properties
+    heightMeas = AltitudeMeasurement(altimeter,posArray(:,1),sim.Timestep, velArray(:,1));
 
 
     % convert to lat and long for plotting on map:
@@ -265,7 +266,7 @@ if sim.Output == 1
     hfig = figure;
     plot(timeArray,posArray(:,1),'-')
     hold on
-    plot(timeArray,heightEst,'+')
+    plot(timeArray,heightMeas,'+')
     xlabel('Time [s]');
     ylabel('Height [m]');
     legend('Simulation', 'Altimeter Measurement')
