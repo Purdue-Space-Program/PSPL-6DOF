@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel, cD] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, InertMatrix, wind, windOnOff, rocket, params)
+function [out, mach, AoA, accel, cD] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, InertMatrix, wind, windOnOff, rocket, sim)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator
@@ -43,9 +43,10 @@ if strcmpi(rocket.name, 'CMS') == 1
     radius = rocket.radius;    % radius of rocket [m]
 end
 
-if nargin == 6
-    thrustMag = params(1);
-end
+% old code, delete
+% if nargin == 6
+%     thrustMag = params(1);
+% end
 
 
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
@@ -96,9 +97,14 @@ CoM = CoMTable(timeIndexCoM);
 
 %% Gravitational Force:
 env = Environment;
-r = env.geocentricRadius;
+%r = env.geocentricRadius;
 
-g = gravitywgs84(env.Elevation + height, env.latlong(1), env.latlong(2), 'Exact');
+if strcmpi(sim.Fidelity, "low")
+    g = 9.8;
+elseif strcmpi(sim.Fidelity,"medium") || strcmpi(sim.Fidelity,"high")
+g = gravitywgs84(env.Elevation + height, env.LatLong(1), env.LatLong(2), 'Exact');
+end
+
 
 gravForce = mass * g * [-1;0;0];
 

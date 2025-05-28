@@ -8,10 +8,11 @@
 % calling all neccesary functions to run the simulation. The overarching
 % simulation structure uses an RK4 structure using ODE45.
 %
-% Inputs: N/A
+% Inputs: Changes to the simulation are made by changing simulation
+% settings
 %
 % Outputs:
-% Graph and value outputs. See subfunctions for specific outputs
+% Graph, value, and file outputs. See subfunctions for specific outputs.
 
 %% KNOWN ISSUES (WIP):
 % post apogee attitude dynamics are not fully finished, attitude in this
@@ -25,10 +26,14 @@
 
 %% Initialization:
 % clear the console and figures before running the code:
-clear;clc;close all
+clear;clc;close all force
 
 % Import the data for the rocket, the default values are for CMS:
 rocket = Rocket;
+
+%% Define any sensors on the rocket:
+% Make a really shitty altimeter for testing
+altimeter = Altimeter("Altimeter", 0.5, 49,.5, 0);
 
 % Import the environment, the default values give a location of Mojave
 % Desert with the current date and weather.
@@ -40,13 +45,13 @@ env = Environment;
 % set the end condition, timestep, simulation fidelity, and outputs
 % run 'help Simulation' for more details
 
-simSetting = Simulation('apogee', 0.1, 'medium', 1);
+sim = Simulation('burnout', 0.1, 'medium', 1);
 
 % run rotation visualization (outputs must be on also)
 rotationVis = 'off';
 
+%% Update this to use the wind class instead
 
-% Update this to use the wind class instead
 % change the month for wind data (First 3 letters of month):
 month = 'Mar';
 
@@ -57,15 +62,15 @@ windOnOff = 'on';
 % w/ recovery on.The code will self-terminate after reaching end condition so no
 % need to reduce this value for faster computation.
 
-if strcmpi('burnout', simSetting.EndCondition) == 1
+if strcmpi('burnout', sim.EndCondition) == 1
     time = constant.burnTime;
-elseif ~isnan(str2double(simSetting.EndCondition)) == 1
+elseif ~isnan(str2double(sim.EndCondition)) == 1
     time = round(str2double(endCondition),1);
 else
     time = 500;
 end
 
-arrayLength = (time / simSetting.Timestep);
+arrayLength = (time / sim.Timestep);
 tspan = linspace(0,time,arrayLength+1);
 
 % set the initial position (x,y,z). Accounts for starting elevation.
@@ -75,7 +80,7 @@ pos = [env.Elevation;0;0];
 vel = [0;0;0];
 
 % initial angle (z angle, y angle, x angle) - following 3-2-1 sequence
-angleVector = [0;0.1;0];
+angleVector = [0;0.1;0.1];
 
 % initial rotation rate (x rate, y rate, z rate)
 omega = [0;0;0];
@@ -108,24 +113,24 @@ atmosphere = readmatrix("Inputs/AtmosphereModel.csv");
 
 % create an array of the center of mass, mass, and moment of inertia of the
 % rocket
-[totCoM, totMass, MoI] = VariableCoM(simSetting.Timestep, tspan, 0);
+[totCoM, totMass, MoI] = VariableCoM(sim.Timestep, tspan, 0);
 
 % additional options for RK4 (stop after reaching final condition)
-opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, simSetting.EndCondition));
+opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, sim.EndCondition), 'RelTol', sim.relTol, 'AbsTol', sim.absTol);
 
 %% RK4:
 tic;
-[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,windOnOff, rocket, 1), tspan, Init, opt);
+[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,windOnOff, rocket, sim), tspan, Init, opt);
 toc;
 
 %% Outputs:
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
-    [~, machArray(k,1), AoArray(k,1), accel(k,:), cD(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket);
+    [~, machArray(k,1), AoArray(k,1), accel(k,:), cD(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket, sim);
 end
 
 
-if simSetting.Output == 1
+if sim.Output == 1
     % make the outputs real (long monte carlo runs can generate complex values)
     out = real(out);
     AoArray = real(AoArray);
@@ -139,28 +144,27 @@ if simSetting.Output == 1
 
     quatArray = [out(:,10), out(:,11), out(:,12), out(:,13)];
 
+    heightEst = AltitudeMeasurement(altimeter,posArray(:,1),0.1, velArray(:,1));
+
+
     % convert to lat and long for plotting on map:
 
     E = wgs84Ellipsoid;
-    [lats,longs, ~] = ned2geodetic(out(:,2),out(:,3),-out(:,1),env.latlong(1),env.latlong(2),E.SemimajorAxis,E);
+    [lats,longs, ~] = ned2geodetic(out(:,3),out(:,2),-out(:,1),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
 
-    figure()
     uif = uifigure;
     g = geoglobe(uif);
     
     geoplot3(g, lats, longs, out(:,1), 'r-', LineWidth= 1)
+    campos(g,env.LatLong(1)-0.1,env.LatLong(2)-0.1,15000)
     campitch(g,-30)
     camheading(g,45)
 
 
 
     % find end conditions for graphs / animations
+    endTime = length(AoArray) * sim.Timestep;
 
-    if isempty((find(posArray(:,1) < 0, 1)))
-        endTime = length(AoArray) * simSetting.Timestep;
-    else
-        endTime = min((find(posArray(:,1) < 0, 1)) * simSetting.Timestep, arrayLength * simSetting.Timestep);
-    end
 
     % grab parameters at max Q and off the rail
     [maxVel, maxIndex] = max(out(:,4));
@@ -246,7 +250,7 @@ if simSetting.Output == 1
 
     % Rocket Trajectory Plot:
     hfig = figure;
-    plot3(posArray(1:int32(endTime / simSetting.Timestep),3), posArray(1:int32(endTime / simSetting.Timestep),2), posArray(1:int32(endTime / simSetting.Timestep),1))
+    plot3(posArray(1:int32(endTime / sim.Timestep),3), posArray(1:int32(endTime / sim.Timestep),2), posArray(1:int32(endTime / sim.Timestep),1))
     % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
     % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
     % plot3(zeros(endTime / dt), posArray(1:endTime / dt,2), posArray(1:endTime / dt,1), '--')
@@ -257,6 +261,16 @@ if simSetting.Output == 1
     axis equal;
     grid minor;
 
+    % Measurements Plot:
+    hfig = figure;
+    plot(timeArray,posArray(:,1),'-')
+    hold on
+    plot(timeArray,heightEst,'+')
+    xlabel('Time [s]');
+    ylabel('Height [m]');
+    legend('Simulation', 'Altimeter Measurement')
+    
+
 
     if strcmpi('on', rotationVis) == 1
         % run the rotation visualizer script
@@ -264,7 +278,7 @@ if simSetting.Output == 1
         quatArray = quatArray';
         posArray = posArray';
 
-        RotationsVisualizer(posArray, quatArray, timeArray, endTime, simSetting.Timestep, playbackSpeed, 0);
+        RotationsVisualizer(posArray, quatArray, timeArray, endTime, sim.Timestep, playbackSpeed, 0);
 
         %% csv outputs:
 
