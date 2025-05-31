@@ -1,4 +1,4 @@
-classdef (Abstract) Sensor
+classdef Sensor
     % The Sensor class defines the generic properties of an imperfect
     % sensor. The sensor class assumes zero-mean gaussian white noise for the
     % sensors to satisfy the assumptions of Kalman filtering. The sensor
@@ -12,19 +12,19 @@ classdef (Abstract) Sensor
     properties
         Name (1,1) string
         SamplingRate (1,1) double = 0.25;
-        Variance (1,1) double
+        Variance double
         Resolution (1,1) double 
         Bias (1,1) double = 0
     end
 
     methods
-        % function out = Sensor(name, samplingRate, variance, resolution, bias)
-        %     out.Name = name;
-        %     out.SamplingRate = samplingRate;
-        %     out.Variance = variance;
-        %     out.Resolution = resolution;
-        %     out.Bias = bias;
-        % end
+        function out = Sensor(name, samplingRate, variance, resolution, bias)
+            out.Name = name;
+            out.SamplingRate = samplingRate;
+            out.Variance = variance;
+            out.Resolution = resolution;
+            out.Bias = bias;
+        end
 
     end
 end

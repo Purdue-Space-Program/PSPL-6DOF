@@ -1,38 +1,44 @@
-classdef Altimeter < Sensor
-    % The Altimeter class is a subclass of Sensor and inherits from the
+classdef GNSS < Sensor
+    % The GNSS class is a subclass of Sensor and inherits from the
     % sensor properties. See Sensor for input clarification
 
-    methods
-        % function out = Altimeter(name, samplingRate, variance, resolution, bias)
-        %     out.Name = name;
-        %     out.SamplingRate = samplingRate;
-        %     out.Variance = variance;
-        %     out.Resolution = resolution;
-        %     out.Bias = bias;
-        % end
 
-        function alt = AltitudeMeasurement(sensor,height, dt, vel)
+    methods
+
+        function gnss = GNSS(name,samplingRate,variance,resolution,bias)
+            arguments
+                name
+                samplingRate (1,1) double
+                variance double
+                resolution (1,1) double
+                bias (1,1) double
+            end
+            gnss@Sensor(name,samplingRate,variance,resolution,bias)
+        end
+
+        function [pos, vel] = GNSSMeasurement(sensor,pos, vel, dt)
             % function to get the altitude measurement from the sensor
             % definition. This can either be run at each timestep, or after
             % the numerical integration
             %
             % Required Inputs:
             % sensor = Sensor definition (of type Sensor)
-            % height = true height (scalar or vector) [m]
+            % pos = true pos (row vector) [m]
+            % vel = true vel (row vector) [m/s]
             %
             % Optional Inputs:
-            % dt = timestep between height datapoints, must be constant.
+            % dt = timestep between GNSS datapoints, must be constant.
             % The timestep must also be smaller than the smallest sensor sampling
             % rate to work properly.
-            % vel = velocity input for fluctutations in accuracy based on
-            % velocity [m/s]
             arguments
                 sensor Sensor
-                height double
+                pos (:,3) double
+                vel (:,3) double
                 dt double = 0 %ignore if no input
-                vel double = zeros(1,length(height)) %ignore if no input
             end
-            var = sensor.Variance;
+            xyVar = sensor.Variance(1);
+            zVar = sensor.Variance(2);
+            vVar = sensor.Variance(3);
 
             if (dt == 0)
                 alt = zeros(1,length(height));
