@@ -7,9 +7,9 @@ classdef GNSS < Sensor
 
         function gnss = GNSS(name,samplingRate,variance,resolution,bias)
             arguments
-                name
+                name (1,1) string
                 samplingRate (1,1) double
-                variance double
+                variance (1,3) double
                 resolution (1,1) double
                 bias (1,1) double
             end

@@ -4,10 +4,17 @@ classdef Sensor
     % sensors to satisfy the assumptions of Kalman filtering. The sensor
     % class assumes digital sensors.
     % The basic Sensor class includes:
-    % samplingRate: the rate of data acquisition
-    % variance: the variance of the noise in the sensor
-    % resolution: the finest percievable resolution of the sensor
-    % bias: constant offset in the sensor
+    %
+    % samplingRate: the time between each data acquisition [s]
+    %
+    % variance: the variance of the noise in the sensor. The square of the
+    % std. dev. of the sensor noise
+    %
+    % resolution: the finest percievable resolution of the sensor. This
+    % corresponds to quantization of the sensor.
+    %
+    % bias: constant offset in the sensor. Bias is added to the sensor
+    % output
 
     properties
         Name (1,1) string
