@@ -2,7 +2,7 @@
 %
 % Title: MainRK4
 % Author: Hudson Reynolds - Created: 9/21/2024
-% Last Modified: 3-26-2025
+% Last Modified: 6-20-2025
 %
 % Description: This is the overarching function that runs the 6-DoF,
 % calling all neccesary functions to run the simulation. The overarching
@@ -33,11 +33,14 @@ rocket = Rocket;
 
 %% Define any sensors on the rocket:
 % Make a really shitty altimeter for testing
-altimeter = Altimeter("Altimeter", 0.5, 49,.5, 0);
+altimeter = Sensor.Altimeter("Altimeter", 0.25, 20^2,.5, 0);
+
+% Make a GPS with measurement update:
+gps = Sensor.GNSS("GPS",2, 3^2, .1, 0);
 
 % Import the environment, the default values give a location of Mojave
 % Desert with the current date and weather.
-env = Environment;
+env = Env.Environment;
 
 %% Simulation Settings:
 
@@ -45,10 +48,10 @@ env = Environment;
 % set the end condition, timestep, simulation fidelity, and outputs
 % run 'help Simulation' for more details
 
-sim = Simulation('apogee', 0.1, 'medium', 1);
+sim = Sim.Simulation('apogee', 0.1, 'medium', 1);
 
 % run rotation visualization (outputs must be on also)
-rotationVis = 'on';
+rotationVis = 'off';
 
 %% Update this to use the wind class instead
 
@@ -104,7 +107,7 @@ end
 % import wind data
 %wind = Wind;
 %windData = readmatrix("Inputs/WindData.xlsx");
-wind = Wind;
+wind = Env.Wind;
 windData = wind.windData;
 windDataInput = parseWind(windData, month);
 
@@ -145,8 +148,9 @@ if sim.Output == 1
     quatArray = [out(:,10), out(:,11), out(:,12), out(:,13)];
 
     % get the height measurement based on the sensor properties
-    heightMeas = AltitudeMeasurement(altimeter,posArray(:,1),sim.Timestep, velArray(:,1));
+    heightMeasAltimeter = altimeter.AltitudeMeasurement(posArray(:,1),sim.Timestep, velArray(:,1));
 
+    [posMeasGps, velMeasGps] = gps.GNSSMeasurement(posArray,velArray,sim.Timestep);
 
     % convert to lat and long for plotting on map:
 
@@ -266,10 +270,13 @@ if sim.Output == 1
     hfig = figure;
     plot(timeArray,posArray(:,1),'-')
     hold on
-    plot(timeArray,heightMeas,'+')
+    plot(timeArray,heightMeasAltimeter,'+')
+    % fix the errors in this
+    %plot(timeArray,posMeasGps(:,1), '+')
     xlabel('Time [s]');
     ylabel('Height [m]');
-    legend('Simulation', 'Altimeter Measurement')
+    legend('Simulation', 'Altimeter Measurement', 'Gps Measurement')
+
     
 
 

@@ -15,7 +15,7 @@ classdef Environment
             % environment and the position in latitude and longitude. The
             % function automatically generates
             if (nargin == 3)
-                env = Environment;
+                env = Env.Environment;
                 env.LatLong = [lat,long];
                 env.Elevation = getElevation(env);
                 env.Date = env.Date;

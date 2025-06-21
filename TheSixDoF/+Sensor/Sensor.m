@@ -22,6 +22,8 @@ classdef Sensor
         Variance double
         Resolution (1,1) double 
         Bias (1,1) double = 0
+        ScaleFactor (1,1) double = 0
+        
     end
 
     methods

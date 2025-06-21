@@ -1,4 +1,4 @@
-classdef Altimeter < Sensor
+classdef Altimeter < Sensor.Sensor
     % The Altimeter class is a subclass of Sensor and inherits from the
     % sensor properties. See Sensor for input clarification
 
@@ -11,7 +11,7 @@ classdef Altimeter < Sensor
                 resolution (1,1) double = 0
                 bias (1,1) double = 0
             end
-            alt@Sensor(name,samplingRate,variance,resolution,bias)
+            alt@Sensor.Sensor(name,samplingRate,variance,resolution,bias)
         end
 
         function alt = AltitudeMeasurement(sensor,height, dt, vel)
@@ -30,7 +30,7 @@ classdef Altimeter < Sensor
             % vel = velocity input for fluctutations in accuracy based on
             % velocity [m/s]
             arguments
-                sensor Sensor
+                sensor Sensor.Altimeter
                 height double
                 dt double = 0 %ignore if no input
                 vel double = zeros(1,length(height)) %ignore if no input
@@ -53,8 +53,6 @@ classdef Altimeter < Sensor
                     alt(k) = height(k) + bias + randn(1)*sqrt(var) + 0.1*randn(1)*sqrt(var)*sqrt(vel(k));
                 end
             end
-
-
         end
     end
 end

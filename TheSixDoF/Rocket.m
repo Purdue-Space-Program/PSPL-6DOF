@@ -25,22 +25,22 @@ classdef Rocket
     end
 
     methods
-        function rocket = Rocket(name)
-            if (nargin == 1)
-                rocket.name = name;
-            end
-        end
+        % function rocket = Rocket(name)
+        %     if (nargin == 1)
+        %         rocket.name = name;
+        %     end
+        % end
 
         function rocket = CreateRocket(rocket,name,refArea,thrust,exitArea,exitPressure,radius,length)
             arguments
                 rocket Rocket
-                name (1,1) string
-                refArea (1,1) double
-                thrust (1,1) double
-                exitArea (1,1)
-                exitPressure (1,1)
-                radius (1,1)
-                length (1,1)
+                name (1,1) string = "CMS"
+                refArea (1,1) double = 0.02224
+                thrust (1,1) double = 4270.29
+                exitArea (1,1) = 0.0070573
+                exitPressure (1,1) = 75842.3
+                radius (1,1) = 0.0841375
+                length (1,1) = 5.123688
             end
 
             rocket.name = name;

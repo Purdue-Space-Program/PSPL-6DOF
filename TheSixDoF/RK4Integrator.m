@@ -96,7 +96,7 @@ CoMTable = totCoM(:,2);
 CoM = CoMTable(timeIndexCoM);
 
 %% Gravitational Force:
-env = Environment;
+env = Env.Environment;
 %r = env.geocentricRadius;
 
 if strcmpi(sim.Fidelity, "low")

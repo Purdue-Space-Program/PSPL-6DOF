@@ -1,4 +1,4 @@
-classdef Wind < Environment
+classdef Wind < Env.Environment
     % The wind class pulls in the data for the wind at a particular
     % location,
 
