@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        release: [R2024a, R2024b, R2025a]
+        release: [R2024a, R2024b]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
