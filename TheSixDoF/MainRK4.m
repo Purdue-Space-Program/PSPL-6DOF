@@ -33,7 +33,7 @@ rocket = Rocket;
 
 %% Define any sensors on the rocket:
 % Make a really shitty altimeter for testing
-altimeter = Sensor.Altimeter("Altimeter", 0.25, 20^2,.5, 0);
+altimeter = Sensor.Altimeter("Altimeter", 0.25, 20^2,.5, 5, .01);
 
 % Make a GPS with measurement update:
 gps = Sensor.GNSS("GPS",2, 3^2, .1, 0);
@@ -165,11 +165,8 @@ if sim.Output == 1
     campitch(g,-30)
     camheading(g,45)
 
-
-
     % find end conditions for graphs / animations
     endTime = length(AoArray) * sim.Timestep;
-
 
     % grab parameters at max Q and off the rail
     [maxVel, maxIndex] = max(out(:,4));
@@ -272,13 +269,11 @@ if sim.Output == 1
     hold on
     plot(timeArray,heightMeasAltimeter,'+')
     % fix the errors in this
-    %plot(timeArray,posMeasGps(:,1), '+')
+    plot(timeArray,posMeasGps(:,1), '+')
     xlabel('Time [s]');
     ylabel('Height [m]');
     legend('Simulation', 'Altimeter Measurement', 'Gps Measurement')
-
     
-
 
     if strcmpi('on', rotationVis) == 1
         % run the rotation visualizer script

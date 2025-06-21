@@ -3,15 +3,16 @@ classdef Altimeter < Sensor.Sensor
     % sensor properties. See Sensor for input clarification
 
     methods
-        function alt = Altimeter(name,samplingRate,variance,resolution,bias)
+        function alt = Altimeter(Name,SamplingRate,Variance,Resolution,Bias,ScaleFactor)
             arguments
-                name (1,1) string
-                samplingRate (1,1) double
-                variance (1,1) double
-                resolution (1,1) double = 0
-                bias (1,1) double = 0
+                Name (1,1) string
+                SamplingRate (1,1) double
+                Variance (1,1) double
+                Resolution (1,1) double = 0
+                Bias (1,1) double = 0
+                ScaleFactor (1,1) double = 0
             end
-            alt@Sensor.Sensor(name,samplingRate,variance,resolution,bias)
+            alt@Sensor.Sensor(Name,SamplingRate,Variance,Resolution,Bias,ScaleFactor)
         end
 
         function alt = AltitudeMeasurement(sensor,height, dt, vel)
@@ -37,11 +38,12 @@ classdef Altimeter < Sensor.Sensor
             end
             var = sensor.Variance;
             bias = sensor.Bias;
+            sf = sensor.ScaleFactor;
 
             if (dt == 0)
                 alt = zeros(1,length(height));
                 for k = 1:length(height)
-                    alt(k) = height(k) + bias + randn(1)*sqrt(var) + 0.1*randn(1)*sqrt(var)*sqrt(vel(k));
+                    alt(k) = height(k) + bias + randn(1)*sqrt(var) + height(k)*sf;
                 end
             else
                 sampleSkip = sensor.SamplingRate/dt;
@@ -50,7 +52,7 @@ classdef Altimeter < Sensor.Sensor
                 alt = NaN(1,length(height));
 
                 for k = sampleSkipArray
-                    alt(k) = height(k) + bias + randn(1)*sqrt(var) + 0.1*randn(1)*sqrt(var)*sqrt(vel(k));
+                    alt(k) = height(k) + bias + randn(1)*sqrt(var) + height(k)*sf;
                 end
             end
         end

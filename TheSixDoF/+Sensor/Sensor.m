@@ -18,7 +18,7 @@ classdef Sensor
 
     properties
         Name (1,1) string
-        SamplingRate (1,1) double = 0.25;
+        SamplingRate (1,1) double
         Variance double
         Resolution (1,1) double 
         Bias (1,1) double = 0
@@ -27,12 +27,13 @@ classdef Sensor
     end
 
     methods
-        function out = Sensor(name, samplingRate, variance, resolution, bias)
+        function out = Sensor(name, samplingRate, variance, resolution, bias, scaleFactor)
             out.Name = name;
             out.SamplingRate = samplingRate;
             out.Variance = variance;
             out.Resolution = resolution;
             out.Bias = bias;
+            out.ScaleFactor = scaleFactor;
         end
 
     end
