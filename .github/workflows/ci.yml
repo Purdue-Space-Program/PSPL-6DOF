@@ -1,39 +1,24 @@
 name: MATLAB CI
 
-on:
-  push:
-  pull_request:
-  workflow_dispatch:  # Allows you to trigger it manually from GitHub UI
+on: [push, pull_request]
 
 jobs:
-  test:
+  build:
     runs-on: self-hosted
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up MATLAB path (if needed)
-        run: |
-          echo "MATLAB path: $(where matlab || echo Not Found)"
-          matlab -batch "disp('MATLAB test run check')"
+      - name: Test MATLAB is working
+        run: matlab -batch "disp('MATLAB is working')"
 
-      - name: Run MATLAB tests
+      # Sets up MATLAB on a GitHub-hosted runner
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          release: ${{ matrix.release }}
+
+      # Runs a set of commands using the runners shell
+      - name: Run all tests
         uses: matlab-actions/run-tests@v2
         with:
-          source-folder: code             # Adjust this to your code folder
-          test-results-junit: test-results/results.xml
-          code-coverage-cobertura: coverage/coverage.xml
-          select-by-folder: code/tests    # Optional: run only tests in this subfolder
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: matlab-test-results
-          path: test-results/results.xml
-
-      - name: Upload code coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: matlab-code-coverage
-          path: coverage/coverage.xml
+          source-folder: code
