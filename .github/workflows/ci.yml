@@ -1,2 +1,2 @@
-- name: Test MATLAB is working
+  name: Test MATLAB is working
   run: matlab -batch "disp('MATLAB is working')"
