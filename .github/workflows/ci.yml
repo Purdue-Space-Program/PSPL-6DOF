@@ -1,2 +1,12 @@
-  name: Test MATLAB is working
-  run: matlab -batch "disp('MATLAB is working')"
+name: MATLAB CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test MATLAB is working
+        run: matlab -batch "disp('MATLAB is working')"
