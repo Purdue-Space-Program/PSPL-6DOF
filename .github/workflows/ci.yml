@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: self-hosted
+    strategy:
+      matrix:
+        release: [R2023b, R2025a]
     steps:
       - uses: actions/checkout@v4
 
