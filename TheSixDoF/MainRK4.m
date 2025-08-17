@@ -14,25 +14,28 @@
 % Outputs:
 % Graph, value, and file outputs. See subfunctions for specific outputs.
 
-%% KNOWN ISSUES (WIP):
+
+% ---------------- KNOWN ISSUES (WIP) ----------------------------------------
+
 % post apogee attitude dynamics are not fully finished, attitude in this
 % regime is likely incorrect
-
+%
 % non-zero AoA calculations for lift and drag need better modelling
-
+%
 % Monte Script is not up to date with main.
 
-% Wind seems more powerful than in should be.
 
-%% Initialization:
+%---------------- Initialization ---------------------------------------------
+
 % clear the console and figures before running the code:
 clear;clc;close all force
 
 % Import the data for the rocket, the default values are for CMS:
-rocket = Rocket;
+rocket = Rocket();
 
-%% Define any sensors on the rocket:
-% Make a really shitty altimeter for testing
+%---------------- Sensor Definition ------------------------------------------
+
+% Make a really bad altimeter for testing
 altimeter = Sensor.Altimeter("Altimeter", 0.25, 20^2,.5, 5, .01);
 
 % Make a GPS with measurement update:
@@ -42,7 +45,7 @@ gps = Sensor.GNSS("GPS",2, 3^2, .1, 0);
 % Desert with the current date and weather.
 env = Env.Environment;
 
-%% Simulation Settings:
+%---------------- Simulation Settings --------------------------------------
 
 % Set the basic simulation settings:
 % set the end condition, timestep, simulation fidelity, and outputs
@@ -51,7 +54,7 @@ env = Env.Environment;
 sim = Sim.Simulation('apogee', 0.1, 'medium', 1);
 
 % run rotation visualization (outputs must be on also)
-rotationVis = 'off';
+rotationVis = 'on';
 
 %% Update this to use the wind class instead
 
@@ -59,7 +62,7 @@ rotationVis = 'off';
 month = 'Mar';
 
 % turn wind on and off
-windOnOff = 'on';
+windOnOff = 'off';
 
 % create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end condition so no
@@ -277,11 +280,11 @@ if sim.Output == 1
 
     if strcmpi('on', rotationVis) == 1
         % run the rotation visualizer script
-        playbackSpeed = 1;
+        playbackSpeed = 3;
         quatArray = quatArray';
         posArray = posArray';
 
-        RotationsVisualizer(posArray, quatArray, timeArray, endTime, sim.Timestep, playbackSpeed, 0);
+        RotationsVisualizer(posArray, quatArray, timeArray, endTime, sim.Timestep, playbackSpeed, 1);
 
         %% csv outputs:
 

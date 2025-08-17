@@ -23,7 +23,6 @@ function RotationsVisualizer(posArray, quatArray, timeArray, endTime, dt, playba
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % playback speed rate
-playbackSpeed = 2;
 
 posArrayTrans = transpose(posArray);
 

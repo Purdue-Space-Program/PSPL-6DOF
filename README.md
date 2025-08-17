@@ -1,11 +1,23 @@
-# PSPL 6DOF
-Six Degrees-of-Freedom model for PSP Liquids. This code is meant to be versatile and to be able to model a variety of rockets, from small scale solids to large scale liquid systems. The primary use case of the code is to run the modeling for the PSP Liquids launch vehicles, but is more generally capable.
+# PSP Liquids 6-DOF  Guide
+
+This readme details the use and the implementation of the 6-DoF model for PSP Liquids. This code is meant to be versatile and to be able to model a variety of rockets, from small scale solids to large scale liquid systems. The primary use case of the code is to run the modeling for the PSP Liquids launch vehicles, but is more generally capable.
 
 This code is intended to be dynamic and model a variety of different rocket characteristics in a general way. This code is also intended to model sensors and other characteristics neccesary for GNC of the rocket.
 
+This document will not dive deeply into the methodology and mathematics behind the model. For that, please refer to our 'Flight Dynamics Bible' series:
+- [Volume I](https://www.overleaf.com/read/cgjkwxwwzxmc#1818cf)
+- Volume II (Not yet available, coming Fall 2025)
+- [Volume III](https://www.overleaf.com/read/ttdvwvvznjgb#da02d8)
+
+## Code Structure
+
+The PSPL 6-DoF takes an Object-Oriented Programming (OOP) approach. As a result, each of the primary components of the simulation are called through a class structure in MATLAB. To access this class structure, the folder `TheSixDoF` must be on the MATLAB file path. 
+
+The OOP approach helps us to maintain a clean code base and store related objects within a single MATLAB object. As our codebase expands, this class structure becomes increasingly important. However, most MATLAB users are unfamilar with its class structure. A desciption of the MATLAB class structure may be found in the final chapter of Volume I.
+
 ## Getting Started
 
-An example script ```MainRK4``` is included in the repo as an example of a simulation. Simply running this simulation will output the results of the simulation.
+An example script ```MainRK4``` is included in the repo as an example of a simulation. Simply running this simulation will output the results of the simulation. This model defaults to a run with the CMS rocket. Various settings in the model may be adjusted to the liking of the user.
 
 ### Creating a custom simulation
 
