@@ -56,8 +56,6 @@ sim = Sim.Simulation('apogee', 0.1, 'medium', 1);
 % run rotation visualization (outputs must be on also)
 rotationVis = 'on';
 
-%% Update this to use the wind class instead
-
 % change the month for wind data (First 3 letters of month):
 month = 'Mar';
 
@@ -124,22 +122,28 @@ atmosphere = readmatrix("Inputs/AtmosphereModel.csv");
 % additional options for RK4 (stop after reaching final condition)
 opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, sim.EndCondition), 'RelTol', sim.relTol, 'AbsTol', sim.absTol);
 
-%% RK4:
+%---------------- Run the RK4 Integration ----------------------------------
 tic;
 [timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,windOnOff, rocket, sim), tspan, Init, opt);
 toc;
 
 %% Outputs:
+
+% create a struct which contains all of the output information:
+outputStruct = struct;
+
+outputStruct.time = timeArray;
+
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
-    [~, machArray(k,1), AoArray(k,1), accel(k,:), cD(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket, sim);
+    [~, outputStruct.mach(k,1), outputStruct.AoA(k,1), outputStruct.accel(k,:), outputStruct.cD(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket, sim);
 end
 
 
 if sim.Output == 1
     % make the outputs real (long monte carlo runs can generate complex values)
     out = real(out);
-    AoArray = real(AoArray);
+    outputStruct.AoA = real(outputStruct.AoA);
 
     % parse rk4 outputs:
     posArray = [out(:,1), out(:,2), out(:,3)];
@@ -149,6 +153,11 @@ if sim.Output == 1
     omega = [out(:,7), out(:,8), out(:,9)];
 
     quatArray = [out(:,10), out(:,11), out(:,12), out(:,13)];
+
+    outputStruct.pos = posArray;
+    outputStruct.vel = velArray;
+    outputStruct.omega = omega;
+    outputStruct.quat = quatArray;
 
     % get the height measurement based on the sensor properties
     heightMeasAltimeter = altimeter.AltitudeMeasurement(posArray(:,1),sim.Timestep, velArray(:,1));
@@ -169,24 +178,24 @@ if sim.Output == 1
     camheading(g,45)
 
     % find end conditions for graphs / animations
-    endTime = length(AoArray) * sim.Timestep;
+    endTime = length(outputStruct.AoA) * sim.Timestep;
 
     % grab parameters at max Q and off the rail
     [maxVel, maxIndex] = max(out(:,4));
-    maxqAccel = accel(maxIndex,1);
+    maxqAccel = outputStruct.accel(maxIndex,1);
     maxqpos = posArray(maxIndex,1);
 
     machTable = rasData(1:300,1);
     cdTable = rasData(1:300,3);
-    maxqMach = machArray(maxIndex);
+    maxqMach = outputStruct.mach(maxIndex);
     [~, maxqMachIndex] = min(abs(machTable-maxqMach));
     maxqCD = cdTable(maxqMachIndex);
 
     [~, railIndex] = min(abs(posArray(1:100,1)-constant.railHeight));
     railVel = out(railIndex,4);
-    railAccel = accel(railIndex,1);
+    railAccel = outputStruct.accel(railIndex,1);
 
-    railMach = machArray(railIndex);
+    railMach = outputStruct.mach(railIndex);
     [~, railMachIndex] = min(abs(machTable-railMach));
     railCD = cdTable(railMachIndex);
 
@@ -247,7 +256,7 @@ if sim.Output == 1
 
     % Angle of Attack:
     hfig = figure;
-    plot(timeArray, AoArray);
+    plot(timeArray, outputStruct.AoA);
     xlim([0,endTime]);
     title("Angle of Attack")
     xlabel("Time (s)")
@@ -284,11 +293,11 @@ if sim.Output == 1
         quatArray = quatArray';
         posArray = posArray';
 
-        RotationsVisualizer(posArray, quatArray, timeArray, endTime, sim.Timestep, playbackSpeed, 1);
+        RotationsVisualizer(posArray, quatArray, timeArray, endTime, sim.Timestep, playbackSpeed, 0);
 
         %% csv outputs:
 
-        output = horzcat(timeArray, machArray);
+        output = horzcat(timeArray, outputStruct.mach);
 
         writematrix(output, 'Outputs/MachTime.csv')
     end
