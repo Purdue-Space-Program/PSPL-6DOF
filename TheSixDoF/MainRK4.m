@@ -179,7 +179,7 @@ if output == 1
     [lats,longs, ~] = ned2geodetic(out(:,3),out(:,2),-out(:,1),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
 
     % get the outputs from the magnetometer
-    xyzMag =  mag.MagnetometerMeasurement(env,[lats,longs,posArray(:,1)]);
+    xyzMag =  mag.MagnetometerMeasurement(env,[lats,longs,posArray(:,1)], sim.Timestep);
 
     uif = uifigure;
     g = geoglobe(uif);

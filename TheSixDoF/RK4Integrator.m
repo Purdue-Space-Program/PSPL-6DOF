@@ -26,6 +26,9 @@ function [out, mach, AoA, accel, cD] = RK4Integrator(time, input, rasData, atmos
 % Outputs:
 % out = derivative of state vector [m/s|m/s^2|rad/s^2|unitless^2]
 
+%---------------- Parse Function Inputs -------------------------------------
+
+
 pos = [input(1);input(2);input(3)];
 
 vel = [input(4);input(5);input(6)];
@@ -43,13 +46,9 @@ if strcmpi(rocket.name, 'CMS') == 1
     radius = rocket.radius;    % radius of rocket [m]
 end
 
-% old code, delete
-% if nargin == 6
-%     thrustMag = params(1);
-% end
-
-
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
+
+%---------------- Get atmospheric Conditions -------------------------------
 
 %% atmospheric conditions:
 height = pos(1);
@@ -63,19 +62,12 @@ a = atmosphere(atmosIndex, 1);
 rho = atmosphere(atmosIndex,2);
 P = atmosphere(atmosIndex, 3);
 
-%% Wind:
+%---------------- Wind -----------------------------------------------------
+
 windAlt = wind(:,1);
 windMagList = wind(:,2);
 windDirList = wind(:,3);
 
-%% Mass Update:
-timeTableMass = totMass(:,1);
-massTable = totMass(:,2);
-
-[~,timeIndexMass] = min(abs(timeTableMass-time));
-mass = massTable(timeIndexMass);
-
-%% Wind calcs:
 [~, heightIndex] = min(abs(windAlt-height));
 
 windDir = windDirList(heightIndex);
@@ -87,24 +79,30 @@ if strcmpi('on', windOnOff) == 1
 else
     windVel = vel;
 end
+
+%---------------- Mass Update ----------------------------------------------
+
+timeTableMass = totMass(:,1);
+massTable = totMass(:,2);
+
+[~,timeIndexMass] = min(abs(timeTableMass-time));
+mass = massTable(timeIndexMass);
   
-%% Center of mass update
 timeTableCoM = totCoM(:,1);
 CoMTable = totCoM(:,2);
 
 [~, timeIndexCoM] = min(abs(timeTableCoM-time));
 CoM = CoMTable(timeIndexCoM);
 
-%% Gravitational Force:
+%---------------- Gravity force --------------------------------------------
+
 env = Env.Environment;
-%r = env.geocentricRadius;
 
 if strcmpi(sim.Fidelity, "low")
     g = 9.8;
 elseif strcmpi(sim.Fidelity,"medium") || strcmpi(sim.Fidelity,"high")
 g = gravitywgs84(env.Elevation + height, env.LatLong(1), env.LatLong(2), 'Exact');
 end
-
 
 gravForce = mass * g * [-1;0;0];
 
@@ -128,7 +126,8 @@ cLAoA4 = rasData(601:900, 6);
 [~, machIndex] = min(abs(machTable-mach));
 cD = cDTable(machIndex);
 
-%% Thrust Forces:
+%---------------- Thrust force ---------------------------------------------
+
 % thrust lies along long axis of the rocket [1;0;0], which we then convert into
 % earth frame
 
@@ -141,7 +140,8 @@ else
     thrustForceEarth = [0;0;0];
 end
 
-%% Lift Forces:
+%---------------- Lift force -----------------------------------------------
+
 % lift forces lie perpendicular to the velocity, these are the most
 % difficult to calculate accurately
 
@@ -165,9 +165,7 @@ else
     cL = min(slope * AoA, 4);
 end
 
-%cL = min(1/8 * AoA, 2);
-
-% these act around the center of pressure, which is given in RasAero,
+% these act around the center of pressure, which is given in RasAero:
 cPTable = rasData(1:300,7); % center of pressure in inches, defined from nose
 cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nose
 
@@ -186,7 +184,8 @@ liftForce(isnan(liftForce)) = 0;
 liftForceBody = RotationMatrix(liftForce, quat, 0);
 
 
-%% Drag Forces:
+%---------------- Drag force -----------------------------------------------
+
 % drag lies parellel and opposite to the velocity vector
 
 %determine the direction and magnitude of the drag force
@@ -200,7 +199,7 @@ dragForce(isnan(dragForce)) = 0;
 dragForceBody = RotationMatrix(dragForce, quat, 0);
 
 
-%% Parachute Drag
+%---------------- Parachute ------------------------------------------------
 
 % Other Constants
 deformVal = 0.70;                   % Deformation value of inflated chute area
@@ -247,16 +246,19 @@ end
 paraDragForceBody = RotationMatrix(paraDragForce, quat, 0);
 
 
-%% Total Forces:
+%---------------- Total Forces ---------------------------------------------
+
 forceVector = gravForce + thrustForceEarth + dragForce + liftForce + paraDragForce;
 %accel:
 accel = forceVector / mass;
 
-%% Stability Caliber Calculations
+%---------------- Stability Caliber ----------------------------------------
+
 % difference between CoM and cP divided by diameter of the rocket
 %fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / 0.168275);
 
-%% Moments:
+%---------------- Moments --------------------------------------------------
+
 % pull the moments from the CoM MoI data:
 
 Ixx = InertMatrix(timeIndexMass,1,1);
@@ -267,15 +269,10 @@ I = [Ixx, 0, 0;
      0, Iyy, 0;
      0, 0, Izz];
 
-%% Aerodynamic Moments:
-
 AeroMomentArm = (CoM - cP) * bodyVector; % define the length of the moment arm in the body frame
 %ParaMomentArm = CoM * bodyVector'; % define the length of the moment arm of the parachute in the body frame
 
-% lift:
-%liftForce = RotationMatrix(liftForce, angle, 0); % define the lift force in body axes
 liftMomentBody = cross(AeroMomentArm,liftForceBody);
-% drag:
 dragMomentBody = cross(AeroMomentArm,dragForceBody);
 
 % Needs work to be correct
@@ -289,7 +286,7 @@ paraMoment = cross(paraMomentArm,paraDragForce);
 
 paraMomentBody = RotationMatrix(paraMoment, quat, 0);
 
-%% Roll Moment Test:
+%---------------- Roll Moments ---------------------------------------------
 
 finCpLocation = 0.02486256; % 1/3 of the span of fins [m]
 missAlpha = 0.1; % [degrees]
@@ -325,7 +322,4 @@ B = [0, -omegaX, -omegaY, -omegaZ;
 quatRates = 0.5 * B * quat;
 
 out = [vel;accel;alpha;quatRates];
-
-
-
 end

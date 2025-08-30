@@ -40,6 +40,8 @@ classdef Magnetometer < Sensor.Sensor
             zVar = sensor.Variance(2);
             vVar = sensor.Variance(3);
 
+            len = numel(pos(:,1));
+
             height = pos(:,3);
             lat = pos(:,1);
             long = pos(:,2);
@@ -49,24 +51,17 @@ classdef Magnetometer < Sensor.Sensor
             if (dt == 0)
                 alt = zeros(1,length(height));
                 for k = 1:length(height)
-
                     xyzMag = wrldmagm(height(k),lat(k),long(k),decimalYear);
                 end
             else
                 sampleSkip = sensor.SamplingRate/dt;
                 sampleSkipArray = round(1:sampleSkip:len);
                 % initialize to Not a Number (NaN) to ignore other entries
-                xyPos = NaN(len,2);
-                zPos = NaN(len, 1);
-                velEst = NaN(len, 3);
+                xyzMag = NaN(len,3);
 
                 for k = sampleSkipArray
-                    xyPos(k,:) = pos(k,1:2) + randn(1,2)*sqrt(xyVar);
-                    zPos(k,:) = pos(k,3) + randn(1)*sqrt(zVar);
-                    velEst(k, :) = vel(k, :) + randn(1, 3) * sqrt(vVar);
+                    xyzMag = wrldmagm(height(k),lat(k),long(k),decimalYear);
                 end
-                posOut = [xyPos, zPos]; % Combine the 2D and altitude positions
-                velOut = velEst; % Output the estimated velocities
             end
         end
     end
