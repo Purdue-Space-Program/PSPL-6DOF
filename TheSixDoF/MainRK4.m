@@ -54,7 +54,7 @@ env = Env.Environment;
 
 % Set the end condition, timestep, simulation fidelity, and outputs
 % run 'help Sim.IntegratorSettings' for more details
-sim = Sim.IntegratorSettings('full', 0.1, 'medium');
+sim = Sim.IntegratorSettings('apogee', 0.1, 'medium');
 
 % set the outputs to be shown:
 output = 1;
@@ -232,27 +232,30 @@ if output == 1
     hfig = figure; % save the figure handle in a variable
     fname = 'Cartesian Elements';
 
+    subplot(2,1,1)
     hold on
     plot(timeArray, posArray(:,1), 'Color', colorlist(1));
     plot(timeArray, posArray(:,2), 'Color', colorlist(2));
     plot(timeArray, posArray(:,3), 'Color', colorlist(3));
 
     xlim([0, endTime]);
-    title("Rocket Cartesian Elements in Earth Frame")
+    title("Rocket Position in Earth Frame")
     xlabel("Time (s)")
-    ylabel("Distance [m]")
+    ylabel("Position [m]")
+    legend("$X$","$Y$","$Z$")
+    grid on
+    hold off
 
-    yyaxis right
+
+    subplot(2,1,2)
+    hold on
     plot(timeArray, velArray(:,1), 'Color', colorlist(4), 'LineStyle','-');
     plot(timeArray, velArray(:,2), 'Color', colorlist(5), 'LineStyle','-');
     plot(timeArray, velArray(:,3), 'Color', colorlist(6), 'LineStyle','-');
-    ylabel("Velocity[m/s]")
-    legend("$X$","$Y$","$Z$", "$V_x$", "$V_y$", "$V_z$");
-
-    ax = gca;
-    ax.YAxis(1).Color = 'k';
-    ax.YAxis(2).Color = 'k';
-
+    xlabel("Time (s)")
+    title("Rocket Velocity in Earth Frame")
+    ylabel("Velocity [m/s]")
+    legend("$V_x$", "$V_y$", "$V_z$");
     grid on
 
     %print(hfig,fname,'-dpdf','-painters','-fillpage')
