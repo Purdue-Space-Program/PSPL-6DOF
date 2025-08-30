@@ -221,6 +221,7 @@ if output == 1
     fprintf("Rocket Apogee (AMSL): %.2f m\n", apogee)
     fprintf("Rocket Apogee (AGL): %.2f m\n", apogee - env.Elevation)
 
+    
 
     %% Plotting:
 
@@ -261,14 +262,15 @@ if output == 1
     %print(hfig,fname,'-dpdf','-painters','-fillpage')
     %print(hfig,fname,'-dpng','-r00')
 
-    % Euler Parameters:
+    % Euler Angles:
+    eulerAngles = quat2eul(quatArray,"ZYX");
     hfig = figure;
-    plot(timeArray, quatArray);
+    plot(timeArray, eulerAngles);
     xlim([0,endTime]);
-    title("Euler Parameters")
+    title("Euler Angles: 3-2-1")
     xlabel("Time (s)")
-    ylabel("Euler Parameters")
-    legend('q0', 'q1', 'q2', 'q3');
+    ylabel("Euler Angles")
+    legend('phi', 'theta', 'psi');
 
     % Angle of Attack:
     hfig = figure;
