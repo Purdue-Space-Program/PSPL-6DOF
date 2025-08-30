@@ -9,11 +9,11 @@ classdef Output
         Geoplot logical = 1
     end
 
-    methods
-        function obj = Output(inputArg1,inputArg2)
-            %OUTPUT Construct an instance of this class
-            %   Detailed explanation goes here
-            obj.Property1 = inputArg1 + inputArg2;
+    methods (Static)
+        function obj = Output(data)
+            arguments
+                data struct
+            end
         end
     end
 end

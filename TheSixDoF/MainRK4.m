@@ -30,7 +30,7 @@
 % clear the console and figures before running the code:
 clear;clc;close all force
 
-% Import the data for the rocket, the default values are for CMS:
+% Create a rocket object, the default values are for CMS:
 rocket = Rocket();
 
 %---------------- Sensor Definition ------------------------------------------
@@ -41,30 +41,35 @@ altimeter = Sensor.Altimeter("Altimeter", 0.25, 20^2,.5, 5, .01);
 % Make a GPS with measurement update:
 gps = Sensor.GNSS("GPS",2, 3^2, .1, 0);
 
+%---------------- Environment ------------------------------------------
+
 % Import the environment, the default values give a location of Mojave
-% Desert with the current date and weather.
+% desert with the current date and weather.
 env = Env.Environment;
 
 %---------------- Simulation Settings --------------------------------------
 
-% Set the basic simulation settings:
-% set the end condition, timestep, simulation fidelity, and outputs
-% run 'help Simulation' for more details
+% Set the end condition, timestep, simulation fidelity, and outputs
+% run 'help Sim.IntegratorSettings' for more details
+sim = Sim.IntegratorSettings('burnout', 0.1, 'medium');
 
-sim = Sim.Simulation('apogee', 0.1, 'medium', 1);
+% set the outputs to be shown:
+output = 0;
 
 % run rotation visualization (outputs must be on also)
 rotationVis = 'on';
+
+% TO-DO: This wind should go into a seperate class script
 
 % change the month for wind data (First 3 letters of month):
 month = 'Mar';
 
 % turn wind on and off
-windOnOff = 'off';
+windOnOff = 'on';
 
 % create a time array to span the simulation time. Use 500s or more
-% w/ recovery on.The code will self-terminate after reaching end condition so no
-% need to reduce this value for faster computation.
+% w/ recovery on.The code will self-terminate after reaching end
+% condition.
 
 if strcmpi('burnout', sim.EndCondition) == 1
     time = constant.burnTime;
@@ -77,7 +82,7 @@ end
 arrayLength = (time / sim.Timestep);
 tspan = linspace(0,time,arrayLength+1);
 
-% set the initial position (x,y,z). Accounts for starting elevation.
+% set the initial position (x,y,z). Accoun ts for starting elevation.
 pos = [env.Elevation;0;0];
 
 % set the initial velocity (xdot,ydot,zdot).
@@ -120,11 +125,13 @@ atmosphere = readmatrix("Inputs/AtmosphereModel.csv");
 [totCoM, totMass, MoI] = VariableCoM(sim.Timestep, tspan, 0);
 
 % additional options for RK4 (stop after reaching final condition)
-opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, sim.EndCondition), 'RelTol', sim.relTol, 'AbsTol', sim.absTol);
+opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, sim.EndCondition), ...
+    'RelTol', sim.relTol, 'AbsTol', sim.absTol);
 
 %---------------- Run the RK4 Integration ----------------------------------
 tic;
-[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere,totCoM,totMass,MoI,windDataInput,windOnOff, rocket, sim), tspan, Init, opt);
+[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere, ...
+    totCoM,totMass,MoI,windDataInput,windOnOff, rocket, sim), tspan, Init, opt);
 toc;
 
 %% Outputs:
@@ -136,23 +143,22 @@ outputStruct.time = timeArray;
 
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
-    [~, outputStruct.mach(k,1), outputStruct.AoA(k,1), outputStruct.accel(k,:), outputStruct.cD(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData,atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket, sim);
+    [~, outputStruct.mach(k,1), outputStruct.AoA(k,1), outputStruct.accel(k,:), ...
+        outputStruct.cD(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData, ...
+        atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket, sim);
 end
 
 
-if sim.Output == 1
+if output == 1
     % make the outputs real (long monte carlo runs can generate complex values)
     out = real(out);
     outputStruct.AoA = real(outputStruct.AoA);
 
     % parse rk4 outputs:
-    posArray = [out(:,1), out(:,2), out(:,3)];
-
-    velArray = [out(:,4), out(:,5), out(:,6)];
-
-    omega = [out(:,7), out(:,8), out(:,9)];
-
-    quatArray = [out(:,10), out(:,11), out(:,12), out(:,13)];
+    posArray = out(:,1:3);
+    velArray = out(:,4:6);
+    omega = out(:,7:9)';
+    quatArray = out(:,10:13);
 
     outputStruct.pos = posArray;
     outputStruct.vel = velArray;

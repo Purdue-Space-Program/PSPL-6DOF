@@ -5,16 +5,19 @@ classdef Sensor
     % class assumes digital sensors.
     % The basic Sensor class includes:
     %
-    % samplingRate: the time between each data acquisition [s]
+    % SamplingRate: the time between each data acquisition [s]
     %
-    % variance: the variance of the noise in the sensor. The square of the
-    % std. dev. of the sensor noise
+    % Variance: the variance of the noise in the sensor. The square of the
+    % std. dev. of the sensor noise.
     %
-    % resolution: the finest percievable resolution of the sensor. This
+    % Resolution: the finest percievable resolution of the sensor. This
     % corresponds to quantization of the sensor.
     %
-    % bias: constant offset in the sensor. Bias is added to the sensor
-    % output
+    % Bias: constant offset in the sensor outputs from true value.
+    %
+    % Scale Factor: constant scaling in the sensor outputs from true value.
+    % 
+    % <a href="https://purdue-space-program.atlassian.net/wiki/spaces/PL/pages/1637023774/Sensor+Class">Documentation</a>
 
     properties
         Name (1,1) string
@@ -28,6 +31,14 @@ classdef Sensor
 
     methods
         function out = Sensor(name, samplingRate, variance, resolution, bias, scaleFactor)
+            arguments
+                name (1,1) string
+                samplingRate (1,1) double   
+                variance
+                resolution = 0;
+                bias = 0;
+                scaleFactor = 0;
+            end
             out.Name = name;
             out.SamplingRate = samplingRate;
             out.Variance = variance;

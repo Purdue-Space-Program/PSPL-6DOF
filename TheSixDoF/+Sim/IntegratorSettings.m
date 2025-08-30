@@ -1,11 +1,15 @@
-classdef Simulation
+classdef IntegratorSettings
     % The simulation class sets all of the settings for the simulation of
     % the rocket. Various parameters can be used to change the length and
     % fidelity of the simulation
+    %
+    % Properties:
+    % endCondition - string specifying end condition (apogee, full, burnout)
+    % timestep - timestep of the simulation in plots and animations
+    % fidelity - simulation fidelity options (low, medium, high)
 
     properties
         EndCondition (1,1) string {mustBeMember(EndCondition,["apogee","full","burnout"])} = "apogee"
-        Output (1,1) logical = 1
         Timestep (1,1) double = 0.1
         Fidelity (1,1) string {mustBeMember(Fidelity,["low","medium","high"])} = "medium"
     end
@@ -16,25 +20,21 @@ classdef Simulation
     end
 
     methods
-        function sim = Simulation(endCondition, timestep, fidelity, output)
-            if (nargin == 4)
-                endCondition = convertCharsToStrings(endCondition);
-                fidelity = convertCharsToStrings(fidelity);
+        function sim = IntegratorSettings(endCondition, timestep, fidelity)
+            endCondition = convertCharsToStrings(endCondition);
+            fidelity = convertCharsToStrings(fidelity);
 
-                if isstring(endCondition)
-                    sim.EndCondition = endCondition;
-                else
-                    error("The end condition must be text")
-                end
+            if isstring(endCondition)
                 sim.EndCondition = endCondition;
-                sim.Timestep = timestep;
-                sim.Fidelity = fidelity;
-                sim.Output = output;
-
-                % set the fidelity options for the sim
-                sim = SetIntegrationParams(sim);
+            else
+                error("The end condition must be text")
             end
+            sim.EndCondition = endCondition;
+            sim.Timestep = timestep;
+            sim.Fidelity = fidelity;
 
+            % set the fidelity options for the sim
+            sim = SetIntegrationParams(sim);
         end
     end
     methods (Access = private)
