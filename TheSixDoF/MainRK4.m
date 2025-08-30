@@ -60,7 +60,7 @@ sim = Sim.IntegratorSettings('full', 0.1, 'medium');
 output = 1;
 
 % run rotation visualization (outputs must be on also)
-rotationVis = 'on';
+rotationVis = 'off';
 
 % TO-DO: This wind should go into a seperate class script
 
@@ -68,7 +68,7 @@ rotationVis = 'on';
 month = 'Mar';
 
 % turn wind on and off
-windOnOff = 'off';
+windOnOff = 'on';
 
 % create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end

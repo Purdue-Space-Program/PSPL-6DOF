@@ -202,17 +202,17 @@ dragForceBody = RotationMatrix(dragForce, quat, 0);
 %---------------- Parachute ------------------------------------------------
 
 % Other Constants
-deformVal = 0.70;                   % Deformation value of inflated chute area
-                                    % *This is an approximate value due to
-                                    % the difficulty to calculate it*
+deformVal = 0.70;                       % Deformation value of inflated chute area
+                                        % *This is an approximate value due to
+                                        % the difficulty to calculate it*
 
 % Parachute parameters
-drogueCd = 0.97;                    % cD for the drogue chute
-drogueDia = (25/6) * constant.ft2m; % drogue  diameter [m]
+drogueCd = 0.97;                        % cD for the drogue chute
+drogueDia = (25/6) * constant.ft2m;     % drogue  diameter [m]
 
-mainCd = 2.2;                       % cD for the main parachute
-mainDia = (97/6) * constant.ft2m;   % main chute diameter [m]
-mainDeployAlt = 304.8;              % main chute deployment altitude [m]
+mainCd = 2.2;                           % cD for the main parachute
+mainDia = (97/6) * constant.ft2m;       % main chute diameter [m]
+mainDeployAlt = 304.8 + env.Elevation;  % main chute deployment altitude [m]
 
 if vel(1) < 0
     % Drogue deployment only
@@ -275,12 +275,13 @@ AeroMomentArm = (CoM - cP) * bodyVector; % define the length of the moment arm i
 liftMomentBody = cross(AeroMomentArm,liftForceBody);
 dragMomentBody = cross(AeroMomentArm,dragForceBody);
 
-% Needs work to be correct
+% This parachute moment should come out of the nose of the rocket. Update
+% this to include this behavior and introduce stabilization in post-apogee.
 
 paraForceBodyY = paraDragForceBody(2);
 paraForceBodyZ = paraDragForceBody(3);
 
-paraMomentArm = [10;0;0];
+paraMomentArm = [2;0;0];
 
 paraMoment = cross(paraMomentArm,paraDragForce);
 
@@ -295,7 +296,7 @@ coefficientLift = 5e-6 * missAlpha;
 forceRoll = 3 / 2 * coefficientLift * rho * norm(vel)^2;
 rollMomentBody = (radius + finCpLocation) * forceRoll * bodyVector;
 
-momentVector = liftMomentBody + dragMomentBody + rollMomentBody + paraMomentBody;
+momentVector = liftMomentBody + dragMomentBody + rollMomentBody; % + paraMomentBody;
 
 % use euler equations to find the final moments:
 
