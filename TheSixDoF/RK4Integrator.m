@@ -283,23 +283,11 @@ dragMomentBody = cross(AeroMomentArm,dragForceBody);
 paraForceBodyY = paraDragForceBody(2);
 paraForceBodyZ = paraDragForceBody(3);
 
+paraMomentArm = [10;0;0];
 
+paraMoment = cross(paraMomentArm,paraDragForce);
 
-paraMomentArm = [-CoM;0;0];
-
-paraMomentBody = cross(paraMomentArm,paraDragForceBody)
-
-
-
-
-
-
-% paraMomentBody = cross(ParaMomentArm, paraDragForceBody);
-% AoAPara = acosd((dot(-vel,bodyVectorEarth)) / (norm(vel) * norm(bodyVectorEarth)));
-% AoAPara(isnan(AoAPara)) = 0;
-% 
-% paraMomentBody = exp(0.1*(38-time)) * 0.15 .* paraMomentBody + 0.3 * -sind(AoAPara) .* paraMomentBody;
-
+paraMomentBody = RotationMatrix(paraMoment, quat, 0);
 
 %% Roll Moment Test:
 
@@ -310,7 +298,7 @@ coefficientLift = 5e-6 * missAlpha;
 forceRoll = 3 / 2 * coefficientLift * rho * norm(vel)^2;
 rollMomentBody = (radius + finCpLocation) * forceRoll * bodyVector;
 
-momentVector = liftMomentBody + dragMomentBody + rollMomentBody; paraMomentBody;
+momentVector = liftMomentBody + dragMomentBody + rollMomentBody + paraMomentBody;
 
 % use euler equations to find the final moments:
 
