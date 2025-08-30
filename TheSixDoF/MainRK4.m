@@ -270,7 +270,7 @@ if output == 1
     title("Euler Angles: 3-2-1")
     xlabel("Time (s)")
     ylabel("Euler Angles")
-    legend('phi', 'theta', 'psi');
+    legend('psi', 'theta', 'phi');
 
     % Angle of Attack:
     hfig = figure;
