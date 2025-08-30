@@ -41,6 +41,9 @@ altimeter = Sensor.Altimeter("Altimeter", 0.25, 20^2,.5, 5, .01);
 % Make a GPS with measurement update:
 gps = Sensor.GNSS("GPS",2, 3^2, .1, 0);
 
+% Make a magnetometer:
+mag = Sensor.Magnetometer("Mag",0.01,0,0,0);
+
 %---------------- Environment ------------------------------------------
 
 % Import the environment, the default values give a location of Mojave
@@ -65,7 +68,7 @@ rotationVis = 'on';
 month = 'Mar';
 
 % turn wind on and off
-windOnOff = 'on';
+windOnOff = 'off';
 
 % create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end
@@ -175,6 +178,9 @@ if output == 1
     E = wgs84Ellipsoid;
     [lats,longs, ~] = ned2geodetic(out(:,3),out(:,2),-out(:,1),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
 
+    % get the outputs from the magnetometer
+    xyzMag =  mag.MagnetometerMeasurement(env,[lats,longs,posArray(:,1)]);
+
     uif = uifigure;
     g = geoglobe(uif);
     
@@ -182,6 +188,7 @@ if output == 1
     campos(g,env.LatLong(1)-0.1,env.LatLong(2)-0.1,15000)
     campitch(g,-30)
     camheading(g,45)
+    
 
     % find end conditions for graphs / animations
     endTime = length(outputStruct.AoA) * sim.Timestep;

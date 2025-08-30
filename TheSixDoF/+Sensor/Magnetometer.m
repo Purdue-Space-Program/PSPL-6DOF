@@ -15,8 +15,8 @@ classdef Magnetometer < Sensor.Sensor
             alt@Sensor.Sensor(Name,SamplingRate,Variance,Resolution,Bias,ScaleFactor)
         end
 
-        function [posOut, velOut] = MagnetometerMeasurement(sensor,env,pos, dt)
-            % GNSSMeasurement is a method to get the altitude measurement
+        function [xyzMag] = MagnetometerMeasurement(sensor,env,pos, dt)
+            % MagnetometerMeasurement is a method to get the altitude measurement
             % from the sensor definition. This can either be run at each
             % timestep, or after the numerical integration.
             %
@@ -40,12 +40,17 @@ classdef Magnetometer < Sensor.Sensor
             zVar = sensor.Variance(2);
             vVar = sensor.Variance(3);
 
-            len = numel(pos(:,1));
+            height = pos(:,3);
+            lat = pos(:,1);
+            long = pos(:,2);
+
+            decimalYear = decyear(env.Date);
 
             if (dt == 0)
                 alt = zeros(1,length(height));
                 for k = 1:length(height)
-                    [XYZ,H,D,I,F] = wrldmagm(height,latitude,longitude,decimalYear)
+
+                    xyzMag = wrldmagm(height(k),lat(k),long(k),decimalYear);
                 end
             else
                 sampleSkip = sensor.SamplingRate/dt;
