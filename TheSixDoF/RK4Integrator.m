@@ -229,8 +229,12 @@ if vel(1) < 0
     end   
 
     vertArea = deformVal * pi * (0.5 * totDia) ^ 2;
-    forceMag = 0.5 * totCd * vertArea * rho * norm(vel) ^ 2;
-    paraDragForce = forceMag .* (-vel ./ norm(vel)); 
+    vertForce = 0.5 * rho * vel(1)^2 * vertArea * totCd;
+    latArea = deformVal * pi * (0.5 * totDia)^2 * 0.5;
+    latForceY = 0.5 * rho * (vel(2) / sqrt(vel(2)^2 + vel(3)^2))^2 * latArea * totCd;
+    latForceZ = 0.5 * rho * (vel(2) / sqrt(vel(2)^2 + vel(3)^2))^2 * latArea * totCd;
+
+    paraDragForce = [vertForce; latForceY; latForceZ] .* (-vel ./ norm(vel)); 
 
 else
     paraDragForce = [0;0;0];
@@ -275,6 +279,21 @@ liftMomentBody = cross(AeroMomentArm,liftForceBody);
 dragMomentBody = cross(AeroMomentArm,dragForceBody);
 
 % Needs work to be correct
+
+paraForceBodyY = paraDragForceBody(2);
+paraForceBodyZ = paraDragForceBody(3);
+
+
+
+paraMomentArm = [-CoM;0;0];
+
+paraMomentBody = cross(paraMomentArm,paraDragForceBody)
+
+
+
+
+
+
 % paraMomentBody = cross(ParaMomentArm, paraDragForceBody);
 % AoAPara = acosd((dot(-vel,bodyVectorEarth)) / (norm(vel) * norm(bodyVectorEarth)));
 % AoAPara(isnan(AoAPara)) = 0;
@@ -291,7 +310,7 @@ coefficientLift = 5e-6 * missAlpha;
 forceRoll = 3 / 2 * coefficientLift * rho * norm(vel)^2;
 rollMomentBody = (radius + finCpLocation) * forceRoll * bodyVector;
 
-momentVector = liftMomentBody + dragMomentBody + rollMomentBody; %+ paraMomentBody;
+momentVector = liftMomentBody + dragMomentBody + rollMomentBody; paraMomentBody;
 
 % use euler equations to find the final moments:
 
