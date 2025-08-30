@@ -54,7 +54,7 @@ env = Env.Environment;
 
 % Set the end condition, timestep, simulation fidelity, and outputs
 % run 'help Sim.IntegratorSettings' for more details
-sim = Sim.IntegratorSettings('apogee', 0.1, 'medium');
+sim = Sim.IntegratorSettings('full', 0.1, 'medium');
 
 % set the outputs to be shown:
 output = 1;

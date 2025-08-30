@@ -230,8 +230,8 @@ if vel(1) < 0
     vertArea = deformVal * pi * (0.5 * totDia) ^ 2;
     vertForce = 0.5 * rho * vel(1)^2 * vertArea * totCd;
     latArea = deformVal * pi * (0.5 * totDia)^2 * 0.5;
-    latForceY = 0.5 * rho * (vel(2) / sqrt(vel(2)^2 + vel(3)^2))^2 * latArea * totCd;
-    latForceZ = 0.5 * rho * (vel(2) / sqrt(vel(2)^2 + vel(3)^2))^2 * latArea * totCd;
+    latForceY = 0.5 * rho * vel(2)^2 * latArea * totCd;
+    latForceZ = 0.5 * rho * vel(3)^2 * latArea * totCd;
 
     paraDragForce = [vertForce; latForceY; latForceZ] .* (-vel ./ norm(vel)); 
 
