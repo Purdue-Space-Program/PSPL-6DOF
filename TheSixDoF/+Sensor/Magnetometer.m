@@ -31,7 +31,8 @@ classdef Magnetometer < Sensor.Sensor
             % smaller than the smallest sensor sampling rate to work
             % properly.
             arguments
-                sensor Sensor.GNSS
+                sensor Sensor.Magnetometer
+                env Env.Environment
                 pos (:,3) double
                 dt double = 0 %ignore if no input
             end
@@ -44,7 +45,7 @@ classdef Magnetometer < Sensor.Sensor
             if (dt == 0)
                 alt = zeros(1,length(height));
                 for k = 1:length(height)
-                    [XYZ,H,D,I,F] = wrldmagm(height,latitude,longitude,decimalYear
+                    [XYZ,H,D,I,F] = wrldmagm(height,latitude,longitude,decimalYear)
                 end
             else
                 sampleSkip = sensor.SamplingRate/dt;
