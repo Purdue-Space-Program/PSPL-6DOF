@@ -227,10 +227,8 @@ if output == 1
 
     colorlist = ["#ff595e", "#ff924c", "#ffbe0b", "#8ac926", "#1982c4", "#6a4c93", "#06402B"];
 
-    %figure(1)
     % Earth Frame XYZ position:
-
-    hfig = figure; % save the figure handle in a variable
+    figure;
     fname = 'Cartesian Elements';
 
     subplot(2,1,1)
@@ -264,7 +262,7 @@ if output == 1
 
     % Euler Angles:
     eulerAngles = quat2eul(quatArray,"ZYX");
-    hfig = figure;
+    figure;
     plot(timeArray, eulerAngles);
     xlim([0,endTime]);
     title("Euler Angles: 3-2-1")
@@ -273,7 +271,7 @@ if output == 1
     legend('psi', 'theta', 'phi');
 
     % Angle of Attack:
-    hfig = figure;
+    figure;
     plot(timeArray, outputStruct.AoA);
     xlim([0,endTime]);
     title("Angle of Attack")
@@ -281,7 +279,7 @@ if output == 1
     ylabel("Angle of Attack [deg]")
 
     % Rocket Trajectory Plot:
-    hfig = figure;
+    figure;
     plot3(posArray(1:int32(endTime / sim.Timestep),3), posArray(1:int32(endTime / sim.Timestep),2), posArray(1:int32(endTime / sim.Timestep),1))
     % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
     % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
@@ -294,7 +292,7 @@ if output == 1
     grid minor;
 
     % Measurements Plot:
-    hfig = figure;
+    figure;
     plot(timeArray,posArray(:,1),'-')
     hold on
     plot(timeArray,heightMeasAltimeter,'+')

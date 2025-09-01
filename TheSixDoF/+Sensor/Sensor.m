@@ -1,9 +1,7 @@
 classdef Sensor
-    % The Sensor class defines the generic properties of an imperfect
-    % sensor. The sensor class assumes zero-mean gaussian white noise for the
-    % sensors to satisfy the assumptions of Kalman filtering. The sensor
-    % class assumes digital sensors.
-    % The basic Sensor class includes:
+    % Sensor - The Sensor class defines the generic properties of an
+    % imperfect sensor. The sensor class assumes zero-mean gaussian white
+    % noise for the sensors to satisfy the assumptions of Kalman filtering.
     %
     % SamplingRate: the time between each data acquisition [s]
     %
@@ -46,6 +44,5 @@ classdef Sensor
             out.Bias = bias;
             out.ScaleFactor = scaleFactor;
         end
-
     end
 end
