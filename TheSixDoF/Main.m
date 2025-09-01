@@ -31,7 +31,7 @@
 clear;clc;close all force
 
 % Create a rocket object, the default values are for CMS:
-rocket = Rocket();
+rocket = Rocket.Rocket();
 
 %---------------- Sensor Definition ------------------------------------------
 
