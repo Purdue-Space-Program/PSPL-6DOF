@@ -75,9 +75,9 @@ windMag = windMagList(heightIndex);
 windVector = windMag * [0;sin(windDir);cos(windDir)];
 
 if strcmpi('on', windOnOff) == 1
-    windVel = vel - windVector;
+    freestreamVel = vel - windVector;
 else
-    windVel = vel;
+    freestreamVel = vel;
 end
 
 %---------------- Mass Update ----------------------------------------------
@@ -107,7 +107,7 @@ end
 gravForce = mass * g * [-1;0;0];
 
 % calculate the angle between the velocity vector and the rocket nose
-AoA = acosd((dot(windVel,bodyVectorEarth)) / (norm(windVel) * norm(bodyVectorEarth)));
+AoA = acosd((dot(freestreamVel,bodyVectorEarth)) / (norm(freestreamVel) * norm(bodyVectorEarth)));
 AoA(isnan(AoA)) = 0;
 
 % mach is used for airspeed dependent drag coefficient:
@@ -174,10 +174,10 @@ cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nos
 cP = cPTableMetric(machIndex2);
 
 %find the magnitude of lift
-lift = (0.5 * rho* norm(windVel)^2 * A * cL);
+lift = (0.5 * rho* norm(freestreamVel)^2 * A * cL);
 
 % do some vector math to find the lift direction:
-liftDir = cross(cross(windVel, bodyVectorEarth), windVel) / norm(cross(cross(windVel,bodyVectorEarth),windVel));
+liftDir = cross(cross(freestreamVel, bodyVectorEarth), freestreamVel) / norm(cross(cross(freestreamVel,bodyVectorEarth),freestreamVel));
 
 liftForce = lift * liftDir;
 liftForce(isnan(liftForce)) = 0;
@@ -189,11 +189,11 @@ liftForceBody = RotationMatrix(liftForce, quat, 0);
 % drag lies parellel and opposite to the velocity vector
 
 %determine the direction and magnitude of the drag force
-dragDir = -windVel / norm(windVel);
+dragDir = -freestreamVel / norm(freestreamVel);
 % implement a simple drag polar model for drag increase with AoA:
 cD = cD + 0.1*(cL)^2;
 
-dragMag = (0.5 * rho * norm(windVel)^2 * A * cD);
+dragMag = (0.5 * rho * norm(freestreamVel)^2 * A * cD);
 dragForce = dragDir * dragMag;
 dragForce(isnan(dragForce)) = 0;
 dragForceBody = RotationMatrix(dragForce, quat, 0);
@@ -201,39 +201,21 @@ dragForceBody = RotationMatrix(dragForce, quat, 0);
 
 %---------------- Parachute ------------------------------------------------
 
-% Other Constants
-deformVal = 0.70;                       % Deformation value of inflated chute area
-                                        % *This is an approximate value due to
-                                        % the difficulty to calculate it*
-
-% Parachute parameters
-drogueCd = 0.97;                        % cD for the drogue chute
-drogueDia = (25/6) * constant.ft2m;     % drogue  diameter [m]
-
-mainCd = 2.2;                           % cD for the main parachute
-mainDia = (97/6) * constant.ft2m;       % main chute diameter [m]
-mainDeployAlt = 304.8 + env.Elevation;  % main chute deployment altitude [m]
+persistent tDrogueOffset
 
 if vel(1) < 0
-    % Drogue deployment only
-    if pos(1) > mainDeployAlt
-        totDia = drogueDia;
-        totCd = drogueCd;
 
-    % Main deployment
-    else        
-        % Assume instantaneous opening for testing purposes
-        totDia = (drogueDia + mainDia);
-        totCd = drogueCd + mainCd;
-    end   
-
-    vertArea = deformVal * pi * (0.5 * totDia) ^ 2;
-    vertForce = 0.5 * rho * vel(1)^2 * vertArea * totCd;
-    latArea = deformVal * pi * (0.5 * totDia)^2 * 0.5;
-    latForceY = 0.5 * rho * vel(2)^2 * latArea * totCd;
-    latForceZ = 0.5 * rho * vel(3)^2 * latArea * totCd;
-
-    paraDragForce = [vertForce; latForceY; latForceZ] .* (-vel ./ norm(vel)); 
+    % initialize a new time variable for the drogue deployment which
+    % increases the length of the drogue as a function of time.
+    if isempty(tDrogueOffset)
+        tDrogueOffset = time;
+        tDrogue = 0;
+    else
+        tDrogue = time - tDrogueOffset;
+    end
+    
+    paraDragForce = ...
+        calculateParachuteForce(pos, freestreamVel, rho, env, tDrogue);
 
 else
     paraDragForce = [0;0;0];
@@ -278,25 +260,21 @@ dragMomentBody = cross(AeroMomentArm,dragForceBody);
 % This parachute moment should come out of the nose of the rocket. Update
 % this to include this behavior and introduce stabilization in post-apogee.
 
-paraForceBodyY = paraDragForceBody(2);
-paraForceBodyZ = paraDragForceBody(3);
 
-paraMomentArm = [2;0;0];
+paraMomentArm = [CoM;0;0];
 
-paraMoment = cross(paraMomentArm,paraDragForce);
-
-paraMomentBody = RotationMatrix(paraMoment, quat, 0);
+paraMomentBody = -cross(paraMomentArm,paraDragForceBody);
 
 %---------------- Roll Moments ---------------------------------------------
 
 finCpLocation = 0.02486256; % 1/3 of the span of fins [m]
 missAlpha = 0.1; % [degrees]
-coefficientLift = 5e-6 * missAlpha;
+coefficientLift = 5e-6 * missAlpha * 0;
 
 forceRoll = 3 / 2 * coefficientLift * rho * norm(vel)^2;
 rollMomentBody = (radius + finCpLocation) * forceRoll * bodyVector;
 
-momentVector = liftMomentBody + dragMomentBody + rollMomentBody; % + paraMomentBody;
+momentVector = liftMomentBody + dragMomentBody + rollMomentBody + paraMomentBody;
 
 % use euler equations to find the final moments:
 

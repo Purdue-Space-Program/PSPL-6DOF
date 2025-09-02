@@ -60,7 +60,7 @@ sim = Sim.IntegratorSettings('full', 0.1, 'medium');
 output = 1;
 
 % run rotation visualization (outputs must be on also)
-rotationVis = 'off';
+rotationVis = 'on';
 
 % TO-DO: This wind should go into a seperate class script
 
@@ -68,7 +68,7 @@ rotationVis = 'off';
 month = 'Mar';
 
 % turn wind on and off
-windOnOff = 'on';
+windOnOff = 'off';
 
 % create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end
@@ -79,7 +79,7 @@ if strcmpi('burnout', sim.EndCondition) == 1
 elseif ~isnan(str2double(sim.EndCondition)) == 1
     time = round(str2double(endCondition),1);
 else
-    time = 500;
+    time = 400;
 end
 
 arrayLength = (time / sim.Timestep);
@@ -92,7 +92,7 @@ pos = [env.Elevation;0;0];
 vel = [0;0;0];
 
 % initial angle (z angle, y angle, x angle) - following 3-2-1 sequence
-angleVector = [0;0.1;0.1];
+angleVector = [0;0.1;0];
 
 % initial rotation rate (x rate, y rate, z rate)
 omega = [0;0;0];
