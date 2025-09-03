@@ -6,7 +6,7 @@ This code is intended to be dynamic and model a variety of different rocket char
 
 This document will not dive deeply into the methodology and mathematics behind the model. For that, please refer to our 'Flight Dynamics Bible' book series:
 - [Volume I](https://www.overleaf.com/read/cgjkwxwwzxmc#1818cf)
-- Volume II (Not yet available, coming Fall)
+- [Volume II](https://www.overleaf.com/project/67c9db5f55304a0119638f83)
 - [Volume III](https://www.overleaf.com/read/ttdvwvvznjgb#da02d8)
 
 ## Code Structure
