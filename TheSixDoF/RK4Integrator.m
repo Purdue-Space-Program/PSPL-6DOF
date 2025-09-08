@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel, cD] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, InertMatrix, wind, windOnOff, rocket, sim)
+function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, InertMatrix, wind, windOnOff, rocket, sim)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator
@@ -109,6 +109,7 @@ gravForce = mass * g * [-1;0;0];
 % calculate the angle between the velocity vector and the rocket nose
 AoA = acosd((dot(freestreamVel,bodyVectorEarth)) / (norm(freestreamVel) * norm(bodyVectorEarth)));
 AoA(isnan(AoA)) = 0;
+AoA = real(AoA);
 
 % mach is used for airspeed dependent drag coefficient:
 mach = norm(vel) / a;
@@ -212,6 +213,9 @@ if vel(1) < 0
         tDrogue = 0;
     else
         tDrogue = time - tDrogueOffset;
+        if tDrogue < 0
+            tDrogue = 0;
+        end
     end
     
     paraDragForce = ...
@@ -263,7 +267,7 @@ dragMomentBody = cross(AeroMomentArm,dragForceBody);
 
 paraMomentArm = [CoM;0;0];
 
-paraMomentBody = -cross(paraMomentArm,paraDragForceBody);
+paraMomentBody = cross(paraMomentArm,paraDragForceBody);
 
 %---------------- Roll Moments ---------------------------------------------
 

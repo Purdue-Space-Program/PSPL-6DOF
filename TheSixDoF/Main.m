@@ -79,7 +79,7 @@ if strcmpi('burnout', sim.EndCondition) == 1
 elseif ~isnan(str2double(sim.EndCondition)) == 1
     time = round(str2double(endCondition),1);
 else
-    time = 400;
+    time = 70;
 end
 
 arrayLength = (time / sim.Timestep);
@@ -147,7 +147,7 @@ outputStruct.time = timeArray;
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
     [~, outputStruct.mach(k,1), outputStruct.AoA(k,1), outputStruct.accel(k,:), ...
-        outputStruct.cD(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData, ...
+        outputStruct.cD(k,:), moment(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData, ...
         atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket, sim);
 end
 
@@ -301,6 +301,11 @@ if output == 1
     xlabel('Time [s]');
     ylabel('Height [m]');
     legend('Simulation', 'Altimeter Measurement', 'Gps Measurement')
+
+    % moment plot
+    figure;
+    plot(timeArray, moment)
+    legend('x','y','z')
     
 
     if strcmpi('on', rotationVis) == 1
@@ -309,7 +314,7 @@ if output == 1
         quatArray = quatArray';
         posArray = posArray';
 
-        RotationsVisualizer(posArray, quatArray, timeArray, endTime, sim.Timestep, playbackSpeed, 0);
+        RotationsVisualizer(posArray, quatArray, timeArray, endTime, sim.Timestep, playbackSpeed, 1);
 
         %% csv outputs:
 

@@ -16,7 +16,7 @@ mainDia = (97/6) * constant.ft2m;       % main chute diameter [m]
 mainDeployAlt = 304.8 + env.Elevation;  % main chute deployment altitude [m]
 
 % define paraLength as a function of time:
-paraLength = 8*(1-exp(-0.1*tDrogue));
+paraLength = 8*(1-exp(-.5*tDrogue));
 
 %establish the direction of the parachute based on the freestream
 %direction:
@@ -28,7 +28,7 @@ paraVector = -freestreamDirection * paraLength;
 
 % calculate the drag force:
 
-area = deformVal * pi * (0.5 * drogueDia)^2 * (1-exp(-0.1*tDrogue));
+area = deformVal * pi * (0.5 * drogueDia)^2 * (1-exp(-.5*tDrogue));
 
 drag = 1/2 * rho * drogueCd * area * dot(vel,vel);
 
