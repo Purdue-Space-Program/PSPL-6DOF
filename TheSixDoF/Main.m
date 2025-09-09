@@ -44,6 +44,9 @@ gps = Sensor.GNSS("GPS",2, 3^2, .1, 0);
 % Make a magnetometer:
 mag = Sensor.Magnetometer("Mag",0.01,0,0,0);
 
+% Make a gyroscope:
+gyro = Sensor.Gyroscope("Gyro",.25,1e-4,.005,.01,0);
+
 %---------------- Environment ------------------------------------------
 
 % Import the environment, the default values give a location of Mojave
@@ -160,7 +163,7 @@ if output == 1
     % parse rk4 outputs:
     posArray = out(:,1:3);
     velArray = out(:,4:6);
-    omega = out(:,7:9)';
+    omega = out(:,7:9);
     quatArray = out(:,10:13);
 
     outputStruct.pos = posArray;
@@ -172,6 +175,8 @@ if output == 1
     heightMeasAltimeter = altimeter.AltitudeMeasurement(posArray(:,1),sim.Timestep, velArray(:,1));
 
     [posMeasGps, velMeasGps] = gps.GNSSMeasurement(posArray,velArray,sim.Timestep);
+
+    angleVelMeasGyro = gyro.GyroscopeMeasurement(omega,sim.Timestep);
 
     % convert to lat and long for plotting on map:
 
@@ -269,6 +274,17 @@ if output == 1
     xlabel("Time (s)")
     ylabel("Euler Angles")
     legend('psi', 'theta', 'phi');
+
+    % Angular Velocity and Gyro Plot:
+    figure;
+    plot(timeArray, omega);
+    hold on
+    plot(timeArray, angleVelMeasGyro,'+')
+    xlim([0,endTime]);
+    title("Angular Velocity")
+    xlabel("Time (s)")
+    ylabel("Angular Velocity [rad/s]")
+    legend("\omega_x","\omega_y","\omega_z","gyro x","gyro y", "gyro z",location="best")
 
     % Angle of Attack:
     figure;
