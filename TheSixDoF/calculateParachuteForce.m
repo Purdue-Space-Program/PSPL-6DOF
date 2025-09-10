@@ -1,4 +1,23 @@
 function [drag,paraVector] = calculateParachuteForce(pos, vel, rho, env, tDrogue)
+% PSP FLIGHT DYNAMICS:
+%
+% Title: CalculateParachuteForce
+% Author: Preston Wright and Hudson Reynolds - Created: 9/1/25
+% Last Modified: 9/9/25
+%
+% Description: This takes the velocity of the rocket as well as
+% environmental parameters and drogue deployment time to model the drag
+% from the parachute in a multibody simulation
+%
+% Inputs: 
+% vel - inertial velocity of the rocket [m/s]
+% rho - atmospheric density [kg/m^3]
+% environment - environment object
+% tDrogue - time at which the drogue chute deploys in the simulation [s]
+%
+% Outputs:
+% drag - inertial drag force imparted by the parachute [N]
+% paraVector - directional vector along which the parachute is oriented
 
 % ---- Initializations -----------------------------------------------------
 
