@@ -108,10 +108,10 @@ Init = [pos;vel;omega;quatVector];
 
 % import aerodynamics data for CMS / R4
 if strcmpi(rocket.name, 'CMS') == 1
-    rasData = readmatrix("Inputs/RasAeroDataCulled2.CSV");
+    rasData = readmatrix("Inputs\RASAero\RasAeroDataCulled2.CSV");
 
 elseif strcmpi(rocket.name, 'R4') == 1
-    rasData = readmatrix("RASAero\Final_with_pumps.CSV");
+    rasData = readmatrix("Inputs\RASAero\CH4_aero.CSV");
 
 else
 end

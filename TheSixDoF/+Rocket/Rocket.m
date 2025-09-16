@@ -25,11 +25,6 @@ classdef Rocket
     end
 
     methods
-        % function rocket = Rocket(name)
-        %     if (nargin == 1)
-        %         rocket.name = name;
-        %     end
-        % end
 
         function rocket = CreateRocket(rocket,name,refArea,thrust,exitArea,exitPressure,radius,length)
             arguments

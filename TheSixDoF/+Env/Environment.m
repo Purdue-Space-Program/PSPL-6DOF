@@ -7,6 +7,7 @@ classdef Environment
         Elevation (1,1) double = 627.91;
         LatLong (1,2) double = [35.347444074690735, -117.8090720168799]
         geocentricRadius (1,1) double = 6.371077849286893e6;
+        railHeight (1,1) double = 18.29; % FAR rail height [m]
     end
 
     methods
