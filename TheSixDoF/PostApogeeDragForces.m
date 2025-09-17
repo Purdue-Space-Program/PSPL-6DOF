@@ -72,7 +72,7 @@ elseif alt(1) > 0
     % Linearlly interpolate through the main chute deployment (this
     % will likely be improved later)
     elseif time - mainChuteTime <= mainDeployTime
-        totDia = drogueDia + mainDia * (time - mainChuteTime)
+        totDia = drogueDia + mainDia * (time - mainChuteTime);
         totCd = drogueCd + mainCd;
 
     % Final, full deployment of both the drogue and main chutes
