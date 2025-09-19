@@ -1,49 +1,137 @@
 classdef Rocket
-    %Rocket: The rocket class is the class the governs all the
-    % properties of the rocket itself. If no inputs are given, the
-    % values default to values for CMS.
-    %
-    %
-    % OUTPUTS:
+    % NOTE: the way the class constructor gets and stores rocket data will NOT work unless your root directory (in MATLAB or VSCode) is set to "PSPL-6DoF," so always check that before running
 
     properties
-        name (1,1) string = 'CMS'
-        refArea (1,1) double = 0.02224
-        thrust (1,1) double = 4270.29
-        exitArea (1,1) = 0.0070573
-        exitPressure (1,1) = 75842.3
-        radius (1,1) = 0.0841375
-        length (1,1) = 5.123688
+        name (1,1) string
+        thrust (1,1) double {mustBePositive}
+        burnTime (1,1) double {mustBePositive}
+        exitArea (1,1) double {mustBePositive}
+        exitPressure (1,1) double {mustBePositive}
+        bodyDiameter (1,1) double {mustBePositive}
+        totalLength (1,1) doule {mustBePositive}
+        finCount (1,1) int {mustBePositive}
+        finHeight (1,1) double {mustBePositive}
+        finThickness (1,1) double {mustBePositive}
+        finType (1,1) {mustBeMember(finType,['Delta', 'Swept', 'Trapezoidal', 'Irregular'])} = 'Trapezoidal'
+        noseconeLength (1,1) double {mustBePositive}
+        noseconeType (1,1) {mustBeMember(noseconeType,['Von Karman', 'Tangent Ogive', 'Conical', 'Parabolic', 'LV-Haack', 'LD-Haack', 'Power Series'])} = 'Power Series'
+
+    end
+    
+    properties (Access = protected, Dependent)
+        finWettedArea (1,1) double {mustBePositive}
+        finFrontalArea (1,1) double {mustBePositive}
+        aeroData (1,1) string
+        finenessRatio (1,1) int {mustBeInRange(finenessRatio,1:10)}
+        refArea (1,1) double {mustBePositive}
     end
 
     methods
 
-        function rocket = rocket()
-
-            name_prompt = "Input the name of a saved rocket (listed below), '1' to save a new rocket, or '2' to create a temporary object (not saved). ";
+        function rocket = Rocket()
+            name_prompt = "Input the name of a saved rocket (listed below), 1 to save a new rocket, or 2 to create a temporary object (not saved) -> ";
             name_struct = dir("TheSixDoF\Inputs\Saved Saved Rockets\*.mat");
-            rocket_num = length(name_struct);
+            name_str = "";
+            for index = 1:length(name_struct)
+                current_name = name_struct(index).name;
+                name_str = name_str + newline + convertCharsToStrings(current_name);
+            end
             
-            input(name_prompt+names,"s")
+            response = input(name_prompt + name_str,"s");
+            if isempty(str2num(response))
+                inputName = response;
+                fprintf("\nSearching Saved Rockets . . .")
+                nameValid = 0;
+                while nameValid == 0
+                    if find(inputName, name_str)
+                        nameValid = 1;
+                    else
+                        fprintf("\nERROR: Rocket could not be found, please input a different name ->")
+                    end
+                end
+                fprintf("\nRocket %s retrieved, loading saved data.", inputName)
+                rocketDataPath = "TheSixDoF\Inputs\Saved Rockets\" + intputName + ".mat";
 
+            elseif response == 1
+                nameValid = 0;
+                while nameValid == 0
+                name_prompt = newline + "Please enter the name of the new rocket (note, the name can be changed later if needed) -> ";
+                inputName = input(name_prompt, "s");
+                    if find(inputName, name_str)
+                        fprintf("\nERROR: Name is already in use, please select a new one.")
+                    else
+                        nameValid = 1;
+                    end
+                end
 
-            rocket.name = name;
-            rocket.refArea = refArea;
-            rocket.thrust = thrust;
-            rocket.exitArea = exitArea;
-            rocket.exitPressure = exitPressure;
-            rocket.radius = radius;
-            rocket.length = length;
-            rocket.drag = 
+                rocket.name = inputName;
+                rocket.refArea = refArea;
+                rocket.thrust = thrust;
+                rocket.exitArea = exitArea;
+                rocket.exitPressure = exitPressure;
+                rocket.radius = radius;
+                rocket.length = length;
+                rocket.aeroData = "TheSixDoF\Inputs\RASAero\" + inputName + ".csv";
+
+            elseif response == 2
+                inputName = response;
+
+                rocket.name = inputName;
+                rocket.refArea = refArea;
+                rocket.thrust = thrust;
+                rocket.exitArea = exitArea;
+                rocket.exitPressure = exitPressure;
+                rocket.radius = radius;
+                rocket.length = length;
+                rocket.aeroData = "TheSixDoF\Inputs\RASAero\" + inputName + ".csv";
+            end
         end
 
         function drawRocket(rocket)
-            [xBody,yBody,zBody] = cylinder(rocket.radius,50);
+            [xBody,yBody,zBody] = cylinder(rocket.bodyDiameter/2,50);
 
             figure()
-            zBody = zBody * rocket.length;
+            zBody = zBody * rocket.totalLength;
             surf(xBody,yBody,zBody, 'FaceColor','red', 'LineStyle','none', 'FaceAlpha','1')
             axis equal
+        end
+
+        % method for determining the area of a single fin parallel to the airstream
+        function finWettedArea = get.finWettedArea(roc)
+            if roc.finType == "Delta"
+                prompt = newline + "Input fin wetted area in m^2 (area of the find parallel to the airstream) -> ";
+                finWettedArea = input(prompt);
+            elseif roc.finType == "Trapezoid"
+                prompt = newline + "Input fin wetted area in m^2 (area of the find parallel to the airstream) -> ";
+                finWettedArea = input(prompt);
+            elseif roc.finType == "Swept"
+                prompt = newline + "Input fin wetted area in m^2 (area of the find parallel to the airstream) -> ";
+                finWettedArea = input(prompt);
+            else
+                prompt = newline + "Input fin wetted area in m^2 (area of the find parallel to the airstream) -> ";
+                finWettedArea = input(prompt);
+            end
+        end
+
+        % method for determining the area of a single fin normal to the airstream
+        function finFrontalArea = get.finFrontalArea(roc)
+            finFrontalArea = roc.finHeight * roc.finThickness;
+        end
+
+        % method for getting all RASAero data for the rocket
+        % ideally making it dependent means we won't have to store it every time a rocket object is created,
+        % but it might also slow things down, so this behavior could be changed later
+        function aeroData = get.aeroData(roc)
+            aeroDataPath = "TheSixDoF\Inputs\RASAero" + roc.name + ".csv";
+            aeroData = readmatrix(aeroDataPath);
+        end
+
+        function finenessRatio = get.finenessRatio(roc)
+            finenessRatio = roc.totalLength / roc.noseconeLength;
+        end
+
+        function refArea = get.refArea(roc)
+            refArea = (pi * (roc.bodyDiameter / 2)^2) + (roc.finCount * roc.finFrontalArea);
         end
 
         % function disp(obj)
