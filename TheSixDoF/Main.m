@@ -110,7 +110,7 @@ Init = [pos;vel;omega;quatVector];
 if strcmpi(rocket.name, 'CMS') == 1
     rasData = readmatrix("Inputs\RASAero\RasAeroDataCulled2.CSV");
 
-elseif strcmpi(rocket.name, 'R4') == 1
+elseif strcmpi(rocket.name, 'CH4') == 1
     rasData = readmatrix("Inputs\RASAero\CH4_aero.CSV");
 
 else

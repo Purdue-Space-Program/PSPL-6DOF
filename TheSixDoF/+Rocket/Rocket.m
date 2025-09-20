@@ -15,15 +15,46 @@ classdef Rocket
         finType (1,1) {mustBeMember(finType,['Delta', 'Swept', 'Trapezoidal', 'Irregular'])} = 'Trapezoidal'
         noseconeLength (1,1) double {mustBePositive}
         noseconeType (1,1) {mustBeMember(noseconeType,['Von Karman', 'Tangent Ogive', 'Conical', 'Parabolic', 'LV-Haack', 'LD-Haack', 'Power Series'])} = 'Power Series'
-
+        wetMass (1,1) double {mustBePositive}
+        dryMass (1,1) double {mustBePositive}
+        fuel (1,1) string {mustBeMember(fuel,['LNG', 'Ethanol'])} = 'Ethanol'
+        fuelMass (1,1) double {mustBePositive}
+        fuelUllage (1,1) double {mustBePositive}
+        fuelMassFlow (1,1) double {mustBePositive}
+        fuelVolume (1,1) double {mustBePositive}
+        fuelTankOuterDiameter (1,1) double {mustBePositive}
+        fuelTankThickness (1,1) double {mustBePositive}
+        oxidizer (1,1) string {mustBeMember(oxidizer, 'LOX')} = 'LOX'
+        oxMass (1,1) double {mustBePositive}
+        oxUllage (1,1) double {mustBePositive}
+        oxMassFlow (1,1) double {mustBePositive}
+        oxVolume (1,1) double {mustBePositive}
+        oxTankOuterDiameter (1,1) double {mustBePositive}
+        oxTankThickness (1,1) double {mustBePositive}
+        injectorType (1,1) string {mustBeMember(injectorType,['Pintle', 'Impinging', 'Swirl', 'Shower Head'])} = 'Pintle'
+        motorCoolingType (1,1) string {mustBeMember(motorCoolingType,['Heatsink', 'Regen', 'Ablative'])} = 'Ablative'
+        tankPressMethod (1,1) string {mustBeMember(tankPressMethod,['Pressure-Fed', 'Pump-Fed'])} = 'Pressure-Fed'
+        chamberPressure (1,1) double {mustBePositive}
+        specificImpulse (1,1) double {mustBePositive}
+        motorLength (1,1) double {mustBePositive}
+        lowerAirframeLength (1,1) double {mustBePositive}
+        fuelTankLength (1,1) double {mustBePositive}
+        oxTankLength (1,1) double {mustBePositive}
+        interTankLength (1,1) double {mustBePositive}
+        upperAirframeLength (1,1) double {mustBePositive}
     end
-    
+
     properties (Access = protected, Dependent)
         finWettedArea (1,1) double {mustBePositive}
         finFrontalArea (1,1) double {mustBePositive}
         aeroData (1,1) string
         finenessRatio (1,1) int {mustBeInRange(finenessRatio,1:10)}
         refArea (1,1) double {mustBePositive}
+        fuelOxRatio (1,1) double {mustBePositive}
+        copvMass (1,1) double {mustBePositive}
+        copvVolume (1,1) double {mustBePositive}
+        initialCoM (1,1) double {mustBePositive}
+        finalCoM (1,1) double {mustBePositive}
     end
 
     methods
@@ -52,6 +83,11 @@ classdef Rocket
                 fprintf("\nRocket %s retrieved, loading saved data.", inputName)
                 rocketDataPath = "TheSixDoF\Inputs\Saved Rockets\" + intputName + ".mat";
 
+                rocketData = load(rocketDataPath);
+
+                % Set all properties
+                rocket.name = rocketData.name;
+
             elseif response == 1
                 nameValid = 0;
                 while nameValid == 0
@@ -64,26 +100,21 @@ classdef Rocket
                     end
                 end
 
+                rocketDataPath = "TheSixDoF\Inputs\Saved Rockets\" + inputName + ".mat";
+                rocketData = matfile(rocketDataPath, "Writable", true);
+
+                % Set all properties
                 rocket.name = inputName;
-                rocket.refArea = refArea;
-                rocket.thrust = thrust;
-                rocket.exitArea = exitArea;
-                rocket.exitPressure = exitPressure;
-                rocket.radius = radius;
-                rocket.length = length;
-                rocket.aeroData = "TheSixDoF\Inputs\RASAero\" + inputName + ".csv";
+
+                % Save all properties
+                rocketData.name = inputName;
 
             elseif response == 2
-                inputName = response;
+                name_prompt = newline + "Please enter the name of the new rocket (note, the name can be changed later if needed) -> ";
+                inputName = input(name_prompt, "s");
 
+                % Set all properties
                 rocket.name = inputName;
-                rocket.refArea = refArea;
-                rocket.thrust = thrust;
-                rocket.exitArea = exitArea;
-                rocket.exitPressure = exitPressure;
-                rocket.radius = radius;
-                rocket.length = length;
-                rocket.aeroData = "TheSixDoF\Inputs\RASAero\" + inputName + ".csv";
             end
         end
 
@@ -99,16 +130,16 @@ classdef Rocket
         % method for determining the area of a single fin parallel to the airstream
         function finWettedArea = get.finWettedArea(roc)
             if roc.finType == "Delta"
-                prompt = newline + "Input fin wetted area in m^2 (area of the find parallel to the airstream) -> ";
+                prompt = newline + "Input fin wetted area in m^2 (Delta) -> ";
                 finWettedArea = input(prompt);
-            elseif roc.finType == "Trapezoid"
-                prompt = newline + "Input fin wetted area in m^2 (area of the find parallel to the airstream) -> ";
+            elseif roc.finType == "Trapezoidal"
+                prompt = newline + "Input fin wetted area in m^2 (Trapezoidal) -> ";
                 finWettedArea = input(prompt);
             elseif roc.finType == "Swept"
-                prompt = newline + "Input fin wetted area in m^2 (area of the find parallel to the airstream) -> ";
+                prompt = newline + "Input fin wetted area in m^2 (Swept) -> ";
                 finWettedArea = input(prompt);
             else
-                prompt = newline + "Input fin wetted area in m^2 (area of the find parallel to the airstream) -> ";
+                prompt = newline + "Input fin wetted area in m^2 (Other) -> ";
                 finWettedArea = input(prompt);
             end
         end
