@@ -15,6 +15,7 @@ classdef Rocket
         finType (1,1) {mustBeMember(finType,['Delta', 'Swept', 'Trapezoidal', 'Irregular'])} = 'Trapezoidal'
         noseconeLength (1,1) double {mustBePositive}
         noseconeType (1,1) {mustBeMember(noseconeType,['Von Karman', 'Tangent Ogive', 'Conical', 'Parabolic', 'LV-Haack', 'LD-Haack', 'Power Series'])} = 'Power Series'
+        noseconeMass (1,1) double {mustBePositive}
         wetMass (1,1) double {mustBePositive}
         dryMass (1,1) double {mustBePositive}
         fuel (1,1) string {mustBeMember(fuel,['LNG', 'Ethanol'])} = 'Ethanol'
@@ -24,6 +25,7 @@ classdef Rocket
         fuelVolume (1,1) double {mustBePositive}
         fuelTankOuterDiameter (1,1) double {mustBePositive}
         fuelTankThickness (1,1) double {mustBePositive}
+        fuelTankMass (1,1) double {mustBePositive}
         oxidizer (1,1) string {mustBeMember(oxidizer, 'LOX')} = 'LOX'
         oxMass (1,1) double {mustBePositive}
         oxUllage (1,1) double {mustBePositive}
@@ -31,6 +33,7 @@ classdef Rocket
         oxVolume (1,1) double {mustBePositive}
         oxTankOuterDiameter (1,1) double {mustBePositive}
         oxTankThickness (1,1) double {mustBePositive}
+        oxTankMass (1,1) double {mustBePositive}
         injectorType (1,1) string {mustBeMember(injectorType,['Pintle', 'Impinging', 'Swirl', 'Shower Head'])} = 'Pintle'
         motorCoolingType (1,1) string {mustBeMember(motorCoolingType,['Heatsink', 'Regen', 'Ablative'])} = 'Ablative'
         tankPressMethod (1,1) string {mustBeMember(tankPressMethod,['Pressure-Fed', 'Pump-Fed'])} = 'Pressure-Fed'
@@ -50,9 +53,8 @@ classdef Rocket
         aeroData (1,1) string
         finenessRatio (1,1) int {mustBeInRange(finenessRatio,1:10)}
         refArea (1,1) double {mustBePositive}
-        fuelOxRatio (1,1) double {mustBePositive}
-        copvMass (1,1) double {mustBePositive}
-        copvVolume (1,1) double {mustBePositive}
+        oxFuelRatio (1,1) double {mustBePositive}
+        componentPositions (1,5) double {mustBePositive}
         initialCoM (1,1) double {mustBePositive}
         finalCoM (1,1) double {mustBePositive}
     end
@@ -163,6 +165,26 @@ classdef Rocket
 
         function refArea = get.refArea(roc)
             refArea = (pi * (roc.bodyDiameter / 2)^2) + (roc.finCount * roc.finFrontalArea);
+        end
+
+        function oxFuelRatio = get.oxFuelRatio(roc)
+            oxFuelRatio = roc.oxMass / roc.fuelMass;
+        end
+
+        function componentPositions = get.componentPositions(roc)
+            noseconePosition =
+            upperAirframePosition =
+            oxTankPosition =
+            fuelTankPosition =
+
+        end
+
+        function initialCoM = get.initialCoM(roc)
+            initialCoM = ((roc.) + () + () + () + ()) / 2
+        end
+
+        function finalCoM = get.finalCoM(roc)
+            finalCoM =
         end
 
         % function disp(obj)
