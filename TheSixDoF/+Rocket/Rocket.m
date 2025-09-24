@@ -120,7 +120,13 @@ classdef Rocket
             end
         end
 
-        function drawRocket(rocket)
+        function plot(rocket, cf)
+            % plot the rocket. Specify which plot to draw the rocket on.
+            % Make a new plot if nothing has been specified
+            arguments
+                rocket Rocket.Rocket
+                cf = figure
+            end
             [xBody,yBody,zBody] = cylinder(rocket.bodyDiameter/2,50);
 
             figure()

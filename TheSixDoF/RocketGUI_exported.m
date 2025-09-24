@@ -2,46 +2,33 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        UIFigure                    matlab.ui.Figure
-        ModifyRocketMenu            matlab.ui.container.Menu
-        SimulationMenu              matlab.ui.container.Menu
-        GridLayout                  matlab.ui.container.GridLayout
-        LeftPanel                   matlab.ui.container.Panel
-        GridLayout2                 matlab.ui.container.GridLayout
-        ComponentLocationEditField  matlab.ui.control.NumericEditField
+        UIFigure                       matlab.ui.Figure
+        TabGroup                       matlab.ui.container.TabGroup
+        RocketDesignTab                matlab.ui.container.Tab
+        Panel                          matlab.ui.container.Panel
+        GridLayout                     matlab.ui.container.GridLayout
+        RocketDiametermEditField       matlab.ui.control.NumericEditField
+        RocketDiametermEditFieldLabel  matlab.ui.control.Label
+        RocketLengthmEditField         matlab.ui.control.NumericEditField
+        RocketLengthmEditFieldLabel    matlab.ui.control.Label
+        ComponentLocationEditField     matlab.ui.control.NumericEditField
         ComponentLocationEditFieldLabel  matlab.ui.control.Label
-        ComponentSelectionDropDown  matlab.ui.control.DropDown
+        ComponentSelectionDropDown     matlab.ui.control.DropDown
         ComponentSelectionDropDownLabel  matlab.ui.control.Label
-        RightPanel                  matlab.ui.container.Panel
-        RocketPropertiesLabel       matlab.ui.control.Label
-        TextArea                    matlab.ui.control.TextArea
-        UIAxes                      matlab.ui.control.UIAxes
-    end
-
-    % Properties that correspond to apps with auto-reflow
-    properties (Access = private)
-        onePanelWidth = 576;
+        PlaceComponentButton           matlab.ui.control.Button
+        UIAxes                         matlab.ui.control.UIAxes
+        SimulationTab                  matlab.ui.container.Tab
     end
 
     % Callbacks that handle component events
     methods (Access = private)
 
-        % Changes arrangement of the app based on UIFigure width
-        function updateAppLayout(app, event)
-            currentFigureWidth = app.UIFigure.Position(3);
-            if(currentFigureWidth <= app.onePanelWidth)
-                % Change to a 2x1 grid
-                app.GridLayout.RowHeight = {480, 480};
-                app.GridLayout.ColumnWidth = {'1x'};
-                app.RightPanel.Layout.Row = 2;
-                app.RightPanel.Layout.Column = 1;
-            else
-                % Change to a 1x2 grid
-                app.GridLayout.RowHeight = {'1x'};
-                app.GridLayout.ColumnWidth = {232, '1x'};
-                app.RightPanel.Layout.Row = 1;
-                app.RightPanel.Layout.Column = 2;
-            end
+        % Value changed function: RocketLengthmEditField
+        function RocketLengthChanged(app, event)
+            value = app.RocketLengthmEditField.Value;
+
+            
+            
         end
     end
 
@@ -53,89 +40,99 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.AutoResizeChildren = 'off';
             app.UIFigure.Position = [100 100 640 480];
             app.UIFigure.Name = 'MATLAB App';
-            app.UIFigure.SizeChangedFcn = createCallbackFcn(app, @updateAppLayout, true);
 
-            % Create ModifyRocketMenu
-            app.ModifyRocketMenu = uimenu(app.UIFigure);
-            app.ModifyRocketMenu.Text = 'Modify Rocket';
+            % Create TabGroup
+            app.TabGroup = uitabgroup(app.UIFigure);
+            app.TabGroup.Position = [1 1 640 480];
 
-            % Create SimulationMenu
-            app.SimulationMenu = uimenu(app.UIFigure);
-            app.SimulationMenu.Text = 'Simulation';
-
-            % Create GridLayout
-            app.GridLayout = uigridlayout(app.UIFigure);
-            app.GridLayout.ColumnWidth = {232, '1x'};
-            app.GridLayout.RowHeight = {'1x'};
-            app.GridLayout.ColumnSpacing = 0;
-            app.GridLayout.RowSpacing = 0;
-            app.GridLayout.Padding = [0 0 0 0];
-            app.GridLayout.Scrollable = 'on';
-
-            % Create LeftPanel
-            app.LeftPanel = uipanel(app.GridLayout);
-            app.LeftPanel.Layout.Row = 1;
-            app.LeftPanel.Layout.Column = 1;
-
-            % Create GridLayout2
-            app.GridLayout2 = uigridlayout(app.LeftPanel);
-            app.GridLayout2.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
-
-            % Create ComponentSelectionDropDownLabel
-            app.ComponentSelectionDropDownLabel = uilabel(app.GridLayout2);
-            app.ComponentSelectionDropDownLabel.HorizontalAlignment = 'center';
-            app.ComponentSelectionDropDownLabel.WordWrap = 'on';
-            app.ComponentSelectionDropDownLabel.Layout.Row = 1;
-            app.ComponentSelectionDropDownLabel.Layout.Column = 1;
-            app.ComponentSelectionDropDownLabel.Text = 'Component Selection';
-
-            % Create ComponentSelectionDropDown
-            app.ComponentSelectionDropDown = uidropdown(app.GridLayout2);
-            app.ComponentSelectionDropDown.Items = {'Tank,Engine,Point Mass,Option 4'};
-            app.ComponentSelectionDropDown.Layout.Row = 1;
-            app.ComponentSelectionDropDown.Layout.Column = 2;
-            app.ComponentSelectionDropDown.Value = 'Tank,Engine,Point Mass,Option 4';
-
-            % Create ComponentLocationEditFieldLabel
-            app.ComponentLocationEditFieldLabel = uilabel(app.GridLayout2);
-            app.ComponentLocationEditFieldLabel.HorizontalAlignment = 'center';
-            app.ComponentLocationEditFieldLabel.WordWrap = 'on';
-            app.ComponentLocationEditFieldLabel.Layout.Row = 2;
-            app.ComponentLocationEditFieldLabel.Layout.Column = 1;
-            app.ComponentLocationEditFieldLabel.Text = 'Component Location';
-
-            % Create ComponentLocationEditField
-            app.ComponentLocationEditField = uieditfield(app.GridLayout2, 'numeric');
-            app.ComponentLocationEditField.Layout.Row = 2;
-            app.ComponentLocationEditField.Layout.Column = 2;
-
-            % Create RightPanel
-            app.RightPanel = uipanel(app.GridLayout);
-            app.RightPanel.Layout.Row = 1;
-            app.RightPanel.Layout.Column = 2;
+            % Create RocketDesignTab
+            app.RocketDesignTab = uitab(app.TabGroup);
+            app.RocketDesignTab.Title = 'Rocket Design';
 
             % Create UIAxes
-            app.UIAxes = uiaxes(app.RightPanel);
+            app.UIAxes = uiaxes(app.RocketDesignTab);
             title(app.UIAxes, 'Rocket Layout', 'Interpreter', 'latex')
             xlabel(app.UIAxes, 'X', 'Interpreter', 'latex')
             ylabel(app.UIAxes, 'Y', 'Interpreter', 'latex')
             zlabel(app.UIAxes, 'Z', 'Interpreter', 'latex')
-            app.UIAxes.Position = [7 267 396 199];
+            app.UIAxes.Position = [226 264 403 185];
 
-            % Create TextArea
-            app.TextArea = uitextarea(app.RightPanel);
-            app.TextArea.Position = [10 41 392 168];
+            % Create Panel
+            app.Panel = uipanel(app.RocketDesignTab);
+            app.Panel.Position = [1 1 213 456];
 
-            % Create RocketPropertiesLabel
-            app.RocketPropertiesLabel = uilabel(app.RightPanel);
-            app.RocketPropertiesLabel.HorizontalAlignment = 'center';
-            app.RocketPropertiesLabel.FontSize = 14;
-            app.RocketPropertiesLabel.FontWeight = 'bold';
-            app.RocketPropertiesLabel.Position = [65 209 281 32];
-            app.RocketPropertiesLabel.Text = 'Rocket Properties';
+            % Create GridLayout
+            app.GridLayout = uigridlayout(app.Panel);
+            app.GridLayout.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
+
+            % Create PlaceComponentButton
+            app.PlaceComponentButton = uibutton(app.GridLayout, 'push');
+            app.PlaceComponentButton.Layout.Row = 7;
+            app.PlaceComponentButton.Layout.Column = [1 2];
+            app.PlaceComponentButton.Text = 'Place Component';
+
+            % Create ComponentSelectionDropDownLabel
+            app.ComponentSelectionDropDownLabel = uilabel(app.GridLayout);
+            app.ComponentSelectionDropDownLabel.HorizontalAlignment = 'center';
+            app.ComponentSelectionDropDownLabel.WordWrap = 'on';
+            app.ComponentSelectionDropDownLabel.Layout.Row = 3;
+            app.ComponentSelectionDropDownLabel.Layout.Column = 1;
+            app.ComponentSelectionDropDownLabel.Text = 'Component Selection';
+
+            % Create ComponentSelectionDropDown
+            app.ComponentSelectionDropDown = uidropdown(app.GridLayout);
+            app.ComponentSelectionDropDown.Items = {'Tank', 'Engine', 'Point Mass', 'Sensor'};
+            app.ComponentSelectionDropDown.Layout.Row = 3;
+            app.ComponentSelectionDropDown.Layout.Column = 2;
+            app.ComponentSelectionDropDown.Value = 'Tank';
+
+            % Create ComponentLocationEditFieldLabel
+            app.ComponentLocationEditFieldLabel = uilabel(app.GridLayout);
+            app.ComponentLocationEditFieldLabel.HorizontalAlignment = 'center';
+            app.ComponentLocationEditFieldLabel.WordWrap = 'on';
+            app.ComponentLocationEditFieldLabel.Layout.Row = 4;
+            app.ComponentLocationEditFieldLabel.Layout.Column = 1;
+            app.ComponentLocationEditFieldLabel.Text = 'Component Location';
+
+            % Create ComponentLocationEditField
+            app.ComponentLocationEditField = uieditfield(app.GridLayout, 'numeric');
+            app.ComponentLocationEditField.Layout.Row = 4;
+            app.ComponentLocationEditField.Layout.Column = 2;
+
+            % Create RocketLengthmEditFieldLabel
+            app.RocketLengthmEditFieldLabel = uilabel(app.GridLayout);
+            app.RocketLengthmEditFieldLabel.HorizontalAlignment = 'center';
+            app.RocketLengthmEditFieldLabel.WordWrap = 'on';
+            app.RocketLengthmEditFieldLabel.Layout.Row = 1;
+            app.RocketLengthmEditFieldLabel.Layout.Column = 1;
+            app.RocketLengthmEditFieldLabel.Text = 'Rocket Length [m]';
+
+            % Create RocketLengthmEditField
+            app.RocketLengthmEditField = uieditfield(app.GridLayout, 'numeric');
+            app.RocketLengthmEditField.ValueChangedFcn = createCallbackFcn(app, @RocketLengthChanged, true);
+            app.RocketLengthmEditField.HorizontalAlignment = 'left';
+            app.RocketLengthmEditField.Layout.Row = 1;
+            app.RocketLengthmEditField.Layout.Column = 2;
+
+            % Create RocketDiametermEditFieldLabel
+            app.RocketDiametermEditFieldLabel = uilabel(app.GridLayout);
+            app.RocketDiametermEditFieldLabel.HorizontalAlignment = 'center';
+            app.RocketDiametermEditFieldLabel.WordWrap = 'on';
+            app.RocketDiametermEditFieldLabel.Layout.Row = 2;
+            app.RocketDiametermEditFieldLabel.Layout.Column = 1;
+            app.RocketDiametermEditFieldLabel.Text = 'Rocket Diameter [m]';
+
+            % Create RocketDiametermEditField
+            app.RocketDiametermEditField = uieditfield(app.GridLayout, 'numeric');
+            app.RocketDiametermEditField.HorizontalAlignment = 'left';
+            app.RocketDiametermEditField.Layout.Row = 2;
+            app.RocketDiametermEditField.Layout.Column = 2;
+
+            % Create SimulationTab
+            app.SimulationTab = uitab(app.TabGroup);
+            app.SimulationTab.Title = 'Simulation';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
