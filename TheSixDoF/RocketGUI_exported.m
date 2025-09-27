@@ -7,9 +7,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         RocketDesignTab                matlab.ui.container.Tab
         Panel                          matlab.ui.container.Panel
         GridLayout                     matlab.ui.container.GridLayout
-        RocketDiametermEditField       matlab.ui.control.NumericEditField
+        NoseConeLengthmEditField       matlab.ui.control.NumericEditField
+        NoseConeLengthmEditFieldLabel  matlab.ui.control.Label
+        NoseConeGeometryDropDown       matlab.ui.control.DropDown
+        NoseConeGeometryDropDownLabel  matlab.ui.control.Label
+        RocketDiameterEditField        matlab.ui.control.NumericEditField
         RocketDiametermEditFieldLabel  matlab.ui.control.Label
-        RocketLengthmEditField         matlab.ui.control.NumericEditField
+        RocketLengthEditField          matlab.ui.control.NumericEditField
         RocketLengthmEditFieldLabel    matlab.ui.control.Label
         ComponentLocationEditField     matlab.ui.control.NumericEditField
         ComponentLocationEditFieldLabel  matlab.ui.control.Label
@@ -34,10 +38,47 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         
         function RocketPlotter(app)
 
-            x = linspace(0,1);
-            y = x.^2;
+            % create general parameters for the rocket:
+            leng = app.RocketLengthEditField.Value;
+            noseLeng = app.NoseConeLengthmEditField.Value;
+            dia = app.RocketDiameterEditField.Value;
 
-            plot(app.UIAxes, x,y)
+
+            % define the geometry over the nose cone:
+            xNose = linspace(0,noseLeng, 50);
+            
+            % change the y profile based on the selection. 
+
+            switch app.NoseConeGeometryDropDown.Value
+
+                case 'Conic'
+                    yNose = xNose.*dia./(noseLeng*2);  
+                case 'Tangent Ogive'
+                    R = dia/2;
+                    L = noseLeng;
+                    rho = (R^2 + L^2) / (2*R);
+
+                    yNose = sqrt(rho^2-(L-xNose).^2) + R - rho;
+            end
+
+            x = [noseLeng,leng];
+            y = dia* ones(numel(x),1);
+
+            % plot the base body of the rocket:
+            plot(app.UIAxes, x,y/2, 'k')
+            hold(app.UIAxes, "on")
+            plot(app.UIAxes, x,-y/2, 'k')
+            plot(app.UIAxes, [x(end),x(end)], [dia/2,-dia/2], 'k')
+
+            % plot the nose of the rocket:
+            plot(app.UIAxes, xNose, yNose, 'k');
+            plot(app.UIAxes, xNose, -yNose, 'k');
+
+            % define the standard limits for the plot
+            xlim(app.UIAxes, [-0.02*leng,leng*1.02])
+            axis(app.UIAxes, "equal")
+            hold(app.UIAxes, 'off')
+
         end
         
         function Geoplotter(app)
@@ -48,8 +89,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             g = geoaxes(app.LocationPlotPanel);
 
             geoplot(g, lat, long, 'ro')
-
-            
         end
     end
     
@@ -63,9 +102,11 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.Geoplotter
         end
 
-        % Value changed function: RocketLengthmEditField
+        % Value changed function: RocketLengthEditField
         function RocketLengthChanged(app, event)
-            value = app.RocketLengthmEditField.Value;
+            value = app.RocketLengthEditField.Value;
+
+            app.RocketPlotter();
             
         end
 
@@ -73,6 +114,24 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         function LatitudeChanged(app, event)
             value = app.LatitudedegEditField.Value;
             app.Geoplotter();
+        end
+
+        % Value changed function: RocketDiameterEditField
+        function RocketDiaChanged(app, event)
+            value = app.RocketDiameterEditField.Value;
+            app.RocketPlotter();
+        end
+
+        % Value changed function: NoseConeLengthmEditField
+        function NoseCoseLengthChanged(app, event)
+            value = app.NoseConeLengthmEditField.Value;
+            app.RocketPlotter();
+        end
+
+        % Value changed function: NoseConeGeometryDropDown
+        function NoseConeTypeChanged(app, event)
+            value = app.NoseConeGeometryDropDown.Value;
+            app.RocketPlotter();
         end
     end
 
@@ -121,14 +180,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.ComponentSelectionDropDownLabel = uilabel(app.GridLayout);
             app.ComponentSelectionDropDownLabel.HorizontalAlignment = 'center';
             app.ComponentSelectionDropDownLabel.WordWrap = 'on';
-            app.ComponentSelectionDropDownLabel.Layout.Row = 3;
+            app.ComponentSelectionDropDownLabel.Layout.Row = 5;
             app.ComponentSelectionDropDownLabel.Layout.Column = 1;
             app.ComponentSelectionDropDownLabel.Text = 'Component Selection';
 
             % Create ComponentSelectionDropDown
             app.ComponentSelectionDropDown = uidropdown(app.GridLayout);
             app.ComponentSelectionDropDown.Items = {'Tank', 'Engine', 'Point Mass', 'Sensor'};
-            app.ComponentSelectionDropDown.Layout.Row = 3;
+            app.ComponentSelectionDropDown.Layout.Row = 5;
             app.ComponentSelectionDropDown.Layout.Column = 2;
             app.ComponentSelectionDropDown.Value = 'Tank';
 
@@ -136,13 +195,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.ComponentLocationEditFieldLabel = uilabel(app.GridLayout);
             app.ComponentLocationEditFieldLabel.HorizontalAlignment = 'center';
             app.ComponentLocationEditFieldLabel.WordWrap = 'on';
-            app.ComponentLocationEditFieldLabel.Layout.Row = 4;
+            app.ComponentLocationEditFieldLabel.Layout.Row = 6;
             app.ComponentLocationEditFieldLabel.Layout.Column = 1;
             app.ComponentLocationEditFieldLabel.Text = 'Component Location';
 
             % Create ComponentLocationEditField
             app.ComponentLocationEditField = uieditfield(app.GridLayout, 'numeric');
-            app.ComponentLocationEditField.Layout.Row = 4;
+            app.ComponentLocationEditField.Layout.Row = 6;
             app.ComponentLocationEditField.Layout.Column = 2;
 
             % Create RocketLengthmEditFieldLabel
@@ -153,12 +212,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketLengthmEditFieldLabel.Layout.Column = 1;
             app.RocketLengthmEditFieldLabel.Text = 'Rocket Length [m]';
 
-            % Create RocketLengthmEditField
-            app.RocketLengthmEditField = uieditfield(app.GridLayout, 'numeric');
-            app.RocketLengthmEditField.ValueChangedFcn = createCallbackFcn(app, @RocketLengthChanged, true);
-            app.RocketLengthmEditField.HorizontalAlignment = 'left';
-            app.RocketLengthmEditField.Layout.Row = 1;
-            app.RocketLengthmEditField.Layout.Column = 2;
+            % Create RocketLengthEditField
+            app.RocketLengthEditField = uieditfield(app.GridLayout, 'numeric');
+            app.RocketLengthEditField.ValueChangedFcn = createCallbackFcn(app, @RocketLengthChanged, true);
+            app.RocketLengthEditField.HorizontalAlignment = 'left';
+            app.RocketLengthEditField.Layout.Row = 1;
+            app.RocketLengthEditField.Layout.Column = 2;
+            app.RocketLengthEditField.Value = 5;
 
             % Create RocketDiametermEditFieldLabel
             app.RocketDiametermEditFieldLabel = uilabel(app.GridLayout);
@@ -168,11 +228,45 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketDiametermEditFieldLabel.Layout.Column = 1;
             app.RocketDiametermEditFieldLabel.Text = 'Rocket Diameter [m]';
 
-            % Create RocketDiametermEditField
-            app.RocketDiametermEditField = uieditfield(app.GridLayout, 'numeric');
-            app.RocketDiametermEditField.HorizontalAlignment = 'left';
-            app.RocketDiametermEditField.Layout.Row = 2;
-            app.RocketDiametermEditField.Layout.Column = 2;
+            % Create RocketDiameterEditField
+            app.RocketDiameterEditField = uieditfield(app.GridLayout, 'numeric');
+            app.RocketDiameterEditField.ValueChangedFcn = createCallbackFcn(app, @RocketDiaChanged, true);
+            app.RocketDiameterEditField.HorizontalAlignment = 'left';
+            app.RocketDiameterEditField.Layout.Row = 2;
+            app.RocketDiameterEditField.Layout.Column = 2;
+            app.RocketDiameterEditField.Value = 0.2;
+
+            % Create NoseConeGeometryDropDownLabel
+            app.NoseConeGeometryDropDownLabel = uilabel(app.GridLayout);
+            app.NoseConeGeometryDropDownLabel.HorizontalAlignment = 'center';
+            app.NoseConeGeometryDropDownLabel.WordWrap = 'on';
+            app.NoseConeGeometryDropDownLabel.Layout.Row = 3;
+            app.NoseConeGeometryDropDownLabel.Layout.Column = 1;
+            app.NoseConeGeometryDropDownLabel.Text = 'Nose Cone Geometry';
+
+            % Create NoseConeGeometryDropDown
+            app.NoseConeGeometryDropDown = uidropdown(app.GridLayout);
+            app.NoseConeGeometryDropDown.Items = {'Von Karman', 'Tangent Ogive', 'Conic'};
+            app.NoseConeGeometryDropDown.ValueChangedFcn = createCallbackFcn(app, @NoseConeTypeChanged, true);
+            app.NoseConeGeometryDropDown.Layout.Row = 3;
+            app.NoseConeGeometryDropDown.Layout.Column = 2;
+            app.NoseConeGeometryDropDown.Value = 'Conic';
+
+            % Create NoseConeLengthmEditFieldLabel
+            app.NoseConeLengthmEditFieldLabel = uilabel(app.GridLayout);
+            app.NoseConeLengthmEditFieldLabel.HorizontalAlignment = 'center';
+            app.NoseConeLengthmEditFieldLabel.WordWrap = 'on';
+            app.NoseConeLengthmEditFieldLabel.Layout.Row = 4;
+            app.NoseConeLengthmEditFieldLabel.Layout.Column = 1;
+            app.NoseConeLengthmEditFieldLabel.Text = 'Nose Cone Length [m]';
+
+            % Create NoseConeLengthmEditField
+            app.NoseConeLengthmEditField = uieditfield(app.GridLayout, 'numeric');
+            app.NoseConeLengthmEditField.Limits = [0 Inf];
+            app.NoseConeLengthmEditField.ValueChangedFcn = createCallbackFcn(app, @NoseCoseLengthChanged, true);
+            app.NoseConeLengthmEditField.Layout.Row = 4;
+            app.NoseConeLengthmEditField.Layout.Column = 2;
+            app.NoseConeLengthmEditField.Value = 1;
 
             % Create SimulationTab
             app.SimulationTab = uitab(app.TabGroup);
