@@ -5,6 +5,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         UIFigure                       matlab.ui.Figure
         TabGroup                       matlab.ui.container.TabGroup
         RocketDesignTab                matlab.ui.container.Tab
+        Switchto3DButton               matlab.ui.control.Button
         FinDesignPanel                 matlab.ui.container.Panel
         GridLayout5                    matlab.ui.container.GridLayout
         SweepEditField                 matlab.ui.control.NumericEditField
@@ -213,7 +214,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Value changed function: RocketLengthEditField
         function RocketLengthChanged(app, event)
-            value = app.RocketLengthEditField.Value;
+            rocketLeng = app.RocketLengthEditField.Value;
+
+            if rocketLeng < app.NoseConeLengthmEditField.Value
+                uialert(app.UIFigure, "The rocket cannot be " + ...
+                    "shorter than the nose cone length!", "Input Error", "Icon","error");
+                return
+
+            end
 
             app.RocketPlotter();
             
@@ -474,12 +482,12 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create FinDesignPanel
             app.FinDesignPanel = uipanel(app.RocketDesignTab);
             app.FinDesignPanel.Title = 'Fin Design';
-            app.FinDesignPanel.Position = [227 12 400 239];
+            app.FinDesignPanel.Position = [227 12 400 202];
 
             % Create GridLayout5
             app.GridLayout5 = uigridlayout(app.FinDesignPanel);
             app.GridLayout5.ColumnWidth = {80, 70, '1x'};
-            app.GridLayout5.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x'};
+            app.GridLayout5.RowHeight = {'1x', '1x', '1x', '1x', '1x'};
 
             % Create FinGraph
             app.FinGraph = uiaxes(app.GridLayout5);
@@ -487,7 +495,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             xlabel(app.FinGraph, 'X', 'Interpreter', 'latex')
             ylabel(app.FinGraph, 'Y', 'Interpreter', 'latex')
             zlabel(app.FinGraph, 'Z', 'Interpreter', 'latex')
-            app.FinGraph.Layout.Row = [1 6];
+            app.FinGraph.Layout.Row = [1 5];
             app.FinGraph.Layout.Column = 3;
 
             % Create TipChordEditFieldLabel
@@ -548,6 +556,11 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.SweepEditField.Layout.Row = 4;
             app.SweepEditField.Layout.Column = 2;
             app.SweepEditField.Value = 0.15;
+
+            % Create Switchto3DButton
+            app.Switchto3DButton = uibutton(app.RocketDesignTab, 'push');
+            app.Switchto3DButton.Position = [378 230 100 22];
+            app.Switchto3DButton.Text = 'Switch to 3D';
 
             % Create SimulationTab
             app.SimulationTab = uitab(app.TabGroup);
