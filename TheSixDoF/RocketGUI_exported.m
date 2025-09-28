@@ -5,6 +5,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         UIFigure                       matlab.ui.Figure
         TabGroup                       matlab.ui.container.TabGroup
         RocketDesignTab                matlab.ui.container.Tab
+        Switchto2D                     matlab.ui.control.Button
         Switchto3DButton               matlab.ui.control.Button
         FinDesignPanel                 matlab.ui.container.Panel
         GridLayout5                    matlab.ui.container.GridLayout
@@ -22,6 +23,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         TabGroup2                      matlab.ui.container.TabGroup
         GeometryTab                    matlab.ui.container.Tab
         GridLayout3                    matlab.ui.container.GridLayout
+        Switch                         matlab.ui.control.Switch
         DistancefromRearmEditField     matlab.ui.control.NumericEditField
         DistancefromRearmEditFieldLabel  matlab.ui.control.Label
         FinDesignLabel                 matlab.ui.control.Label
@@ -55,13 +57,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         DateSelectionDatePickerLabel   matlab.ui.control.Label
     end
 
-    
+
     properties (Access = private)
         lineColor; % line color for plots
+        ThreeDPlot;
     end
-    
+
     methods (Access = private)
-        
+
         function RocketPlotter(app)
 
             % create general parameters for the rocket:
@@ -69,16 +72,15 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             noseLeng = app.NoseConeLengthmEditField.Value;
             dia = app.RocketDiameterEditField.Value;
 
-
             % define the geometry over the nose cone:
             xNose = linspace(0,noseLeng, 50);
-            
-            % change the y profile based on the selection. 
+
+            % change the y profile based on the selection.
 
             switch app.NoseConeGeometryDropDown.Value
 
                 case 'Conic'
-                    yNose = xNose.*dia./(noseLeng*2);  
+                    yNose = xNose.*dia./(noseLeng*2);
                 case 'Tangent Ogive'
                     R = dia/2;
                     L = noseLeng;
@@ -94,69 +96,46 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             end
 
             x = [noseLeng,leng];
-            y = dia* ones(numel(x),1);
+            y = dia* ones(1,numel(x));
+            x = [xNose,x];
+            y = [2*yNose,y];
 
-            % plot the base body of the rocket:
-            plot(app.UIAxes, x,y/2, app.lineColor)
-            hold(app.UIAxes, "on")
-            plot(app.UIAxes, x,-y/2, app.lineColor)
-            plot(app.UIAxes, [x(end),x(end)], [dia/2,-dia/2], app.lineColor)
+            % if the plot is in 3d, modify it
+            if app.ThreeDPlot
 
-            % plot the nose of the rocket:
-            plot(app.UIAxes, xNose, yNose, app.lineColor);
-            plot(app.UIAxes, xNose, -yNose, app.lineColor);
+                % [X, Y, Z] = cylinder(y);
+                %
+                % surf(app.UIAxes, X,Y,Z, "FaceColor",'r', 'EdgeAlpha',0);
+                % axis(app.UIAxes, "equal")
 
-            % plot the fins of the rocket, if they exist
+            else
 
-            numFin = app.FinNumberSpinner.Value;
+                % plot the base body of the rocket:
+                plot(app.UIAxes, x,y/2, app.lineColor)
+                hold(app.UIAxes, "on")
+                plot(app.UIAxes, x,-y/2, app.lineColor)
+                plot(app.UIAxes, [x(end),x(end)], [dia/2,-dia/2], app.lineColor)
 
-            if numFin ~= 0
 
-                [xFin, yFin] = app.FinPlotter;
+                % plot the fins of the rocket, if they exist
 
-                rearDistance = app.DistancefromRearmEditField.Value;
+                numFin = app.FinNumberSpinner.Value;
 
-                for idx = 1:numFin
+                if numFin ~= 0
 
-                    % the first fin always points up towards us, so use
-                    % that as the baseline reference:
+                    app.plotFins(numFin)
 
-                    theta = (2*pi)/numFin * (idx-1);
-
-                    % generate an array of matrices
-                    xFins = xFin + leng - rearDistance;
-                    yFins = yFin*sin(theta);
-
-                    % add the radial component to the y values:
-
-                    rad = dia/2 * sin(theta);
-
-                    yFins = yFins+rad;
-
-                    % if the y-component is less than the rocket body
-                    % radius, it is occluded from the view.
-
-                    if theta > pi/2 && theta <= pi
-                        yFins(yFins<dia/2) = dia/2;
-                    elseif theta > pi && theta < 3*pi/2 
-                        yFins(yFins>-dia/2) = -dia/2;
-                    end
-
-                    plot(app.UIAxes, xFins, yFins, app.lineColor);
-                    
                 end
+
+                % define the standard limits for the plot
+                hold(app.UIAxes, 'off')
+                xlim(app.UIAxes, [-0.02*leng,leng*1.02])
+                axis(app.UIAxes, "equal")
 
             end
 
-            % define the standard limits for the plot
-            hold(app.UIAxes, 'off')
-            xlim(app.UIAxes, [-0.02*leng,leng*1.02])
-            axis(app.UIAxes, "equal")
-
         end
 
-
-        
         function Geoplotter(app)
 
             lat = app.LatitudedegEditField.Value;
@@ -166,7 +145,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             geoplot(g, lat, long, 'ro')
         end
-        
+
         function [finPtsX, finPtsY] = FinPlotter(app)
             % get the basic parameters of the fin:
             rootChord = app.RootChordEditField.Value;
@@ -185,10 +164,73 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             finPtsY = [0, span, span, 0, 0];
 
             plot(app.FinGraph, finPtsX, finPtsY, app.lineColor);
-            axis(app.FinGraph, "equal");                        
+            axis(app.FinGraph, "equal");
+        end
+
+        function plotFins(app, numFin)
+
+            % get the default fin geometry from the fin plotter function
+            [xFin, yFin] = app.FinPlotter;
+
+            % get parameters from user input:
+            rearDist = app.DistancefromRearmEditField.Value;
+            dia = app.RocketDiameterEditField.Value;
+            leng = app.RocketLengthEditField.Value;
+
+
+            % run a for loop for each of the fins, calculated the projected
+            % view
+            for idx = 1:numFin
+
+                % the first fin always points up towards us, so use
+                % that as the baseline reference (theta = 0):
+                theta = (2*pi)/numFin * (idx-1);
+
+                % generate an array of matrices for the projected fins.
+                xFinShifted = xFin + leng - rearDist;
+                yFinProjection = yFin*sin(theta);
+
+                % add the radial component to the y-values:
+                rad = dia/2 * sin(theta);
+
+                yFinProjection = yFinProjection+rad;
+
+                % if the y-component is less than the rocket body
+                % radius, it is occluded from the view. Calculate how much
+                % of the fin to show in this case:
+
+                % start by calculating the slope of the front and back
+                % lines:
+                slopeFront = (yFinProjection(2)-yFinProjection(1)) ...
+                    / (xFinShifted(2) - xFinShifted(1));
+
+                slopeBack = (yFinProjection(2)-yFinProjection(1)) ...
+                    / (xFinShifted(3) - xFinShifted(4));
+
+                % in the region from the top to the back of the view:
+                if theta > pi/2 && theta <= pi
+                    % figure out the distance for each of the y-points:
+                    dist = dia/2 - yFinProjection;
+
+                    % update the x-position based on the y-points if the
+                    % distance is less than zero (inside the body), shift
+                    % the points by the slope:
+                    
+
+                    yFinProjection(yFinProjection<dia/2) = dia/2;
+
+                    % in the region from the back to the bottom side:
+                elseif theta > pi && theta < 3*pi/2
+                    yFinProjection(yFinProjection>-dia/2) = -dia/2;
+                end
+
+                plot(app.UIAxes, xFinShifted, yFinProjection, app.lineColor);
+
+            end
+
         end
     end
-    
+
 
     % Callbacks that handle component events
     methods (Access = private)
@@ -224,7 +266,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             end
 
             app.RocketPlotter();
-            
+
         end
 
         % Value changed function: LatitudedegEditField
@@ -285,6 +327,29 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             value = app.DistancefromRearmEditField.Value;
             app.RocketPlotter();
         end
+
+        % Button pushed function: Switchto3DButton
+        function ConvertToThreeD(app, event)
+            app.Switchto2D.Enable = "on";
+            app.Switchto2D.Visible = 'on';
+            app.Switchto3DButton.Enable = 'off';
+            app.Switchto3DButton.Visible = "off";
+
+            app.ThreeDPlot = 1;
+
+            app.RocketPlotter();
+        end
+
+        % Button pushed function: Switchto2D
+        function SwitchToTwoD(app, event)
+            app.Switchto3DButton.Enable = "on";
+            app.Switchto3DButton.Visible = 'on';
+            app.Switchto2D.Enable = 'off';
+            app.Switchto2D.Visible = 'off';
+
+            app.ThreeDPlot = 0;
+            app.RocketPlotter();
+        end
     end
 
     % Component initialization
@@ -333,13 +398,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create GridLayout3
             app.GridLayout3 = uigridlayout(app.GeometryTab);
-            app.GridLayout3.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
+            app.GridLayout3.RowHeight = {20, '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
 
             % Create RocketLengthmEditFieldLabel
             app.RocketLengthmEditFieldLabel = uilabel(app.GridLayout3);
             app.RocketLengthmEditFieldLabel.HorizontalAlignment = 'center';
             app.RocketLengthmEditFieldLabel.WordWrap = 'on';
-            app.RocketLengthmEditFieldLabel.Layout.Row = 1;
+            app.RocketLengthmEditFieldLabel.Layout.Row = 2;
             app.RocketLengthmEditFieldLabel.Layout.Column = 1;
             app.RocketLengthmEditFieldLabel.Text = 'Rocket Length [m]';
 
@@ -347,7 +412,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketLengthEditField = uieditfield(app.GridLayout3, 'numeric');
             app.RocketLengthEditField.ValueChangedFcn = createCallbackFcn(app, @RocketLengthChanged, true);
             app.RocketLengthEditField.HorizontalAlignment = 'left';
-            app.RocketLengthEditField.Layout.Row = 1;
+            app.RocketLengthEditField.Layout.Row = 2;
             app.RocketLengthEditField.Layout.Column = 2;
             app.RocketLengthEditField.Value = 5;
 
@@ -355,7 +420,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketDiametermEditFieldLabel = uilabel(app.GridLayout3);
             app.RocketDiametermEditFieldLabel.HorizontalAlignment = 'center';
             app.RocketDiametermEditFieldLabel.WordWrap = 'on';
-            app.RocketDiametermEditFieldLabel.Layout.Row = 2;
+            app.RocketDiametermEditFieldLabel.Layout.Row = 3;
             app.RocketDiametermEditFieldLabel.Layout.Column = 1;
             app.RocketDiametermEditFieldLabel.Text = 'Rocket Diameter [m]';
 
@@ -363,7 +428,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketDiameterEditField = uieditfield(app.GridLayout3, 'numeric');
             app.RocketDiameterEditField.ValueChangedFcn = createCallbackFcn(app, @RocketDiaChanged, true);
             app.RocketDiameterEditField.HorizontalAlignment = 'left';
-            app.RocketDiameterEditField.Layout.Row = 2;
+            app.RocketDiameterEditField.Layout.Row = 3;
             app.RocketDiameterEditField.Layout.Column = 2;
             app.RocketDiameterEditField.Value = 0.2;
 
@@ -371,7 +436,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.NoseConeGeometryDropDownLabel = uilabel(app.GridLayout3);
             app.NoseConeGeometryDropDownLabel.HorizontalAlignment = 'center';
             app.NoseConeGeometryDropDownLabel.WordWrap = 'on';
-            app.NoseConeGeometryDropDownLabel.Layout.Row = 3;
+            app.NoseConeGeometryDropDownLabel.Layout.Row = 4;
             app.NoseConeGeometryDropDownLabel.Layout.Column = 1;
             app.NoseConeGeometryDropDownLabel.Text = 'Nose Cone Geometry';
 
@@ -379,7 +444,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.NoseConeGeometryDropDown = uidropdown(app.GridLayout3);
             app.NoseConeGeometryDropDown.Items = {'Von Karman', 'Tangent Ogive', 'Conic'};
             app.NoseConeGeometryDropDown.ValueChangedFcn = createCallbackFcn(app, @NoseConeTypeChanged, true);
-            app.NoseConeGeometryDropDown.Layout.Row = 3;
+            app.NoseConeGeometryDropDown.Layout.Row = 4;
             app.NoseConeGeometryDropDown.Layout.Column = 2;
             app.NoseConeGeometryDropDown.Value = 'Von Karman';
 
@@ -387,7 +452,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.NoseConeLengthmEditFieldLabel = uilabel(app.GridLayout3);
             app.NoseConeLengthmEditFieldLabel.HorizontalAlignment = 'center';
             app.NoseConeLengthmEditFieldLabel.WordWrap = 'on';
-            app.NoseConeLengthmEditFieldLabel.Layout.Row = 4;
+            app.NoseConeLengthmEditFieldLabel.Layout.Row = 5;
             app.NoseConeLengthmEditFieldLabel.Layout.Column = 1;
             app.NoseConeLengthmEditFieldLabel.Text = 'Nose Cone Length [m]';
 
@@ -395,14 +460,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.NoseConeLengthmEditField = uieditfield(app.GridLayout3, 'numeric');
             app.NoseConeLengthmEditField.Limits = [0 Inf];
             app.NoseConeLengthmEditField.ValueChangedFcn = createCallbackFcn(app, @NoseCoseLengthChanged, true);
-            app.NoseConeLengthmEditField.Layout.Row = 4;
+            app.NoseConeLengthmEditField.Layout.Row = 5;
             app.NoseConeLengthmEditField.Layout.Column = 2;
             app.NoseConeLengthmEditField.Value = 0.5;
 
             % Create FinNumberSpinnerLabel
             app.FinNumberSpinnerLabel = uilabel(app.GridLayout3);
             app.FinNumberSpinnerLabel.HorizontalAlignment = 'center';
-            app.FinNumberSpinnerLabel.Layout.Row = 6;
+            app.FinNumberSpinnerLabel.Layout.Row = 7;
             app.FinNumberSpinnerLabel.Layout.Column = 1;
             app.FinNumberSpinnerLabel.Text = 'Fin Number';
 
@@ -410,7 +475,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.FinNumberSpinner = uispinner(app.GridLayout3);
             app.FinNumberSpinner.Limits = [0 6];
             app.FinNumberSpinner.ValueChangedFcn = createCallbackFcn(app, @FinNumberChanged, true);
-            app.FinNumberSpinner.Layout.Row = 6;
+            app.FinNumberSpinner.Layout.Row = 7;
             app.FinNumberSpinner.Layout.Column = 2;
             app.FinNumberSpinner.Value = 4;
 
@@ -418,7 +483,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.FinDesignLabel = uilabel(app.GridLayout3);
             app.FinDesignLabel.HorizontalAlignment = 'center';
             app.FinDesignLabel.FontWeight = 'bold';
-            app.FinDesignLabel.Layout.Row = 5;
+            app.FinDesignLabel.Layout.Row = 6;
             app.FinDesignLabel.Layout.Column = [1 2];
             app.FinDesignLabel.Text = 'Fin Design';
 
@@ -426,16 +491,23 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.DistancefromRearmEditFieldLabel = uilabel(app.GridLayout3);
             app.DistancefromRearmEditFieldLabel.HorizontalAlignment = 'center';
             app.DistancefromRearmEditFieldLabel.WordWrap = 'on';
-            app.DistancefromRearmEditFieldLabel.Layout.Row = 7;
+            app.DistancefromRearmEditFieldLabel.Layout.Row = 8;
             app.DistancefromRearmEditFieldLabel.Layout.Column = 1;
             app.DistancefromRearmEditFieldLabel.Text = 'Distance from Rear [m]';
 
             % Create DistancefromRearmEditField
             app.DistancefromRearmEditField = uieditfield(app.GridLayout3, 'numeric');
             app.DistancefromRearmEditField.ValueChangedFcn = createCallbackFcn(app, @DistFromRearChanged, true);
-            app.DistancefromRearmEditField.Layout.Row = 7;
+            app.DistancefromRearmEditField.Layout.Row = 8;
             app.DistancefromRearmEditField.Layout.Column = 2;
             app.DistancefromRearmEditField.Value = 0.25;
+
+            % Create Switch
+            app.Switch = uiswitch(app.GridLayout3, 'slider');
+            app.Switch.Items = {'SI', 'Imperial'};
+            app.Switch.Layout.Row = 1;
+            app.Switch.Layout.Column = [1 2];
+            app.Switch.Value = 'SI';
 
             % Create ComponentTab
             app.ComponentTab = uitab(app.TabGroup2);
@@ -559,8 +631,17 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create Switchto3DButton
             app.Switchto3DButton = uibutton(app.RocketDesignTab, 'push');
+            app.Switchto3DButton.ButtonPushedFcn = createCallbackFcn(app, @ConvertToThreeD, true);
             app.Switchto3DButton.Position = [378 230 100 22];
             app.Switchto3DButton.Text = 'Switch to 3D';
+
+            % Create Switchto2D
+            app.Switchto2D = uibutton(app.RocketDesignTab, 'push');
+            app.Switchto2D.ButtonPushedFcn = createCallbackFcn(app, @SwitchToTwoD, true);
+            app.Switchto2D.Enable = 'off';
+            app.Switchto2D.Visible = 'off';
+            app.Switchto2D.Position = [378 230 100 22];
+            app.Switchto2D.Text = 'Switch to 2D';
 
             % Create SimulationTab
             app.SimulationTab = uitab(app.TabGroup);
