@@ -9,14 +9,21 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         Switchto3DButton               matlab.ui.control.Button
         FinDesignPanel                 matlab.ui.container.Panel
         GridLayout5                    matlab.ui.container.GridLayout
+        TabGroup3                      matlab.ui.container.TabGroup
+        PlanformTab                    matlab.ui.container.Tab
+        GridLayout6                    matlab.ui.container.GridLayout
         SweepEditField                 matlab.ui.control.NumericEditField
         SweepEditFieldLabel            matlab.ui.control.Label
         SpanEditField                  matlab.ui.control.NumericEditField
         SpanEditFieldLabel             matlab.ui.control.Label
-        RootChordEditField             matlab.ui.control.NumericEditField
-        RootChordEditFieldLabel        matlab.ui.control.Label
         TipChordEditField              matlab.ui.control.NumericEditField
         TipChordEditFieldLabel         matlab.ui.control.Label
+        RootChordEditField             matlab.ui.control.NumericEditField
+        RootChordEditFieldLabel        matlab.ui.control.Label
+        AirfoilTab                     matlab.ui.container.Tab
+        GridLayout7                    matlab.ui.container.GridLayout
+        AirfoilGeometryDropDown        matlab.ui.control.DropDown
+        AirfoilGeometryDropDownLabel   matlab.ui.control.Label
         FinGraph                       matlab.ui.control.UIAxes
         Panel                          matlab.ui.container.Panel
         GridLayout                     matlab.ui.container.GridLayout
@@ -177,10 +184,30 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             dia = app.RocketDiameterEditField.Value;
             leng = app.RocketLengthEditField.Value;
 
+            % first, check which fins should be plotted based on occlusion
+            % (manually for now lmao, don't know how to write this
+            % programmatically)
+
+            switch numFin
+                case 1
+                    % why?
+                    plotFin = 1;
+                case 2
+                    plotFin = [1,2];
+                case 3
+                    plotFin = [1,2,3];
+                case 4
+                    plotFin = [1,2,4];
+                case 5
+                    plotFin = [1,2,5];
+                case 6
+                    plotFin = [1,2,6];
+            end
+
 
             % run a for loop for each of the fins, calculated the projected
             % view
-            for idx = 1:numFin
+            for idx = plotFin
 
                 % the first fin always points up towards us, so use
                 % that as the baseline reference (theta = 0):
@@ -350,6 +377,24 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.ThreeDPlot = 0;
             app.RocketPlotter();
         end
+
+        % Value changed function: Switch
+        function SiImperialSwitch(app, event)
+            value = app.Switch.Value;
+
+            if strcmp(value, "Imperial")
+            app.RocketDiametermEditFieldLabel.Text = 'Rocket Diameter [in]';
+            app.RocketLengthmEditFieldLabel.Text = 'Rocket Length [in]';
+            app.NoseConeLengthmEditFieldLabel.Text = 'Nose Cone Length [in]';
+            app.DistancefromRearmEditFieldLabel.Text = 'Distance from Rear [in]';
+            else
+            app.RocketDiametermEditFieldLabel.Text = 'Rocket Diameter [m]';
+            app.RocketLengthmEditFieldLabel.Text = 'Rocket Length [m]';
+            app.NoseConeLengthmEditFieldLabel.Text = 'Nose Cone Length [m]'; 
+            app.DistancefromRearmEditFieldLabel.Text = 'Distance from Rear [m]';
+
+            end
+        end
     end
 
     % Component initialization
@@ -505,6 +550,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create Switch
             app.Switch = uiswitch(app.GridLayout3, 'slider');
             app.Switch.Items = {'SI', 'Imperial'};
+            app.Switch.ValueChangedFcn = createCallbackFcn(app, @SiImperialSwitch, true);
             app.Switch.Layout.Row = 1;
             app.Switch.Layout.Column = [1 2];
             app.Switch.Value = 'SI';
@@ -554,11 +600,11 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create FinDesignPanel
             app.FinDesignPanel = uipanel(app.RocketDesignTab);
             app.FinDesignPanel.Title = 'Fin Design';
-            app.FinDesignPanel.Position = [227 12 400 202];
+            app.FinDesignPanel.Position = [227 12 400 218];
 
             % Create GridLayout5
             app.GridLayout5 = uigridlayout(app.FinDesignPanel);
-            app.GridLayout5.ColumnWidth = {80, 70, '1x'};
+            app.GridLayout5.ColumnWidth = {100, 110, '2x'};
             app.GridLayout5.RowHeight = {'1x', '1x', '1x', '1x', '1x'};
 
             % Create FinGraph
@@ -570,45 +616,59 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.FinGraph.Layout.Row = [1 5];
             app.FinGraph.Layout.Column = 3;
 
-            % Create TipChordEditFieldLabel
-            app.TipChordEditFieldLabel = uilabel(app.GridLayout5);
-            app.TipChordEditFieldLabel.HorizontalAlignment = 'right';
-            app.TipChordEditFieldLabel.Layout.Row = 2;
-            app.TipChordEditFieldLabel.Layout.Column = 1;
-            app.TipChordEditFieldLabel.Text = 'Tip Chord';
+            % Create TabGroup3
+            app.TabGroup3 = uitabgroup(app.GridLayout5);
+            app.TabGroup3.Layout.Row = [1 5];
+            app.TabGroup3.Layout.Column = [1 2];
 
-            % Create TipChordEditField
-            app.TipChordEditField = uieditfield(app.GridLayout5, 'numeric');
-            app.TipChordEditField.Limits = [0 Inf];
-            app.TipChordEditField.ValueChangedFcn = createCallbackFcn(app, @TipChordChanged, true);
-            app.TipChordEditField.Layout.Row = 2;
-            app.TipChordEditField.Layout.Column = 2;
-            app.TipChordEditField.Value = 0.1;
+            % Create PlanformTab
+            app.PlanformTab = uitab(app.TabGroup3);
+            app.PlanformTab.Title = 'Planform';
+
+            % Create GridLayout6
+            app.GridLayout6 = uigridlayout(app.PlanformTab);
+            app.GridLayout6.ColumnWidth = {90, 90};
+            app.GridLayout6.RowHeight = {'1x', '1x', '1x', '1x'};
 
             % Create RootChordEditFieldLabel
-            app.RootChordEditFieldLabel = uilabel(app.GridLayout5);
-            app.RootChordEditFieldLabel.HorizontalAlignment = 'right';
+            app.RootChordEditFieldLabel = uilabel(app.GridLayout6);
+            app.RootChordEditFieldLabel.HorizontalAlignment = 'center';
             app.RootChordEditFieldLabel.Layout.Row = 1;
             app.RootChordEditFieldLabel.Layout.Column = 1;
             app.RootChordEditFieldLabel.Text = 'Root Chord';
 
             % Create RootChordEditField
-            app.RootChordEditField = uieditfield(app.GridLayout5, 'numeric');
+            app.RootChordEditField = uieditfield(app.GridLayout6, 'numeric');
             app.RootChordEditField.Limits = [0 Inf];
             app.RootChordEditField.ValueChangedFcn = createCallbackFcn(app, @RootChordChanged, true);
             app.RootChordEditField.Layout.Row = 1;
             app.RootChordEditField.Layout.Column = 2;
             app.RootChordEditField.Value = 0.2;
 
+            % Create TipChordEditFieldLabel
+            app.TipChordEditFieldLabel = uilabel(app.GridLayout6);
+            app.TipChordEditFieldLabel.HorizontalAlignment = 'center';
+            app.TipChordEditFieldLabel.Layout.Row = 2;
+            app.TipChordEditFieldLabel.Layout.Column = 1;
+            app.TipChordEditFieldLabel.Text = 'Tip Chord';
+
+            % Create TipChordEditField
+            app.TipChordEditField = uieditfield(app.GridLayout6, 'numeric');
+            app.TipChordEditField.Limits = [0 Inf];
+            app.TipChordEditField.ValueChangedFcn = createCallbackFcn(app, @TipChordChanged, true);
+            app.TipChordEditField.Layout.Row = 2;
+            app.TipChordEditField.Layout.Column = 2;
+            app.TipChordEditField.Value = 0.1;
+
             % Create SpanEditFieldLabel
-            app.SpanEditFieldLabel = uilabel(app.GridLayout5);
-            app.SpanEditFieldLabel.HorizontalAlignment = 'right';
+            app.SpanEditFieldLabel = uilabel(app.GridLayout6);
+            app.SpanEditFieldLabel.HorizontalAlignment = 'center';
             app.SpanEditFieldLabel.Layout.Row = 3;
             app.SpanEditFieldLabel.Layout.Column = 1;
             app.SpanEditFieldLabel.Text = 'Span';
 
             % Create SpanEditField
-            app.SpanEditField = uieditfield(app.GridLayout5, 'numeric');
+            app.SpanEditField = uieditfield(app.GridLayout6, 'numeric');
             app.SpanEditField.Limits = [0 Inf];
             app.SpanEditField.ValueChangedFcn = createCallbackFcn(app, @SpanChanged, true);
             app.SpanEditField.Layout.Row = 3;
@@ -616,23 +676,45 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.SpanEditField.Value = 0.1;
 
             % Create SweepEditFieldLabel
-            app.SweepEditFieldLabel = uilabel(app.GridLayout5);
-            app.SweepEditFieldLabel.HorizontalAlignment = 'right';
+            app.SweepEditFieldLabel = uilabel(app.GridLayout6);
+            app.SweepEditFieldLabel.HorizontalAlignment = 'center';
             app.SweepEditFieldLabel.Layout.Row = 4;
             app.SweepEditFieldLabel.Layout.Column = 1;
             app.SweepEditFieldLabel.Text = 'Sweep';
 
             % Create SweepEditField
-            app.SweepEditField = uieditfield(app.GridLayout5, 'numeric');
+            app.SweepEditField = uieditfield(app.GridLayout6, 'numeric');
             app.SweepEditField.ValueChangedFcn = createCallbackFcn(app, @SweepChanged, true);
             app.SweepEditField.Layout.Row = 4;
             app.SweepEditField.Layout.Column = 2;
             app.SweepEditField.Value = 0.15;
 
+            % Create AirfoilTab
+            app.AirfoilTab = uitab(app.TabGroup3);
+            app.AirfoilTab.Title = 'Airfoil';
+
+            % Create GridLayout7
+            app.GridLayout7 = uigridlayout(app.AirfoilTab);
+            app.GridLayout7.RowHeight = {'1x', '1x', '1x'};
+
+            % Create AirfoilGeometryDropDownLabel
+            app.AirfoilGeometryDropDownLabel = uilabel(app.GridLayout7);
+            app.AirfoilGeometryDropDownLabel.HorizontalAlignment = 'right';
+            app.AirfoilGeometryDropDownLabel.Layout.Row = 1;
+            app.AirfoilGeometryDropDownLabel.Layout.Column = 1;
+            app.AirfoilGeometryDropDownLabel.Text = 'Airfoil Geometry';
+
+            % Create AirfoilGeometryDropDown
+            app.AirfoilGeometryDropDown = uidropdown(app.GridLayout7);
+            app.AirfoilGeometryDropDown.Items = {'NACA 4 Series', 'Hexagonal', 'Wedge'};
+            app.AirfoilGeometryDropDown.Layout.Row = 1;
+            app.AirfoilGeometryDropDown.Layout.Column = 2;
+            app.AirfoilGeometryDropDown.Value = 'NACA 4 Series';
+
             % Create Switchto3DButton
             app.Switchto3DButton = uibutton(app.RocketDesignTab, 'push');
             app.Switchto3DButton.ButtonPushedFcn = createCallbackFcn(app, @ConvertToThreeD, true);
-            app.Switchto3DButton.Position = [378 230 100 22];
+            app.Switchto3DButton.Position = [378 237 100 22];
             app.Switchto3DButton.Text = 'Switch to 3D';
 
             % Create Switchto2D
@@ -640,7 +722,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.Switchto2D.ButtonPushedFcn = createCallbackFcn(app, @SwitchToTwoD, true);
             app.Switchto2D.Enable = 'off';
             app.Switchto2D.Visible = 'off';
-            app.Switchto2D.Position = [378 230 100 22];
+            app.Switchto2D.Position = [378 237 100 22];
             app.Switchto2D.Text = 'Switch to 2D';
 
             % Create SimulationTab
