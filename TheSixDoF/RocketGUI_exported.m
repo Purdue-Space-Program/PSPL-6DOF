@@ -22,6 +22,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         RootChordEditFieldLabel        matlab.ui.control.Label
         AirfoilTab                     matlab.ui.container.Tab
         GridLayout7                    matlab.ui.container.GridLayout
+        DoubleAngleLabel               matlab.ui.control.Label
+        DoubleAngleEditField           matlab.ui.control.EditField
+        NACAEditField                  matlab.ui.control.NumericEditField
+        NACAEditFieldLabel             matlab.ui.control.Label
         AirfoilGeometryDropDown        matlab.ui.control.DropDown
         AirfoilGeometryDropDownLabel   matlab.ui.control.Label
         FinGraph                       matlab.ui.control.UIAxes
@@ -53,7 +57,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         ComponentSelectionDropDownLabel  matlab.ui.control.Label
         UIAxes                         matlab.ui.control.UIAxes
         SimulationTab                  matlab.ui.container.Tab
-        LocationPlotPanel              matlab.ui.container.Panel
+        LaunchLocationPanel            matlab.ui.container.Panel
         Panel_2                        matlab.ui.container.Panel
         GridLayout2                    matlab.ui.container.GridLayout
         LongitudedegEditField          matlab.ui.control.NumericEditField
@@ -84,22 +88,28 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % change the y profile based on the selection.
 
+            R = dia/2;
+
             switch app.NoseConeGeometryDropDown.Value
+
 
                 case 'Conic'
                     yNose = xNose.*dia./(noseLeng*2);
                 case 'Tangent Ogive'
-                    R = dia/2;
                     L = noseLeng;
                     rho = (R^2 + L^2) / (2*R);
                     yNose = sqrt(rho^2-(L-xNose).^2) + R - rho;
 
                 case 'Von Karman'
                     theta = linspace(0,pi,50);
-                    R = dia/2;
                     L = noseLeng;
                     xNose = L/2 * (1-cos(theta));
                     yNose = R/sqrt(pi) * sqrt(theta-sin(2*theta)/2);
+
+                case 'Elliptical'
+                    L = noseLeng;
+                    yNose = R*sqrt(1-((xNose-L).^2./L^2));
+
             end
 
             x = [noseLeng,leng];
@@ -148,9 +158,15 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             lat = app.LatitudedegEditField.Value;
             long = app.LongitudedegEditField.Value;
 
-            g = geoaxes(app.LocationPlotPanel);
+            g = geoaxes(app.LaunchLocationPanel);
+
+            set(g, 'Basemap', 'satellite')
 
             geoplot(g, lat, long, 'ro')
+
+            size = 0.1;
+
+            geolimits(g, [lat-size, lat+size], [long-size,long+size]);
         end
 
         function [finPtsX, finPtsY] = FinPlotter(app)
@@ -279,6 +295,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketPlotter();
             app.Geoplotter();
             app.FinPlotter();
+            app.AirfoilGeoChanged();
         end
 
         % Value changed function: RocketLengthEditField
@@ -310,7 +327,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Value changed function: NoseConeLengthmEditField
         function NoseCoseLengthChanged(app, event)
-            value = app.NoseConeLengthmEditField.Value;
+            noseLeng = app.NoseConeLengthmEditField.Value;
+
+            if noseLeng >= app.RocketLengthEditField.Value
+                uialert(app.UIFigure, "Nose cone cannot be longer than rocket body!", ...
+                    "Dimension Error")
+                return
+            end
+
             app.RocketPlotter();
         end
 
@@ -395,6 +419,59 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             end
         end
+
+        % Value changed function: AirfoilGeometryDropDown
+        function AirfoilGeoChanged(app, event)
+            value = app.AirfoilGeometryDropDown.Value;
+            
+        switch value
+
+            case 'NACA 4 Series'
+
+                % switch on the NACA number input
+                app.NACAEditField.Enable = "on";
+                app.NACAEditField.Visible = "on";
+                app.NACAEditFieldLabel.Enable = "on";
+                app.NACAEditFieldLabel.Visible = "on";
+
+                app.DoubleAngleEditField.Enable = 'off';
+                app.DoubleAngleEditField.Visible = 'off';
+                app.DoubleAngleLabel.Visible = 'off';
+                app.DoubleAngleLabel.Enable = 'off';
+
+            case 'Double Wedge'
+                app.DoubleAngleEditField.Enable = 'on';
+                app.DoubleAngleEditField.Visible = 'on';
+                app.DoubleAngleLabel.Visible = 'on';
+                app.DoubleAngleLabel.Enable = 'on';
+
+
+                app.NACAEditField.Enable = "off";
+                app.NACAEditField.Visible = "off";
+                app.NACAEditFieldLabel.Enable = "off";
+                app.NACAEditFieldLabel.Visible = "off";
+
+        end
+        end
+
+        % Callback function: not associated with a component
+        function GeoplotZoomChanged(app, event)
+            value = app.ZoomLevelSlider.Value;
+            
+            app.Geoplotter();
+        end
+
+        % Callback function: not associated with a component
+        function GeoplotClicked(app, event)
+                clickedPoint = ax.CurrentPoint; % [x, y] coordinates where clicked
+
+                % Convert the clicked point to geographical coordinates (latitude, longitude)
+                lat = clickedPoint(1,2);
+                lon = clickedPoint(1,1);
+            
+                % Display the coordinates
+                disp(['Latitude: ', num2str(lat), ', Longitude: ', num2str(lon)]);
+        end
     end
 
     % Component initialization
@@ -443,7 +520,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create GridLayout3
             app.GridLayout3 = uigridlayout(app.GeometryTab);
-            app.GridLayout3.RowHeight = {20, '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
+            app.GridLayout3.RowHeight = {20, '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
 
             % Create RocketLengthmEditFieldLabel
             app.RocketLengthmEditFieldLabel = uilabel(app.GridLayout3);
@@ -487,7 +564,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create NoseConeGeometryDropDown
             app.NoseConeGeometryDropDown = uidropdown(app.GridLayout3);
-            app.NoseConeGeometryDropDown.Items = {'Von Karman', 'Tangent Ogive', 'Conic'};
+            app.NoseConeGeometryDropDown.Items = {'Von Karman', 'Tangent Ogive', 'Conic', 'Elliptical'};
             app.NoseConeGeometryDropDown.ValueChangedFcn = createCallbackFcn(app, @NoseConeTypeChanged, true);
             app.NoseConeGeometryDropDown.Layout.Row = 4;
             app.NoseConeGeometryDropDown.Layout.Column = 2;
@@ -512,7 +589,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create FinNumberSpinnerLabel
             app.FinNumberSpinnerLabel = uilabel(app.GridLayout3);
             app.FinNumberSpinnerLabel.HorizontalAlignment = 'center';
-            app.FinNumberSpinnerLabel.Layout.Row = 7;
+            app.FinNumberSpinnerLabel.Layout.Row = 8;
             app.FinNumberSpinnerLabel.Layout.Column = 1;
             app.FinNumberSpinnerLabel.Text = 'Fin Number';
 
@@ -520,7 +597,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.FinNumberSpinner = uispinner(app.GridLayout3);
             app.FinNumberSpinner.Limits = [0 6];
             app.FinNumberSpinner.ValueChangedFcn = createCallbackFcn(app, @FinNumberChanged, true);
-            app.FinNumberSpinner.Layout.Row = 7;
+            app.FinNumberSpinner.Layout.Row = 8;
             app.FinNumberSpinner.Layout.Column = 2;
             app.FinNumberSpinner.Value = 4;
 
@@ -536,14 +613,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.DistancefromRearmEditFieldLabel = uilabel(app.GridLayout3);
             app.DistancefromRearmEditFieldLabel.HorizontalAlignment = 'center';
             app.DistancefromRearmEditFieldLabel.WordWrap = 'on';
-            app.DistancefromRearmEditFieldLabel.Layout.Row = 8;
+            app.DistancefromRearmEditFieldLabel.Layout.Row = 9;
             app.DistancefromRearmEditFieldLabel.Layout.Column = 1;
             app.DistancefromRearmEditFieldLabel.Text = 'Distance from Rear [m]';
 
             % Create DistancefromRearmEditField
             app.DistancefromRearmEditField = uieditfield(app.GridLayout3, 'numeric');
             app.DistancefromRearmEditField.ValueChangedFcn = createCallbackFcn(app, @DistFromRearChanged, true);
-            app.DistancefromRearmEditField.Layout.Row = 8;
+            app.DistancefromRearmEditField.Layout.Row = 9;
             app.DistancefromRearmEditField.Layout.Column = 2;
             app.DistancefromRearmEditField.Value = 0.25;
 
@@ -706,10 +783,46 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create AirfoilGeometryDropDown
             app.AirfoilGeometryDropDown = uidropdown(app.GridLayout7);
-            app.AirfoilGeometryDropDown.Items = {'NACA 4 Series', 'Hexagonal', 'Wedge'};
+            app.AirfoilGeometryDropDown.Items = {'NACA 4 Series', 'Hexagonal', 'Double Wedge'};
+            app.AirfoilGeometryDropDown.ValueChangedFcn = createCallbackFcn(app, @AirfoilGeoChanged, true);
             app.AirfoilGeometryDropDown.Layout.Row = 1;
             app.AirfoilGeometryDropDown.Layout.Column = 2;
             app.AirfoilGeometryDropDown.Value = 'NACA 4 Series';
+
+            % Create NACAEditFieldLabel
+            app.NACAEditFieldLabel = uilabel(app.GridLayout7);
+            app.NACAEditFieldLabel.HorizontalAlignment = 'right';
+            app.NACAEditFieldLabel.Enable = 'off';
+            app.NACAEditFieldLabel.Visible = 'off';
+            app.NACAEditFieldLabel.Layout.Row = 2;
+            app.NACAEditFieldLabel.Layout.Column = 1;
+            app.NACAEditFieldLabel.Text = 'NACA';
+
+            % Create NACAEditField
+            app.NACAEditField = uieditfield(app.GridLayout7, 'numeric');
+            app.NACAEditField.ValueDisplayFormat = '%04d';
+            app.NACAEditField.Editable = 'off';
+            app.NACAEditField.Enable = 'off';
+            app.NACAEditField.Visible = 'off';
+            app.NACAEditField.Layout.Row = 2;
+            app.NACAEditField.Layout.Column = 2;
+
+            % Create DoubleAngleEditField
+            app.DoubleAngleEditField = uieditfield(app.GridLayout7, 'text');
+            app.DoubleAngleEditField.Editable = 'off';
+            app.DoubleAngleEditField.Enable = 'off';
+            app.DoubleAngleEditField.Visible = 'off';
+            app.DoubleAngleEditField.Layout.Row = 2;
+            app.DoubleAngleEditField.Layout.Column = 2;
+
+            % Create DoubleAngleLabel
+            app.DoubleAngleLabel = uilabel(app.GridLayout7);
+            app.DoubleAngleLabel.HorizontalAlignment = 'center';
+            app.DoubleAngleLabel.Enable = 'off';
+            app.DoubleAngleLabel.Visible = 'off';
+            app.DoubleAngleLabel.Layout.Row = 2;
+            app.DoubleAngleLabel.Layout.Column = 1;
+            app.DoubleAngleLabel.Text = 'Double Angle';
 
             % Create Switchto3DButton
             app.Switchto3DButton = uibutton(app.RocketDesignTab, 'push');
@@ -778,11 +891,11 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.LongitudedegEditField.Layout.Column = 2;
             app.LongitudedegEditField.Value = -117.8091;
 
-            % Create LocationPlotPanel
-            app.LocationPlotPanel = uipanel(app.SimulationTab);
-            app.LocationPlotPanel.TitlePosition = 'centertop';
-            app.LocationPlotPanel.Title = 'Location Plot';
-            app.LocationPlotPanel.Position = [293 213 319 221];
+            % Create LaunchLocationPanel
+            app.LaunchLocationPanel = uipanel(app.SimulationTab);
+            app.LaunchLocationPanel.TitlePosition = 'centertop';
+            app.LaunchLocationPanel.Title = 'Launch Location';
+            app.LaunchLocationPanel.Position = [275 237 352 210];
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
