@@ -5,11 +5,22 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         UIFigure                       matlab.ui.Figure
         TabGroup                       matlab.ui.container.TabGroup
         RocketDesignTab                matlab.ui.container.Tab
-        Switchto2D                     matlab.ui.control.Button
-        Switchto3DButton               matlab.ui.control.Button
+        GridLayout9                    matlab.ui.container.GridLayout
+        ComponentBrowserPanel          matlab.ui.container.Panel
+        GridLayout10                   matlab.ui.container.GridLayout
+        EditComponentListBox           matlab.ui.control.ListBox
+        EditComponentListBoxLabel      matlab.ui.control.Label
         FinDesignPanel                 matlab.ui.container.Panel
         GridLayout5                    matlab.ui.container.GridLayout
         TabGroup3                      matlab.ui.container.TabGroup
+        AirfoilTab                     matlab.ui.container.Tab
+        GridLayout7                    matlab.ui.container.GridLayout
+        DoubleAngleLabel               matlab.ui.control.Label
+        DoubleAngleEditField           matlab.ui.control.EditField
+        NACAEditField                  matlab.ui.control.NumericEditField
+        NACAEditFieldLabel             matlab.ui.control.Label
+        AirfoilGeometryDropDown        matlab.ui.control.DropDown
+        AirfoilGeometryDropDownLabel   matlab.ui.control.Label
         PlanformTab                    matlab.ui.container.Tab
         GridLayout6                    matlab.ui.container.GridLayout
         SweepEditField                 matlab.ui.control.NumericEditField
@@ -20,22 +31,32 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         TipChordEditFieldLabel         matlab.ui.control.Label
         RootChordEditField             matlab.ui.control.NumericEditField
         RootChordEditFieldLabel        matlab.ui.control.Label
-        AirfoilTab                     matlab.ui.container.Tab
-        GridLayout7                    matlab.ui.container.GridLayout
-        DoubleAngleLabel               matlab.ui.control.Label
-        DoubleAngleEditField           matlab.ui.control.EditField
-        NACAEditField                  matlab.ui.control.NumericEditField
-        NACAEditFieldLabel             matlab.ui.control.Label
-        AirfoilGeometryDropDown        matlab.ui.control.DropDown
-        AirfoilGeometryDropDownLabel   matlab.ui.control.Label
         FinGraph                       matlab.ui.control.UIAxes
+        Switchto2D                     matlab.ui.control.Button
+        Switchto3DButton               matlab.ui.control.Button
         Panel                          matlab.ui.container.Panel
         GridLayout                     matlab.ui.container.GridLayout
         TabGroup2                      matlab.ui.container.TabGroup
+        ComponentTab                   matlab.ui.container.Tab
+        GridLayout4                    matlab.ui.container.GridLayout
+        ComponentOptionsLabel          matlab.ui.control.Label
+        DryMasskgEditField             matlab.ui.control.NumericEditField
+        DryMasskgEditFieldLabel        matlab.ui.control.Label
+        AddComponentButton             matlab.ui.control.Button
+        TankDiametermEditField         matlab.ui.control.NumericEditField
+        TankDiametermEditFieldLabel    matlab.ui.control.Label
+        TankLengthmEditField           matlab.ui.control.NumericEditField
+        TankLengthmEditFieldLabel      matlab.ui.control.Label
+        DistancefromNosemEditField     matlab.ui.control.NumericEditField
+        DistancefromNosemEditFieldLabel  matlab.ui.control.Label
+        ComponentSelectionDropDown     matlab.ui.control.DropDown
+        ComponentSelectionDropDownLabel  matlab.ui.control.Label
         GeometryTab                    matlab.ui.container.Tab
         GridLayout3                    matlab.ui.container.GridLayout
+        RocketDryMass                  matlab.ui.control.NumericEditField
+        DryMasskgEditField_2Label      matlab.ui.control.Label
         Switch                         matlab.ui.control.Switch
-        DistancefromRearmEditField     matlab.ui.control.NumericEditField
+        DistancefromRear               matlab.ui.control.NumericEditField
         DistancefromRearmEditFieldLabel  matlab.ui.control.Label
         FinDesignLabel                 matlab.ui.control.Label
         FinNumberSpinner               matlab.ui.control.Spinner
@@ -48,13 +69,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         RocketDiametermEditFieldLabel  matlab.ui.control.Label
         RocketLengthEditField          matlab.ui.control.NumericEditField
         RocketLengthmEditFieldLabel    matlab.ui.control.Label
-        ComponentTab                   matlab.ui.container.Tab
-        GridLayout4                    matlab.ui.container.GridLayout
-        PlaceComponentButton           matlab.ui.control.Button
-        ComponentLocationEditField     matlab.ui.control.NumericEditField
-        ComponentLocationEditFieldLabel  matlab.ui.control.Label
-        ComponentSelectionDropDown     matlab.ui.control.DropDown
-        ComponentSelectionDropDownLabel  matlab.ui.control.Label
         UIAxes                         matlab.ui.control.UIAxes
         SimulationTab                  matlab.ui.container.Tab
         LaunchLocationPanel            matlab.ui.container.Panel
@@ -71,7 +85,9 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
     properties (Access = private)
         lineColor; % line color for plots
-        ThreeDPlot;
+        ThreeDPlot; % flag to turn 3d plotting on and off
+        ComponentList = ""; % a list of the components on the rocket
+        ComponentDetails;
     end
 
     methods (Access = private)
@@ -124,7 +140,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 %
                 % surf(app.UIAxes, X,Y,Z, "FaceColor",'r', 'EdgeAlpha',0);
                 % axis(app.UIAxes, "equal")
-
             else
 
                 % plot the base body of the rocket:
@@ -139,10 +154,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 numFin = app.FinNumberSpinner.Value;
 
                 if numFin ~= 0
-
-                    app.plotFins(numFin)
-
+                    app.PlotFins(numFin)
                 end
+
+                app.PlotComponents();
 
                 % define the standard limits for the plot
                 hold(app.UIAxes, 'off')
@@ -190,13 +205,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             axis(app.FinGraph, "equal");
         end
 
-        function plotFins(app, numFin)
+        function PlotFins(app, numFin)
 
             % get the default fin geometry from the fin plotter function
             [xFin, yFin] = app.FinPlotter;
 
             % get parameters from user input:
-            rearDist = app.DistancefromRearmEditField.Value;
+            rearDist = app.DistancefromRear.Value;
             dia = app.RocketDiameterEditField.Value;
             leng = app.RocketLengthEditField.Value;
 
@@ -270,7 +285,42 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 plot(app.UIAxes, xFinShifted, yFinProjection, app.lineColor);
 
             end
+        end
 
+        function PlotComponents(app)
+
+            leng = numel(app.EditComponentListBox.Items);
+
+            for idx = 1:leng
+
+                itemData = app.ComponentDetails(idx,:);
+
+                componentType = itemData(1);
+
+                switch componentType
+                    case 1 % tank
+
+                        % for the tank, the data is in the order:
+                        % Component Type
+                        % Length
+                        % Diameter
+                        % Dist from Nose
+                        % Dry Mass
+
+                        length = itemData(2);
+                        rad = itemData(3)/2;
+                        dist = itemData(4);
+
+                        xTank = [dist, dist, dist+length, dist+length, dist];
+                        yTank = [-rad, rad, rad, -rad, -rad];
+
+                        plot(app.UIAxes, xTank, yTank, 'b-')
+                end
+            end
+        end
+
+        function plotCoM()
+            % plot the center of mass of the rocket
         end
     end
 
@@ -373,9 +423,9 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketPlotter();
         end
 
-        % Value changed function: DistancefromRearmEditField
+        % Value changed function: DistancefromRear
         function DistFromRearChanged(app, event)
-            value = app.DistancefromRearmEditField.Value;
+            value = app.DistancefromRear.Value;
             app.RocketPlotter();
         end
 
@@ -454,14 +504,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         end
         end
 
-        % Callback function: not associated with a component
+        % Callback function
         function GeoplotZoomChanged(app, event)
             value = app.ZoomLevelSlider.Value;
             
             app.Geoplotter();
         end
 
-        % Callback function: not associated with a component
+        % Callback function
         function GeoplotClicked(app, event)
                 clickedPoint = ax.CurrentPoint; % [x, y] coordinates where clicked
 
@@ -471,6 +521,64 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             
                 % Display the coordinates
                 disp(['Latitude: ', num2str(lat), ', Longitude: ', num2str(lon)]);
+        end
+
+        % Value changed function: LongitudedegEditField
+        function longitudeChanged(app, event)
+            value = app.LongitudedegEditField.Value;
+            
+            app.Geoplotter();
+        end
+
+        % Button pushed function: AddComponentButton
+        function AddComponent(app, event)
+            name = string(app.ComponentSelectionDropDown.Value);
+
+            % check if the identifier is unique
+            
+            if contains(app.ComponentList, name)
+                % do something if an element already exists
+            end
+
+            % if it is empty
+            if (app.ComponentList == "")
+                app.ComponentList = name;
+            else
+                app.ComponentList = [app.ComponentList, name];
+            end
+
+            app.EditComponentListBox.Items = app.ComponentList;
+
+            leng = numel(app.EditComponentListBox.Items);
+
+            switch name
+                case "Tank"
+                    app.ComponentDetails(leng,:) = [1,app.TankLengthmEditField.Value, ...
+                    app.TankDiametermEditField.Value, ...
+                    app.DistancefromNosemEditField.Value, app.DryMasskgEditField.Value];
+
+                otherwise
+                    app.EditComponentListBox.ItemsData = {};
+            end 
+
+            app.RocketPlotter();
+
+
+
+        end
+
+        % Selection change function: TabGroup2
+        function TabGroupChanged(app, event)
+            selectedTab = app.TabGroup2.SelectedTab.Title;
+
+            if strcmp(selectedTab, "Geometry")
+                app.ComponentBrowserPanel.Visible = 'off';
+                app.ComponentBrowserPanel.Enable = 'off';
+            else
+                app.ComponentBrowserPanel.Visible = 'on';
+                app.ComponentBrowserPanel.Enable = 'on';
+            end
+            
         end
     end
 
@@ -482,202 +590,39 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [100 100 640 480];
+            app.UIFigure.Position = [100 100 640 481];
             app.UIFigure.Name = 'MATLAB App';
 
             % Create TabGroup
             app.TabGroup = uitabgroup(app.UIFigure);
-            app.TabGroup.Position = [1 1 640 480];
+            app.TabGroup.Position = [2 2 640 480];
 
             % Create RocketDesignTab
             app.RocketDesignTab = uitab(app.TabGroup);
             app.RocketDesignTab.Title = 'Rocket Design';
 
+            % Create GridLayout9
+            app.GridLayout9 = uigridlayout(app.RocketDesignTab);
+            app.GridLayout9.ColumnWidth = {'fit', '1.08x', 86, '1.08x'};
+            app.GridLayout9.RowHeight = {'1.3x', 22, '1x'};
+            app.GridLayout9.ColumnSpacing = 5.04001007080078;
+            app.GridLayout9.RowSpacing = 5.07499361038208;
+            app.GridLayout9.Padding = [5.04001007080078 5.07499361038208 5.04001007080078 5.07499361038208];
+
             % Create UIAxes
-            app.UIAxes = uiaxes(app.RocketDesignTab);
+            app.UIAxes = uiaxes(app.GridLayout9);
             title(app.UIAxes, 'Rocket Layout', 'Interpreter', 'latex')
             xlabel(app.UIAxes, 'X', 'Interpreter', 'latex')
             ylabel(app.UIAxes, 'Y', 'Interpreter', 'latex')
             zlabel(app.UIAxes, 'Z', 'Interpreter', 'latex')
-            app.UIAxes.Position = [226 264 403 185];
-
-            % Create Panel
-            app.Panel = uipanel(app.RocketDesignTab);
-            app.Panel.Position = [1 1 213 456];
-
-            % Create GridLayout
-            app.GridLayout = uigridlayout(app.Panel);
-            app.GridLayout.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
-
-            % Create TabGroup2
-            app.TabGroup2 = uitabgroup(app.GridLayout);
-            app.TabGroup2.Layout.Row = [1 7];
-            app.TabGroup2.Layout.Column = [1 2];
-
-            % Create GeometryTab
-            app.GeometryTab = uitab(app.TabGroup2);
-            app.GeometryTab.Title = 'Geometry';
-
-            % Create GridLayout3
-            app.GridLayout3 = uigridlayout(app.GeometryTab);
-            app.GridLayout3.RowHeight = {20, '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
-
-            % Create RocketLengthmEditFieldLabel
-            app.RocketLengthmEditFieldLabel = uilabel(app.GridLayout3);
-            app.RocketLengthmEditFieldLabel.HorizontalAlignment = 'center';
-            app.RocketLengthmEditFieldLabel.WordWrap = 'on';
-            app.RocketLengthmEditFieldLabel.Layout.Row = 2;
-            app.RocketLengthmEditFieldLabel.Layout.Column = 1;
-            app.RocketLengthmEditFieldLabel.Text = 'Rocket Length [m]';
-
-            % Create RocketLengthEditField
-            app.RocketLengthEditField = uieditfield(app.GridLayout3, 'numeric');
-            app.RocketLengthEditField.ValueChangedFcn = createCallbackFcn(app, @RocketLengthChanged, true);
-            app.RocketLengthEditField.HorizontalAlignment = 'left';
-            app.RocketLengthEditField.Layout.Row = 2;
-            app.RocketLengthEditField.Layout.Column = 2;
-            app.RocketLengthEditField.Value = 5;
-
-            % Create RocketDiametermEditFieldLabel
-            app.RocketDiametermEditFieldLabel = uilabel(app.GridLayout3);
-            app.RocketDiametermEditFieldLabel.HorizontalAlignment = 'center';
-            app.RocketDiametermEditFieldLabel.WordWrap = 'on';
-            app.RocketDiametermEditFieldLabel.Layout.Row = 3;
-            app.RocketDiametermEditFieldLabel.Layout.Column = 1;
-            app.RocketDiametermEditFieldLabel.Text = 'Rocket Diameter [m]';
-
-            % Create RocketDiameterEditField
-            app.RocketDiameterEditField = uieditfield(app.GridLayout3, 'numeric');
-            app.RocketDiameterEditField.ValueChangedFcn = createCallbackFcn(app, @RocketDiaChanged, true);
-            app.RocketDiameterEditField.HorizontalAlignment = 'left';
-            app.RocketDiameterEditField.Layout.Row = 3;
-            app.RocketDiameterEditField.Layout.Column = 2;
-            app.RocketDiameterEditField.Value = 0.2;
-
-            % Create NoseConeGeometryDropDownLabel
-            app.NoseConeGeometryDropDownLabel = uilabel(app.GridLayout3);
-            app.NoseConeGeometryDropDownLabel.HorizontalAlignment = 'center';
-            app.NoseConeGeometryDropDownLabel.WordWrap = 'on';
-            app.NoseConeGeometryDropDownLabel.Layout.Row = 4;
-            app.NoseConeGeometryDropDownLabel.Layout.Column = 1;
-            app.NoseConeGeometryDropDownLabel.Text = 'Nose Cone Geometry';
-
-            % Create NoseConeGeometryDropDown
-            app.NoseConeGeometryDropDown = uidropdown(app.GridLayout3);
-            app.NoseConeGeometryDropDown.Items = {'Von Karman', 'Tangent Ogive', 'Conic', 'Elliptical'};
-            app.NoseConeGeometryDropDown.ValueChangedFcn = createCallbackFcn(app, @NoseConeTypeChanged, true);
-            app.NoseConeGeometryDropDown.Layout.Row = 4;
-            app.NoseConeGeometryDropDown.Layout.Column = 2;
-            app.NoseConeGeometryDropDown.Value = 'Von Karman';
-
-            % Create NoseConeLengthmEditFieldLabel
-            app.NoseConeLengthmEditFieldLabel = uilabel(app.GridLayout3);
-            app.NoseConeLengthmEditFieldLabel.HorizontalAlignment = 'center';
-            app.NoseConeLengthmEditFieldLabel.WordWrap = 'on';
-            app.NoseConeLengthmEditFieldLabel.Layout.Row = 5;
-            app.NoseConeLengthmEditFieldLabel.Layout.Column = 1;
-            app.NoseConeLengthmEditFieldLabel.Text = 'Nose Cone Length [m]';
-
-            % Create NoseConeLengthmEditField
-            app.NoseConeLengthmEditField = uieditfield(app.GridLayout3, 'numeric');
-            app.NoseConeLengthmEditField.Limits = [0 Inf];
-            app.NoseConeLengthmEditField.ValueChangedFcn = createCallbackFcn(app, @NoseCoseLengthChanged, true);
-            app.NoseConeLengthmEditField.Layout.Row = 5;
-            app.NoseConeLengthmEditField.Layout.Column = 2;
-            app.NoseConeLengthmEditField.Value = 0.5;
-
-            % Create FinNumberSpinnerLabel
-            app.FinNumberSpinnerLabel = uilabel(app.GridLayout3);
-            app.FinNumberSpinnerLabel.HorizontalAlignment = 'center';
-            app.FinNumberSpinnerLabel.Layout.Row = 8;
-            app.FinNumberSpinnerLabel.Layout.Column = 1;
-            app.FinNumberSpinnerLabel.Text = 'Fin Number';
-
-            % Create FinNumberSpinner
-            app.FinNumberSpinner = uispinner(app.GridLayout3);
-            app.FinNumberSpinner.Limits = [0 6];
-            app.FinNumberSpinner.ValueChangedFcn = createCallbackFcn(app, @FinNumberChanged, true);
-            app.FinNumberSpinner.Layout.Row = 8;
-            app.FinNumberSpinner.Layout.Column = 2;
-            app.FinNumberSpinner.Value = 4;
-
-            % Create FinDesignLabel
-            app.FinDesignLabel = uilabel(app.GridLayout3);
-            app.FinDesignLabel.HorizontalAlignment = 'center';
-            app.FinDesignLabel.FontWeight = 'bold';
-            app.FinDesignLabel.Layout.Row = 6;
-            app.FinDesignLabel.Layout.Column = [1 2];
-            app.FinDesignLabel.Text = 'Fin Design';
-
-            % Create DistancefromRearmEditFieldLabel
-            app.DistancefromRearmEditFieldLabel = uilabel(app.GridLayout3);
-            app.DistancefromRearmEditFieldLabel.HorizontalAlignment = 'center';
-            app.DistancefromRearmEditFieldLabel.WordWrap = 'on';
-            app.DistancefromRearmEditFieldLabel.Layout.Row = 9;
-            app.DistancefromRearmEditFieldLabel.Layout.Column = 1;
-            app.DistancefromRearmEditFieldLabel.Text = 'Distance from Rear [m]';
-
-            % Create DistancefromRearmEditField
-            app.DistancefromRearmEditField = uieditfield(app.GridLayout3, 'numeric');
-            app.DistancefromRearmEditField.ValueChangedFcn = createCallbackFcn(app, @DistFromRearChanged, true);
-            app.DistancefromRearmEditField.Layout.Row = 9;
-            app.DistancefromRearmEditField.Layout.Column = 2;
-            app.DistancefromRearmEditField.Value = 0.25;
-
-            % Create Switch
-            app.Switch = uiswitch(app.GridLayout3, 'slider');
-            app.Switch.Items = {'SI', 'Imperial'};
-            app.Switch.ValueChangedFcn = createCallbackFcn(app, @SiImperialSwitch, true);
-            app.Switch.Layout.Row = 1;
-            app.Switch.Layout.Column = [1 2];
-            app.Switch.Value = 'SI';
-
-            % Create ComponentTab
-            app.ComponentTab = uitab(app.TabGroup2);
-            app.ComponentTab.Title = 'Component';
-
-            % Create GridLayout4
-            app.GridLayout4 = uigridlayout(app.ComponentTab);
-            app.GridLayout4.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
-
-            % Create ComponentSelectionDropDownLabel
-            app.ComponentSelectionDropDownLabel = uilabel(app.GridLayout4);
-            app.ComponentSelectionDropDownLabel.HorizontalAlignment = 'center';
-            app.ComponentSelectionDropDownLabel.WordWrap = 'on';
-            app.ComponentSelectionDropDownLabel.Layout.Row = 1;
-            app.ComponentSelectionDropDownLabel.Layout.Column = 1;
-            app.ComponentSelectionDropDownLabel.Text = 'Component Selection';
-
-            % Create ComponentSelectionDropDown
-            app.ComponentSelectionDropDown = uidropdown(app.GridLayout4);
-            app.ComponentSelectionDropDown.Items = {'Tank', 'Engine', 'Point Mass', 'Sensor'};
-            app.ComponentSelectionDropDown.Layout.Row = 1;
-            app.ComponentSelectionDropDown.Layout.Column = 2;
-            app.ComponentSelectionDropDown.Value = 'Tank';
-
-            % Create ComponentLocationEditFieldLabel
-            app.ComponentLocationEditFieldLabel = uilabel(app.GridLayout4);
-            app.ComponentLocationEditFieldLabel.HorizontalAlignment = 'center';
-            app.ComponentLocationEditFieldLabel.WordWrap = 'on';
-            app.ComponentLocationEditFieldLabel.Layout.Row = 2;
-            app.ComponentLocationEditFieldLabel.Layout.Column = 1;
-            app.ComponentLocationEditFieldLabel.Text = 'Component Location';
-
-            % Create ComponentLocationEditField
-            app.ComponentLocationEditField = uieditfield(app.GridLayout4, 'numeric');
-            app.ComponentLocationEditField.Layout.Row = 2;
-            app.ComponentLocationEditField.Layout.Column = 2;
-
-            % Create PlaceComponentButton
-            app.PlaceComponentButton = uibutton(app.GridLayout4, 'push');
-            app.PlaceComponentButton.Layout.Row = 7;
-            app.PlaceComponentButton.Layout.Column = [1 2];
-            app.PlaceComponentButton.Text = 'Place Component';
+            app.UIAxes.Layout.Row = 1;
+            app.UIAxes.Layout.Column = [2 4];
 
             % Create FinDesignPanel
-            app.FinDesignPanel = uipanel(app.RocketDesignTab);
+            app.FinDesignPanel = uipanel(app.GridLayout9);
             app.FinDesignPanel.Title = 'Fin Design';
-            app.FinDesignPanel.Position = [227 12 400 218];
+            app.FinDesignPanel.Layout.Row = 3;
+            app.FinDesignPanel.Layout.Column = [2 4];
 
             % Create GridLayout5
             app.GridLayout5 = uigridlayout(app.FinDesignPanel);
@@ -824,19 +769,289 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.DoubleAngleLabel.Layout.Column = 1;
             app.DoubleAngleLabel.Text = 'Double Angle';
 
+            % Create Panel
+            app.Panel = uipanel(app.GridLayout9);
+            app.Panel.Layout.Row = [1 3];
+            app.Panel.Layout.Column = 1;
+
+            % Create GridLayout
+            app.GridLayout = uigridlayout(app.Panel);
+            app.GridLayout.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
+
+            % Create TabGroup2
+            app.TabGroup2 = uitabgroup(app.GridLayout);
+            app.TabGroup2.SelectionChangedFcn = createCallbackFcn(app, @TabGroupChanged, true);
+            app.TabGroup2.Layout.Row = [1 7];
+            app.TabGroup2.Layout.Column = [1 2];
+
+            % Create GeometryTab
+            app.GeometryTab = uitab(app.TabGroup2);
+            app.GeometryTab.Title = 'Geometry';
+
+            % Create GridLayout3
+            app.GridLayout3 = uigridlayout(app.GeometryTab);
+            app.GridLayout3.RowHeight = {20, '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
+
+            % Create RocketLengthmEditFieldLabel
+            app.RocketLengthmEditFieldLabel = uilabel(app.GridLayout3);
+            app.RocketLengthmEditFieldLabel.HorizontalAlignment = 'center';
+            app.RocketLengthmEditFieldLabel.WordWrap = 'on';
+            app.RocketLengthmEditFieldLabel.Layout.Row = 2;
+            app.RocketLengthmEditFieldLabel.Layout.Column = 1;
+            app.RocketLengthmEditFieldLabel.Text = 'Rocket Length [m]';
+
+            % Create RocketLengthEditField
+            app.RocketLengthEditField = uieditfield(app.GridLayout3, 'numeric');
+            app.RocketLengthEditField.ValueChangedFcn = createCallbackFcn(app, @RocketLengthChanged, true);
+            app.RocketLengthEditField.HorizontalAlignment = 'left';
+            app.RocketLengthEditField.Layout.Row = 2;
+            app.RocketLengthEditField.Layout.Column = 2;
+            app.RocketLengthEditField.Value = 5;
+
+            % Create RocketDiametermEditFieldLabel
+            app.RocketDiametermEditFieldLabel = uilabel(app.GridLayout3);
+            app.RocketDiametermEditFieldLabel.HorizontalAlignment = 'center';
+            app.RocketDiametermEditFieldLabel.WordWrap = 'on';
+            app.RocketDiametermEditFieldLabel.Layout.Row = 3;
+            app.RocketDiametermEditFieldLabel.Layout.Column = 1;
+            app.RocketDiametermEditFieldLabel.Text = 'Rocket Diameter [m]';
+
+            % Create RocketDiameterEditField
+            app.RocketDiameterEditField = uieditfield(app.GridLayout3, 'numeric');
+            app.RocketDiameterEditField.ValueChangedFcn = createCallbackFcn(app, @RocketDiaChanged, true);
+            app.RocketDiameterEditField.HorizontalAlignment = 'left';
+            app.RocketDiameterEditField.Layout.Row = 3;
+            app.RocketDiameterEditField.Layout.Column = 2;
+            app.RocketDiameterEditField.Value = 0.2;
+
+            % Create NoseConeGeometryDropDownLabel
+            app.NoseConeGeometryDropDownLabel = uilabel(app.GridLayout3);
+            app.NoseConeGeometryDropDownLabel.HorizontalAlignment = 'center';
+            app.NoseConeGeometryDropDownLabel.WordWrap = 'on';
+            app.NoseConeGeometryDropDownLabel.Layout.Row = 4;
+            app.NoseConeGeometryDropDownLabel.Layout.Column = 1;
+            app.NoseConeGeometryDropDownLabel.Text = 'Nose Cone Geometry';
+
+            % Create NoseConeGeometryDropDown
+            app.NoseConeGeometryDropDown = uidropdown(app.GridLayout3);
+            app.NoseConeGeometryDropDown.Items = {'Von Karman', 'Tangent Ogive', 'Conic', 'Elliptical'};
+            app.NoseConeGeometryDropDown.ValueChangedFcn = createCallbackFcn(app, @NoseConeTypeChanged, true);
+            app.NoseConeGeometryDropDown.Layout.Row = 4;
+            app.NoseConeGeometryDropDown.Layout.Column = 2;
+            app.NoseConeGeometryDropDown.Value = 'Von Karman';
+
+            % Create NoseConeLengthmEditFieldLabel
+            app.NoseConeLengthmEditFieldLabel = uilabel(app.GridLayout3);
+            app.NoseConeLengthmEditFieldLabel.HorizontalAlignment = 'center';
+            app.NoseConeLengthmEditFieldLabel.WordWrap = 'on';
+            app.NoseConeLengthmEditFieldLabel.Layout.Row = 5;
+            app.NoseConeLengthmEditFieldLabel.Layout.Column = 1;
+            app.NoseConeLengthmEditFieldLabel.Text = 'Nose Cone Length [m]';
+
+            % Create NoseConeLengthmEditField
+            app.NoseConeLengthmEditField = uieditfield(app.GridLayout3, 'numeric');
+            app.NoseConeLengthmEditField.Limits = [0 Inf];
+            app.NoseConeLengthmEditField.ValueChangedFcn = createCallbackFcn(app, @NoseCoseLengthChanged, true);
+            app.NoseConeLengthmEditField.Layout.Row = 5;
+            app.NoseConeLengthmEditField.Layout.Column = 2;
+            app.NoseConeLengthmEditField.Value = 0.5;
+
+            % Create FinNumberSpinnerLabel
+            app.FinNumberSpinnerLabel = uilabel(app.GridLayout3);
+            app.FinNumberSpinnerLabel.HorizontalAlignment = 'center';
+            app.FinNumberSpinnerLabel.Layout.Row = 8;
+            app.FinNumberSpinnerLabel.Layout.Column = 1;
+            app.FinNumberSpinnerLabel.Text = 'Fin Number';
+
+            % Create FinNumberSpinner
+            app.FinNumberSpinner = uispinner(app.GridLayout3);
+            app.FinNumberSpinner.Limits = [0 6];
+            app.FinNumberSpinner.ValueChangedFcn = createCallbackFcn(app, @FinNumberChanged, true);
+            app.FinNumberSpinner.Layout.Row = 8;
+            app.FinNumberSpinner.Layout.Column = 2;
+            app.FinNumberSpinner.Value = 4;
+
+            % Create FinDesignLabel
+            app.FinDesignLabel = uilabel(app.GridLayout3);
+            app.FinDesignLabel.HorizontalAlignment = 'center';
+            app.FinDesignLabel.FontWeight = 'bold';
+            app.FinDesignLabel.Layout.Row = 7;
+            app.FinDesignLabel.Layout.Column = [1 2];
+            app.FinDesignLabel.Text = 'Fin Design';
+
+            % Create DistancefromRearmEditFieldLabel
+            app.DistancefromRearmEditFieldLabel = uilabel(app.GridLayout3);
+            app.DistancefromRearmEditFieldLabel.HorizontalAlignment = 'center';
+            app.DistancefromRearmEditFieldLabel.WordWrap = 'on';
+            app.DistancefromRearmEditFieldLabel.Layout.Row = 9;
+            app.DistancefromRearmEditFieldLabel.Layout.Column = 1;
+            app.DistancefromRearmEditFieldLabel.Text = 'Distance from Rear [m]';
+
+            % Create DistancefromRear
+            app.DistancefromRear = uieditfield(app.GridLayout3, 'numeric');
+            app.DistancefromRear.ValueChangedFcn = createCallbackFcn(app, @DistFromRearChanged, true);
+            app.DistancefromRear.Layout.Row = 9;
+            app.DistancefromRear.Layout.Column = 2;
+            app.DistancefromRear.Value = 0.25;
+
+            % Create Switch
+            app.Switch = uiswitch(app.GridLayout3, 'slider');
+            app.Switch.Items = {'SI', 'Imperial'};
+            app.Switch.ValueChangedFcn = createCallbackFcn(app, @SiImperialSwitch, true);
+            app.Switch.Layout.Row = 1;
+            app.Switch.Layout.Column = [1 2];
+            app.Switch.Value = 'SI';
+
+            % Create DryMasskgEditField_2Label
+            app.DryMasskgEditField_2Label = uilabel(app.GridLayout3);
+            app.DryMasskgEditField_2Label.HorizontalAlignment = 'right';
+            app.DryMasskgEditField_2Label.Layout.Row = 6;
+            app.DryMasskgEditField_2Label.Layout.Column = 1;
+            app.DryMasskgEditField_2Label.Text = 'Dry Mass [kg]';
+
+            % Create RocketDryMass
+            app.RocketDryMass = uieditfield(app.GridLayout3, 'numeric');
+            app.RocketDryMass.Layout.Row = 6;
+            app.RocketDryMass.Layout.Column = 2;
+
+            % Create ComponentTab
+            app.ComponentTab = uitab(app.TabGroup2);
+            app.ComponentTab.Title = 'Component';
+
+            % Create GridLayout4
+            app.GridLayout4 = uigridlayout(app.ComponentTab);
+            app.GridLayout4.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
+
+            % Create ComponentSelectionDropDownLabel
+            app.ComponentSelectionDropDownLabel = uilabel(app.GridLayout4);
+            app.ComponentSelectionDropDownLabel.HorizontalAlignment = 'center';
+            app.ComponentSelectionDropDownLabel.WordWrap = 'on';
+            app.ComponentSelectionDropDownLabel.Layout.Row = 1;
+            app.ComponentSelectionDropDownLabel.Layout.Column = 1;
+            app.ComponentSelectionDropDownLabel.Text = 'Component Selection';
+
+            % Create ComponentSelectionDropDown
+            app.ComponentSelectionDropDown = uidropdown(app.GridLayout4);
+            app.ComponentSelectionDropDown.Items = {'Tank', 'Engine', 'Point Mass', 'Sensor'};
+            app.ComponentSelectionDropDown.Layout.Row = 1;
+            app.ComponentSelectionDropDown.Layout.Column = 2;
+            app.ComponentSelectionDropDown.Value = 'Tank';
+
+            % Create DistancefromNosemEditFieldLabel
+            app.DistancefromNosemEditFieldLabel = uilabel(app.GridLayout4);
+            app.DistancefromNosemEditFieldLabel.HorizontalAlignment = 'center';
+            app.DistancefromNosemEditFieldLabel.WordWrap = 'on';
+            app.DistancefromNosemEditFieldLabel.Layout.Row = 5;
+            app.DistancefromNosemEditFieldLabel.Layout.Column = 1;
+            app.DistancefromNosemEditFieldLabel.Text = 'Distance from Nose [m]';
+
+            % Create DistancefromNosemEditField
+            app.DistancefromNosemEditField = uieditfield(app.GridLayout4, 'numeric');
+            app.DistancefromNosemEditField.Layout.Row = 5;
+            app.DistancefromNosemEditField.Layout.Column = 2;
+
+            % Create TankLengthmEditFieldLabel
+            app.TankLengthmEditFieldLabel = uilabel(app.GridLayout4);
+            app.TankLengthmEditFieldLabel.HorizontalAlignment = 'center';
+            app.TankLengthmEditFieldLabel.WordWrap = 'on';
+            app.TankLengthmEditFieldLabel.Layout.Row = 3;
+            app.TankLengthmEditFieldLabel.Layout.Column = 1;
+            app.TankLengthmEditFieldLabel.Text = 'Tank Length [m]';
+
+            % Create TankLengthmEditField
+            app.TankLengthmEditField = uieditfield(app.GridLayout4, 'numeric');
+            app.TankLengthmEditField.Limits = [0 Inf];
+            app.TankLengthmEditField.Layout.Row = 3;
+            app.TankLengthmEditField.Layout.Column = 2;
+
+            % Create TankDiametermEditFieldLabel
+            app.TankDiametermEditFieldLabel = uilabel(app.GridLayout4);
+            app.TankDiametermEditFieldLabel.HorizontalAlignment = 'center';
+            app.TankDiametermEditFieldLabel.WordWrap = 'on';
+            app.TankDiametermEditFieldLabel.Layout.Row = 4;
+            app.TankDiametermEditFieldLabel.Layout.Column = 1;
+            app.TankDiametermEditFieldLabel.Text = 'Tank Diameter [m]';
+
+            % Create TankDiametermEditField
+            app.TankDiametermEditField = uieditfield(app.GridLayout4, 'numeric');
+            app.TankDiametermEditField.Limits = [0 Inf];
+            app.TankDiametermEditField.Layout.Row = 4;
+            app.TankDiametermEditField.Layout.Column = 2;
+
+            % Create AddComponentButton
+            app.AddComponentButton = uibutton(app.GridLayout4, 'push');
+            app.AddComponentButton.ButtonPushedFcn = createCallbackFcn(app, @AddComponent, true);
+            app.AddComponentButton.Layout.Row = 7;
+            app.AddComponentButton.Layout.Column = [1 2];
+            app.AddComponentButton.Text = 'Add Component';
+
+            % Create DryMasskgEditFieldLabel
+            app.DryMasskgEditFieldLabel = uilabel(app.GridLayout4);
+            app.DryMasskgEditFieldLabel.HorizontalAlignment = 'center';
+            app.DryMasskgEditFieldLabel.WordWrap = 'on';
+            app.DryMasskgEditFieldLabel.Layout.Row = 6;
+            app.DryMasskgEditFieldLabel.Layout.Column = 1;
+            app.DryMasskgEditFieldLabel.Text = 'Dry Mass [kg]';
+
+            % Create DryMasskgEditField
+            app.DryMasskgEditField = uieditfield(app.GridLayout4, 'numeric');
+            app.DryMasskgEditField.Limits = [0 Inf];
+            app.DryMasskgEditField.Layout.Row = 6;
+            app.DryMasskgEditField.Layout.Column = 2;
+
+            % Create ComponentOptionsLabel
+            app.ComponentOptionsLabel = uilabel(app.GridLayout4);
+            app.ComponentOptionsLabel.HorizontalAlignment = 'center';
+            app.ComponentOptionsLabel.FontWeight = 'bold';
+            app.ComponentOptionsLabel.Layout.Row = 2;
+            app.ComponentOptionsLabel.Layout.Column = [1 2];
+            app.ComponentOptionsLabel.Text = 'Component Options';
+
             % Create Switchto3DButton
-            app.Switchto3DButton = uibutton(app.RocketDesignTab, 'push');
+            app.Switchto3DButton = uibutton(app.GridLayout9, 'push');
             app.Switchto3DButton.ButtonPushedFcn = createCallbackFcn(app, @ConvertToThreeD, true);
-            app.Switchto3DButton.Position = [378 237 100 22];
+            app.Switchto3DButton.Layout.Row = 2;
+            app.Switchto3DButton.Layout.Column = 3;
             app.Switchto3DButton.Text = 'Switch to 3D';
 
             % Create Switchto2D
-            app.Switchto2D = uibutton(app.RocketDesignTab, 'push');
+            app.Switchto2D = uibutton(app.GridLayout9, 'push');
             app.Switchto2D.ButtonPushedFcn = createCallbackFcn(app, @SwitchToTwoD, true);
             app.Switchto2D.Enable = 'off';
             app.Switchto2D.Visible = 'off';
-            app.Switchto2D.Position = [378 237 100 22];
+            app.Switchto2D.Layout.Row = 2;
+            app.Switchto2D.Layout.Column = 3;
             app.Switchto2D.Text = 'Switch to 2D';
+
+            % Create ComponentBrowserPanel
+            app.ComponentBrowserPanel = uipanel(app.GridLayout9);
+            app.ComponentBrowserPanel.Enable = 'off';
+            app.ComponentBrowserPanel.TitlePosition = 'centertop';
+            app.ComponentBrowserPanel.Title = 'Component Browser';
+            app.ComponentBrowserPanel.Visible = 'off';
+            app.ComponentBrowserPanel.Layout.Row = 3;
+            app.ComponentBrowserPanel.Layout.Column = [2 4];
+            app.ComponentBrowserPanel.FontWeight = 'bold';
+            app.ComponentBrowserPanel.FontSize = 14;
+
+            % Create GridLayout10
+            app.GridLayout10 = uigridlayout(app.ComponentBrowserPanel);
+            app.GridLayout10.ColumnWidth = {'0.4x', '1x'};
+            app.GridLayout10.RowHeight = {28, '1x'};
+
+            % Create EditComponentListBoxLabel
+            app.EditComponentListBoxLabel = uilabel(app.GridLayout10);
+            app.EditComponentListBoxLabel.HorizontalAlignment = 'right';
+            app.EditComponentListBoxLabel.Layout.Row = 1;
+            app.EditComponentListBoxLabel.Layout.Column = 1;
+            app.EditComponentListBoxLabel.Text = 'Edit Component';
+
+            % Create EditComponentListBox
+            app.EditComponentListBox = uilistbox(app.GridLayout10);
+            app.EditComponentListBox.Items = {};
+            app.EditComponentListBox.Layout.Row = 2;
+            app.EditComponentListBox.Layout.Column = 1;
+            app.EditComponentListBox.Value = {};
 
             % Create SimulationTab
             app.SimulationTab = uitab(app.TabGroup);
@@ -887,6 +1102,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create LongitudedegEditField
             app.LongitudedegEditField = uieditfield(app.GridLayout2, 'numeric');
             app.LongitudedegEditField.Limits = [-180 180];
+            app.LongitudedegEditField.ValueChangedFcn = createCallbackFcn(app, @longitudeChanged, true);
             app.LongitudedegEditField.Layout.Row = 3;
             app.LongitudedegEditField.Layout.Column = 2;
             app.LongitudedegEditField.Value = -117.8091;
