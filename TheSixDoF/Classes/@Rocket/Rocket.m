@@ -16,6 +16,11 @@ classdef Rocket < handle
         end
 
         function addComponent(rocketObj, componentObj)
+            arguments
+                rocketObj Rocket
+                componentObj RocketComponent
+            end
+
             if isKey(rocketObj.componentDict, componentObj.name)
                 warning("Replacing existing component '%c', do you want to proceed? (Y/N)", componentObj.name)
                 response = input("", "s");
@@ -31,20 +36,28 @@ classdef Rocket < handle
             end
         end
 
-        function m = getMass(Rocket)
+        function m = getMass(rocketObj)
+            arguments
+                rocketObj Rocket
+            end
+
             m = 0;
 
-            for idx = length(Rocket.componentArray)
-                m = m + Rocket.componentArray(idx).mass;
+            for idx = length(rocketObj.componentArray)
+                m = m + rocketObj.componentArray(idx).mass;
             end
         end
 
-        function cm = getCoM(Rocket)
-            cm = 0;
-            m = Rocket.getMass;
+        function cm = getCoM(rocketObj)
+            arguments
+                rocketObj Rocket
+            end
 
-            for idx = length(Rocket.componentArray)
-                cm = cm + (Rocket.componentArray(idx).position * Rocket.componentArray(idx).mass);
+            cm = 0;
+            m = rocketObj.getMass;
+
+            for idx = length(rocketObj.componentArray)
+                cm = cm + (rocketObj.componentArray(idx).position * rocketObj.componentArray(idx).mass);
             end
 
             cm = cm / m;
