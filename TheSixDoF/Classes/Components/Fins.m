@@ -1,12 +1,13 @@
 classdef Fins < RocketComponent
 
     properties
-        finCount (1,1) int {mustBeMember(finCount, [3, 4])}
-        leadingEdgeShape (1,1) string {mustBeMember(leadingEdgeShape, [""])}
+        count (1,1) int {mustBeMember(count, [3, 4])}
+        airfoil (1,1) string {mustBeMember(airfoil, ["Double Wedge", "NACA"])} = "Double Wedge"
         material (1,1) string
-        height (1,1) double
+        span (1,1) double
         rootChord (1,1) double
         tipChord (1,1) double
+        sweep (1,1) double
     end
 
     methods
