@@ -19,3 +19,10 @@ else
     disp('Error in running the Python script:');
     disp(result);
 end
+
+%% convert the timestamp to human readable format:
+
+% these dates are milliseconds past Jan 1, 1970
+weather_data.ts = weather_data.ts/1000;
+
+weather_data.ts = datetime(weather_data.ts, 'ConvertFrom', 'posixtime');
