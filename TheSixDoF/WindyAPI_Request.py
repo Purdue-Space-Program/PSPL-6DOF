@@ -49,7 +49,7 @@ def main():
     api_key = "HcwZQ8f1w4Qu2sSifMc6qt1VnyeRjsgm"
     model = "namConus"
     parameters = ["wind", "windGust", "gh", "pressure", "temp"]
-    levels = ["surface", "1000h", "950h", "925h", "900h", "850h", "800h", "700h", "600h", "500h", "300h"]
+    levels = ["surface", "1000h", "950h", "925h", "900h", "850h", "800h", "700h", "600h", "500h", "400h", "300h"]
     
     data = fetch_windy_data(api_key, lat, lon, model, parameters, levels)
     print(json.dumps(data))  # Output to MATLAB

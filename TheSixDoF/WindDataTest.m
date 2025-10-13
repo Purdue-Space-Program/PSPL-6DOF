@@ -10,9 +10,14 @@
 
 % Units for all other values are given in the struct.
 
-% Input parameters: latitude and longitude
-lat = 35.0109889;
-lon = -115.4939547;
+% Create an environment using the class structure
+env = Environment();
+
+% get the location information from the environment
+latlong = env.LatLong;
+
+lat = latlong(1);
+lon = latlong(2);
 
 % Path to your Python script
 python_script = 'WindyAPI_Request.py';  % Adjust to the actual location
@@ -40,15 +45,90 @@ weatherData.ts = weatherData.ts/1000;
 
 weatherData.ts = datetime(weatherData.ts, 'ConvertFrom', 'posixtime');
 
-% find the closest time for the 6-DoF for now. In the future this should be
-% based on the selection of the user time.
+%% Pull data out of the weatherData list
 
-closestTime = weatherData.ts(1);
+% find the closest time based on the value set in the environment:
+
+envTime = env.Date;
+
+% Find the index of the closest timestamp in weatherData
+[~, closestIndex] = min(abs(weatherData.ts - envTime));
+
+closestTime = weatherData.ts(closestIndex);
 
 
+% Get all field names in your struct
+fields = fieldnames(weatherData);
+
+% Keep only the geopotential height fields
+ghFields = fields(contains(fields, 'gh_'));
+
+geoHeight(1) = env.Elevation;
+
+% Loop and extract the value at that index
+for idx = 2:numel(ghFields)
+    f = ghFields{idx};
+    geoHeight(idx) = weatherData.(f)(closestIndex);  % access by dynamic field name
+end
+
+FieldsFilter = geoHeight >= env.Elevation;
 
 
+% remove any of the geoheights which are less than the site elevation
+geoHeight(geoHeight < env.Elevation) = [];
 
+% use the fields filter to go through the rest of the data and pull the
+% appropriate values:
 
+% wind data u (west towards east):
+windUFields = fields(contains(fields, 'wind_u'));
 
+windUFields = windUFields(FieldsFilter);
 
+% Loop and extract the value at that index
+for idx = 1:numel(windUFields)
+    f = windUFields{idx};
+    windU(idx) = weatherData.(f)(closestIndex);  % access by dynamic field name
+end
+
+% wind data v (south towards north):
+windVFields = fields(contains(fields, 'wind_v'));
+
+windVFields = windVFields(FieldsFilter);
+
+% Loop and extract the value at that index
+for idx = 1:numel(windVFields)
+    f = windVFields{idx};
+    windV(idx) = weatherData.(f)(closestIndex);  % access by dynamic field name
+end
+
+% temp data
+
+tempFields = fields(contains(fields, 'temp_'));
+
+tempFields = tempFields(FieldsFilter);
+
+% Loop and extract the value at that index
+for idx = 1:numel(tempFields)
+    f = tempFields{idx};
+    tempKelvin(idx) = weatherData.(f)(closestIndex);  % access by dynamic field name
+end
+
+% interpolate the data for more data
+geoHeightInterp = linspace(geoHeight(1),geoHeight(end),100);
+
+% interpolate the other data:
+% Interpolate wind data u and v using the same height interpolation
+windUInterp = interp1(geoHeight, windU, geoHeightInterp, 'linear', 'extrap');
+windVInterp = interp1(geoHeight, windV, geoHeightInterp, 'linear', 'extrap');
+tempInterp = interp1(geoHeight, tempKelvin, geoHeightInterp, 'linear', 'extrap');
+
+% plot the data
+X_values = zeros(1,length(geoHeightInterp));
+Y_values = zeros(1,length(geoHeightInterp));
+W_values = zeros(1,length(geoHeightInterp));
+
+quiver3(X_values,Y_values,geoHeightInterp, windUInterp,windVInterp,W_values)
+
+figure;
+plot(tempInterp,geoHeightInterp)

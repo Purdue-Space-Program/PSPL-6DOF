@@ -3,7 +3,7 @@ classdef Environment
     % including the sea level height of the location, local gravity, and
 
     properties
-        Date (1,1) datetime = datetime("today");
+        Date (1,1) datetime = datetime("now");
         Elevation (1,1) double = 627.91;
         LatLong (1,2) double = [35.347444074690735, -117.8090720168799]
         geocentricRadius (1,1) double = 6.371077849286893e6;
