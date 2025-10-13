@@ -1,28 +1,45 @@
+% This script gets the wind data for the input lat and long:
+
+% Wind speed and direction defined by a two-dimensional vector. The
+% component u defines the speed of a wind blowing from the West towards the
+% East (a negative value therefore implies the opposite direction). The
+% component v similarly defines the speed of a wind blowing from the South
+% towards the North.
+
+% Units for all other values are given in the struct.
+
 % Input parameters: latitude and longitude
 lat = input('Enter latitude: ');
 lon = input('Enter longitude: ');
 
-% Set the path to your Python script (replace with the actual path)
-python_script = 'WindyAPI_Request.py';  % For example, 'C:/my_scripts/fetch_weather.py'
+% Path to your Python script
+python_script = 'WindyAPI_Request.py';  % Adjust to the actual location
 
-% Run the Python script with pyrunfile, and capture the printed output
-[status, result] = system(['python ', python_script, ' ', num2str(lat), ' ', num2str(lon)]);
+% Construct system command
+cmd = sprintf('python "%s" %.6f %.6f', python_script, lat, lon);
 
-% If the Python script executed successfully, result should contain the JSON output
+% Run the Python script and capture output
+[status, result] = system(cmd);
+
+% Check result
 if status == 0
-    % Parse the result (JSON string) into MATLAB data
-    weather_data = jsondecode(result);
+    % Clean up whitespace/newlines and decode JSON
+    result = strtrim(result);
+    weatherData = jsondecode(result);
     
-    % Display the result (weather data)
-    disp(weather_data);
+    % Display the weather data
+    disp(weatherData);
 else
-    disp('Error in running the Python script:');
-    disp(result);
+    fprintf('Error running Python script:\n%s\n', result);
 end
+
 
 %% convert the timestamp to human readable format:
 
 % these dates are milliseconds past Jan 1, 1970
-weather_data.ts = weather_data.ts/1000;
+weatherData.ts = weatherData.ts/1000;
 
-weather_data.ts = datetime(weather_data.ts, 'ConvertFrom', 'posixtime');
+weatherData.ts = datetime(weatherData.ts, 'ConvertFrom', 'posixtime');
+
+% convert the temps to celcius
+weatherData.tempFahr = weatherData.temp_surface - 273.15;
