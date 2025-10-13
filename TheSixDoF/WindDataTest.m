@@ -1,4 +1,6 @@
 % This script gets the wind data for the input lat and long:
+% beware that the namConus data only works for launches in the US.
+% Switching to GFS for global launches will be included in the future.
 
 % Wind speed and direction defined by a two-dimensional vector. The
 % component u defines the speed of a wind blowing from the West towards the
@@ -9,8 +11,8 @@
 % Units for all other values are given in the struct.
 
 % Input parameters: latitude and longitude
-lat = input('Enter latitude: ');
-lon = input('Enter longitude: ');
+lat = 35.0109889;
+lon = -115.4939547;
 
 % Path to your Python script
 python_script = 'WindyAPI_Request.py';  % Adjust to the actual location
@@ -26,9 +28,6 @@ if status == 0
     % Clean up whitespace/newlines and decode JSON
     result = strtrim(result);
     weatherData = jsondecode(result);
-    
-    % Display the weather data
-    disp(weatherData);
 else
     fprintf('Error running Python script:\n%s\n', result);
 end
@@ -41,5 +40,15 @@ weatherData.ts = weatherData.ts/1000;
 
 weatherData.ts = datetime(weatherData.ts, 'ConvertFrom', 'posixtime');
 
-% convert the temps to celcius
-weatherData.tempFahr = weatherData.temp_surface - 273.15;
+% find the closest time for the 6-DoF for now. In the future this should be
+% based on the selection of the user time.
+
+closestTime = weatherData.ts(1);
+
+
+
+
+
+
+
+
