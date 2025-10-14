@@ -3,8 +3,7 @@ classdef Rocket < handle
     properties
         name (1,1) string
         totalLength (1,1) double
-        componentArray cell
-        componentDict dictionary
+        componentList dictionary
         aeroData
 
     end
@@ -12,9 +11,9 @@ classdef Rocket < handle
     methods
         function obj = Rocket(name)
             obj.name = name;
-            obj.componentArray = cell(1);
-            obj.componentDict = dictionary();
+            obj.componentList = dictionary();
         end
+
 
         function addComponent(rocketObj, componentObj)
             arguments
@@ -22,53 +21,46 @@ classdef Rocket < handle
                 componentObj RocketComponent
             end
 
-            numComponents = numEntries(rocketObj.componentDict);
+            numComponents = numEntries(rocketObj.componentList);
 
             if numComponents == 0
-                rocketObj.componentArray{numComponents+1} = componentObj;
-                rocketObj.componentDict(componentObj.name) = componentObj;
-            elseif isKey(rocketObj.componentDict, componentObj.name)
+                rocketObj.componentList(componentObj.name) = {componentObj};
+            elseif isKey(rocketObj.componentList, componentObj.name)
                 %this should be removed for GUI implementation, only added here for testing
                 warning("Replacing existing component '%s', do you want to proceed? (Y/N)", componentObj.name)
                 response = input("", "s");
                 if strcmp(response, "Y")
-                    rocketObj.componentArray{numComponents+1} = componentObj;
-                    rocketObj.componentDict(componentObj.name) = componentObj;
+                    rocketObj.componentList(componentObj.name) = {componentObj};
                 else
                     fprintf("\nStopping . . .\n")
                 end
             else
-                rocketObj.componentArray{numComponents+1} = componentObj;
-                rocketObj.componentDict(componentObj.name) = componentObj;
+                rocketObj.componentList(componentObj.name) = {componentObj};
             end
         end
 
+
         function removeComponent(rocketObj, componentName)
-            if iskey(rocketObj.componentDict, componentName)
+            if iskey(rocketObj.componentList, componentName)
 
-                keyArray = keys(rocketObj.componentDict);
-                componentIndex = strcmp(keyArray, componentName);
-
-                rocketObj.componentArray(componentIndex) = [];
-                rocketObj.componentDict = remove(rocketObj.componentDict, componentName);
+                rocketObj.componentList = remove(rocketObj.componentList, componentName);
             else
                 %this should be removed for GUI implementation, only added here for testing
                 warning("The component you are trying to remove does not exist, try using a different name")
             end
         end
 
+
         function m = getMass(rocketObj)
             arguments
                 rocketObj Rocket
             end
 
-            m = 0;
-
-            for idx = length(rocketObj.componentArray)
-                currentComponent = rocketObj.componentArray{idx};
-                m = m + currentComponent{1}.mass;
-            end
+            componentArray = values(rocketObj.componentList);
+            mass = cellfun(@(c) c.mass, componentArray);
+            m = sum(mass);
         end
+
 
         function set.aeroData(rocketObj, filename)
             arguments
@@ -83,6 +75,12 @@ classdef Rocket < handle
                     [rawData(5001:5300,1:5) rawData(5001:5300,8) rawData(5001:5301,13:15)]];
             rocketObj.aeroData = data;
 
+        end
+
+        function saveRocket(rocketObj)
+            filename = rocketObj.name;
+            filepath = 'TheSixDoF\Inputs\Saved Rockets\' + filename;
+            save(filepath, "rocketObj")
         end
 
     end
