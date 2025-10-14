@@ -11,7 +11,7 @@
 % Units for all other values are given in the struct.
 
 % Create an environment using the class structure
-env = Environment();
+%env = Environment();
 
 % get the location information from the environment
 latlong = env.LatLong;
