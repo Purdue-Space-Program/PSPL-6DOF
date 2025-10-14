@@ -31,7 +31,8 @@
 clear;clc;close all force
 
 % Create a rocket object, the default values are for CMS:
-rocket = Rocket.Rocket();
+rocketFile = load("TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + "CMS.mat");
+rocket = rocketFile.rocketObj;
 
 %---------------- Sensor Definition ------------------------------------------
 
@@ -106,15 +107,8 @@ quatVector = eul2quat(angleVector.', "ZYX").';
 % initial state vector
 Init = [pos;vel;omega;quatVector];
 
-% import aerodynamics data for CMS / R4
-if strcmpi(rocket.name, 'CMS') == 1
-    rasData = readmatrix("Inputs\RASAero\RasAeroDataCulled2.CSV");
-
-elseif strcmpi(rocket.name, 'CH4') == 1
-    rasData = readmatrix("Inputs\RASAero\CH4_aero.CSV");
-
-else
-end
+% import aerodynamics data
+rasData = rocket.aeroData;
 
 % import wind data
 %wind = Wind;
@@ -124,7 +118,7 @@ windData = wind.windData;
 windDataInput = parseWind(windData, month);
 
 % import atmosphere;
-atmosphere = readmatrix("Inputs/AtmosphereModel.csv");
+atmosphere = readmatrix("Inputs" + filesep + "AtmosphereModel.csv");
 
 % create an array of the center of mass, mass, and moment of inertia of the
 % rocket
@@ -150,7 +144,7 @@ outputStruct.time = timeArray;
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
     [~, outputStruct.mach(k,1), outputStruct.AoA(k,1), outputStruct.accel(k,:), ...
-        outputStruct.cD(k,:), moment(k,:)] = RK4Integrator(timeArray(k), out(k,:), rasData, ...
+        outputStruct.cD(k,:), moment(k,:)] = RK4Integrator(timeArray(k), out(k,:), ...
         atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket, sim);
 end
 

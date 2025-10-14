@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, InertMatrix, wind, windOnOff, rocket, sim)
+function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, wind, windOnOff, rocket, sim)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator
@@ -115,6 +115,7 @@ AoA = real(AoA);
 mach = norm(vel) / a;
 
 % read the coefficient of drag from RasAero data:
+rasData = rocket.aeroData;
 machTable = rasData(1:300,1); % mach values from 0.01 to 3
 cDTable = rasData(1:300,3); % coefficient of drag
 
