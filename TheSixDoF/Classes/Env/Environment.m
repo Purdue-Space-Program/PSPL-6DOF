@@ -11,22 +11,16 @@ classdef Environment
     end
 
     methods
-        function env = setLaunchSite(env, lat, long, date)
+        function env = Environment(lat, long, date)
             % setLaunchSite creates a new launch site given an input
             % environment and the position in latitude and longitude. The
-            % function automatically generates
-            if (nargin == 3)
-                env = Env.Environment;
+            % function automatically generates the elevation
                 env.LatLong = [lat,long];
                 env.Elevation = getElevation(env);
-                env.Date = env.Date;
-            elseif (nargin == 4)
                 env.Date = date;
-            end
         end
 
         function elev = getElevation(env)
-            %env = Environment;
             loc = txsite("Latitude", env.LatLong(1),"Longitude",env.LatLong(2));
             elev = elevation(loc);
         end
