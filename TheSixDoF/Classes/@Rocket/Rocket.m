@@ -68,7 +68,7 @@ classdef Rocket < handle
                 filename (1,1) string
             end
 
-            filepath = "\TheSixDoF\Inputs\RASAero\" + filename + ".csv";
+            filepath = "TheSixDoF" + filesep + "Inputs" + filesep + "RASAero" + filesep + filename + ".csv";
             rawData = readmatrix(filepath);
             data = [[rawData(1:300,1:5) rawData(1:300,8) rawData(1:300,13:15)]; 
                     [rawData(2501:2800,1:5) rawData(2501:2800,8) rawData(2501:2801,13:15)]; 
@@ -79,7 +79,7 @@ classdef Rocket < handle
 
         function saveRocket(rocketObj)
             filename = rocketObj.name;
-            filepath = 'TheSixDoF\Inputs\Saved Rockets\' + filename;
+            filepath = 'TheSixDoF' + filesep + 'Inputs' + filesep + 'Saved Rockets' + filesep + filename;
             save(filepath, "rocketObj")
         end
 
