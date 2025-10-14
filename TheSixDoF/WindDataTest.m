@@ -128,7 +128,17 @@ X_values = zeros(1,length(geoHeightInterp));
 Y_values = zeros(1,length(geoHeightInterp));
 W_values = zeros(1,length(geoHeightInterp));
 
-quiver3(X_values,Y_values,geoHeightInterp, windUInterp,windVInterp,W_values)
-
 figure;
+subplot(1,2,1)
+quiver3(X_values,Y_values,geoHeightInterp, windUInterp,windVInterp,W_values, "off")
+xlabel('Wind Vel U [m/s]')
+ylabel('Wind Vel V [m/s]')
+zlabel('Geopotential Height [m]')
+title('Wind Profile')
+
+subplot(1,2,2)
 plot(tempInterp,geoHeightInterp)
+title('Temperature Profile with Geopotential Height');
+xlabel('Temperature [K]')
+ylabel('Geopotential Height [m]')
+grid on;
