@@ -89,7 +89,7 @@ classdef Environment
             envTime = env.Date;
 
             % if the requested date is more than 1 day in the past
-            if env.Date - datetime("today") < 0.5
+            if env.Date - datetime("today") > 1
                 warndlg('Pulling historic weather data is currently not supported. The script will pull the most current weather data.')
                 warning('Pulling historic weather data is currently not supported. The script will pull the most current weather data.')
             end
@@ -114,7 +114,6 @@ classdef Environment
             end
 
             FieldsFilter = geoHeight >= env.Elevation;
-
 
             % remove any of the geoheights which are less than the site elevation
             geoHeight(geoHeight < env.Elevation) = [];
