@@ -20,7 +20,7 @@ lat = latlong(1);
 lon = latlong(2);
 
 % Path to your Python script
-python_script = 'WindyAPI_Request.py';  % Adjust to the actual location
+python_script = 'OpenMeteoWeather_Request_test.py';  % Adjust to the actual location
 
 % Construct system command
 cmd = sprintf('python "%s" %.6f %.6f', python_script, lat, lon);
