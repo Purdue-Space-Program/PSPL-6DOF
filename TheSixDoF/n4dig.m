@@ -8,7 +8,7 @@
 % n4dig('ID',1 or 0)
 %
 % Example: n4dig('2412',1) plots a Naca 2412 airfoil and writes the points
-% to a .dat file named n2412.dat. If the second argument == 0, then no file
+% to a .dat file named NACA4Airfoil.dat. If the second argument == 0, then no file
 % is written.
 %_________________________________________________________________________
 function [s,output] = n4dig(ID,writefile);
@@ -110,7 +110,7 @@ function [s,output] = n4dig(ID,writefile);
     
     %% Output file
     if output == 1  
-        write_ID = 'NACA' + convertCharsToStrings(s) + '.dat';
+        write_ID = 'NACA4Airfoil.dat';
         
         if exist(write_ID, 'file') == 2 %delete .dat file if same exists
             delete(write_ID);
