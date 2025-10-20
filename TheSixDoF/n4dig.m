@@ -86,25 +86,17 @@ function [s,output] = n4dig(ID,writefile);
     end
     
     %% Plot Airfoil Shape
-    plot(xu,yu,'b') %upper surface
+    plot(xu,yu, 'Color', '#0072BD', 'LineWidth', 1.25) %upper surface
     hold on
-    plot(xl,yl,'b') %bottom surface
+    plot(xl,yl, 'Color', '#0072BD', 'LineWidth', 1.25) %bottom surface
     if d1 ~= 0
         plot(x,yc,'r') %camber line
     end
     plot([0 c],[0 yt(1,res)],'--') %chord line
-    axis equal
+    axis equal; grid on;
     title(ID)
     xlabel('Chord Length')
     
-    %TMP ----- COMPARE AIRFOIL OUTPUT TO XFOIL AIRFOIL OUTPUT
-%     fidAirfoil = fopen('2412_out.dat');
-%     dataBuffer = textscan(fidAirfoil,'%f %f','CollectOutput',1,...
-%         'Delimiter','','HeaderLines',0);
-%     fclose(fidAirfoil);
-%     xfoil_x = dataBuffer{1}(:,1);
-%     xfoil_y = dataBuffer{1}(:,2);
-%     plot(xfoil_x,xfoil_y,'r') %compare to xfoil 2412 output
     hold off
     % ----------------------------------------------------------------
     
