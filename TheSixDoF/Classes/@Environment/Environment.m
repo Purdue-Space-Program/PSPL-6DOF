@@ -8,25 +8,24 @@ classdef Environment
         Elevation (1,1) double = 627.91;
         LatLong (1,2) double = [35.347444074690735, -117.8090720168799]
         railHeight (1,1) double = 18.29; % FAR rail height [m]
+        Atmosphere (:,5) double
+        Wind (:,3) double
     end
 
     methods
         function env = Environment(lat, long, date)
             % Environment creates a new launch site given an input
             % environment and the position in latitude and longitude. The
-            % function automatically generates the elevation
+            % function automatically generates the elevation of the
+            % location.
             arguments
                 lat (1,1) double = 35.347444074690735
                 long (1,1) double = -117.8090720168799
                 date (1,1) datetime = datetime("now", "TimeZone", "UTC")
             end
-                env.LatLong = [lat,long];
-                env.Elevation = getElevation(env);
-                env.Date = date;
-        end
-
-        function modifyTime(env)
-
+            env.LatLong = [lat,long];
+            env.Elevation = getElevation(env);
+            env.Date = date;
         end
 
         function elev = getElevation(env)
@@ -35,7 +34,7 @@ classdef Environment
             elev = elevation(loc);
         end
 
-        function varargout = getLocalWeather(env)
+        function env = getLocalWeather(env)
             % get the local weather based on the environment that has been
             % set by the user.
             %
@@ -68,62 +67,74 @@ classdef Environment
             lat = latlong(1);
             lon = latlong(2);
 
-            % Path to your Python script
-            python_script = 'WindyAPI_Request.py';  % Adjust to the actual location
-
-            % Construct system command
-            cmd = sprintf('python "%s" %.6f %.6f', python_script, lat, lon);
-
-            % Run the Python script and capture output
-            [status, result] = system(cmd);
-
-            % Check result
-            if status == 0
-                % Clean up whitespace/newlines and decode JSON
-                result = strtrim(result);
-                weatherData = jsondecode(result);
-            else
-                fprintf('Error running Python script:\n%s\n', result);
+            if count(py.sys.path, string(pwd)) == 0
+                insert(py.sys.path, int32(0), string(pwd));
             end
 
+            % import the python file which contains all of the scripts:
+            mod = py.importlib.import_module('OpenMeteoWeatherRequest');
+            py.importlib.reload(mod)
 
-            % convert the timestamp to human readable format and make it a datetime object:
-            % these dates are milliseconds past Jan 1, 1970. Convert these
-            % with the datetime function.
-            weatherData.ts = weatherData.ts/1000;
+            hourlyWeatherData = mod.getHourlyWeather(lat,lon);
 
-            weatherData.ts = datetime(weatherData.ts, 'ConvertFrom', 'posixtime');
+            currentWeatherData = mod.getCurrentWeather(lat,lon);
 
-            % Pull data out of the weatherData list
-            % find the closest time based on the value set in the environment:
+            hourlyWeatherData = struct(hourlyWeatherData);
+            currentWeatherData = struct(currentWeatherData);
+
+            % adjust the current weather:
+            currentWeatherData.time = datetime("now", "TimeZone", "UTC");
+
+            % Auto-convert all py.numpy arrays or lists to MATLAB doubles
+            f = fieldnames(hourlyWeatherData);
+            for i = 1:numel(f)
+                val = hourlyWeatherData.(f{i});
+                if isa(val, 'py.numpy.ndarray')
+                    hourlyWeatherData.(f{i}) = double(val);
+                elseif isa(val, 'py.list')
+                    hourlyWeatherData.(f{i}) = double(py.array.array('d', val));
+                end
+            end
+
+            hourlyWeatherData.date = datetime(hourlyWeatherData.date, 'ConvertFrom', 'posixtime', 'TimeZone', 'UTC');
+
+            % convert to local time:
+            hourlyWeatherData.dateLocal = hourlyWeatherData.date + seconds(hourlyWeatherData.timeOffset);
+
+            % update the local environment time
             envTime = env.Date;
 
-            % if the requested date is more than 1 day in the past
-            if env.Date - datetime("today") > 1
-                warndlg('Pulling historic weather data is currently not supported. The script will pull the most current weather data.')
-                warning('Pulling historic weather data is currently not supported. The script will pull the most current weather data.')
-            end
-
             % Find the index of the closest timestamp in weatherData
-            [~, closestIndex] = min(abs(weatherData.ts - envTime));
+            [~, closestIndex] = min(abs(hourlyWeatherData.date - envTime));
 
-            closestTime = weatherData.ts(closestIndex);
+            closestTime = hourlyWeatherData.date(closestIndex);
 
-            % Get all field names in your struct
-            fields = fieldnames(weatherData);
+            % get the single variable fields:
+            surfPres = hourlyWeatherData.surface_pressure(closestIndex);
+
+            surfGust = hourlyWeatherData.wind_gusts_10m(closestIndex);
+
+            % Get all field names in the struct
+            fields = fieldnames(hourlyWeatherData);
 
             % Keep only the geopotential height fields
-            ghFields = fields(contains(fields, 'gh_'));
+            ghFields = fields(contains(fields, 'geopotential_height_'));
+
+            % define the pressure level fields:
+            presLevels = [1000e2, 975e2, 950e2, 925e2, 900e2, 850e2, 800e2, 700e2, 600e2, ...
+            500e2, 400e2, 300e2, 250e2, 200e2, 150e2, 100e2, 70e2, 50e2, 30e2]';
 
             geoHeight(1) = env.Elevation;
 
             % Loop and extract the value at that index
-            for idx = 2:numel(ghFields)
+            for idx = 1:numel(ghFields)
                 f = ghFields{idx};
-                geoHeight(idx) = weatherData.(f)(closestIndex);  % access by dynamic field name
+                geoHeight(idx) = hourlyWeatherData.(f)(closestIndex);
             end
 
             FieldsFilter = geoHeight >= env.Elevation;
+
+            presLevels = presLevels(FieldsFilter);
 
             % remove any of the geoheights which are less than the site elevation
             geoHeight(geoHeight < env.Elevation) = [];
@@ -131,80 +142,94 @@ classdef Environment
             % use the fields filter to go through the rest of the data and pull the
             % appropriate values:
 
-            % wind data u (west towards east):
-            windUFields = fields(contains(fields, 'wind_u'));
+            % wind speed data:
+            windSpeedFields = fields(contains(fields, 'wind_speed_'));
 
-            windUFields = windUFields(FieldsFilter);
+            windSpeedFields = windSpeedFields(FieldsFilter);
 
             % Loop and extract the value at that index
-            for idx = 1:numel(windUFields)
-                f = windUFields{idx};
-                windU(idx) = weatherData.(f)(closestIndex);  % access by dynamic field name
+            for idx = 1:numel(windSpeedFields)
+                f = windSpeedFields{idx};
+                windSpeed(idx) = hourlyWeatherData.(f)(closestIndex);
             end
 
-            % wind data v (south towards north):
-            windVFields = fields(contains(fields, 'wind_v'));
+            % wind dir data:
+            windDirFields = fields(contains(fields, 'wind_direction_'));
 
-            windVFields = windVFields(FieldsFilter);
+            windDirFields = windDirFields(FieldsFilter);
 
             % Loop and extract the value at that index
-            for idx = 1:numel(windVFields)
-                f = windVFields{idx};
-                windV(idx) = weatherData.(f)(closestIndex);  % access by dynamic field name
+            for idx = 1:numel(windDirFields)
+                f = windDirFields{idx};
+                windDir(idx) = hourlyWeatherData.(f)(closestIndex);
             end
 
             % temp data
 
-            tempFields = fields(contains(fields, 'temp_'));
+            tempFields = fields(contains(fields, 'temperature_'));
 
             tempFields = tempFields(FieldsFilter);
 
             % Loop and extract the value at that index
             for idx = 1:numel(tempFields)
                 f = tempFields{idx};
-                tempKelvin(idx) = weatherData.(f)(closestIndex);  % access by dynamic field name
+                tempKelvin(idx) = hourlyWeatherData.(f)(closestIndex) + 273.15;
             end
 
-            % interpolate the data for more data
-            geoHeightInterp = linspace(geoHeight(1),geoHeight(end),100);
+            % interpolate the data for more fine grain height increments:
+            geoHeightInterp = linspace(geoHeight(1),geoHeight(end),1000);
 
             % interpolate the other data:
             % Interpolate wind data u and v using the same height interpolation
-            windUInterp = interp1(geoHeight, windU, geoHeightInterp, 'linear', 'extrap');
-            windVInterp = interp1(geoHeight, windV, geoHeightInterp, 'linear', 'extrap');
+            windSpeedInterp = interp1(geoHeight, windSpeed, geoHeightInterp, 'pchip', 'extrap');
+            windDirInterp = interp1(geoHeight, windDir, geoHeightInterp, 'pchip', 'extrap');
             tempInterp = interp1(geoHeight, tempKelvin, geoHeightInterp, 'linear', 'extrap');
+            presInterp = interp1(geoHeight, presLevels, geoHeightInterp, 'pchip', 'extrap');
+            rhoInterp = presInterp ./ (constant.R_air * tempInterp);
+            aInterp = sqrt(constant.R_air .* constant.gamma_air .* tempInterp);
 
-            % change the number of outputs based on the user input:
-            nOutputs = nargout;
+            % get the wind directions. Get it as the direction the wind is actually
+            % going (not the direction it is coming from)!
+            % U is the N-S direction. A positive value is wind blowing from
+            % the south (the wind is going north)
+            % V is the E-W direction. A positive value is wing blowing from
+            % the west (going east)
 
-            switch nOutputs
+            windU = -windSpeedInterp .* cosd(windDirInterp);
+            windV = -windSpeedInterp .* sind(windDirInterp);
 
-                case 1
-                    varargout{1} = [geoHeightInterp;windUInterp;windVInterp]';
-                case 2
-                    varargout{1} = geoHeightInterp';
-                    varargout{2} = [windUInterp;windVInterp]'; 
-                case 3
-                    varargout{1} = geoHeightInterp';
-                    varargout{2} = [windUInterp;windVInterp]'; 
-                    varargout{3} = tempInterp';
-                case 4
-                    gust = weatherData.gust_surface(closestIndex);
+            % put this into the environment:
+            env.Atmosphere = [geoHeightInterp', tempInterp', aInterp', presInterp', rhoInterp'];
 
-                    varargout{1} = geoHeightInterp';
-                    varargout{2} = [windUInterp;windVInterp]'; 
-                    varargout{3} = tempInterp';
-                    varargout{4} = gust;
-                case 5
-                    gust = weatherData.gust_surface(closestIndex);
-                    pres = weatherData.pressure_surface(closestIndex);
+            env.Wind = [geoHeightInterp', windU', windV'];
 
-                    varargout{1} = geoHeightInterp';
-                    varargout{2} = [windUInterp;windVInterp]'; 
-                    varargout{3} = tempInterp';
-                    varargout{4} = gust;
-                    varargout{5} = pres;
-            end
+            % change the number of outputs based on the users choice.
+            % Helpful if the user wants outputs for something else:
+            % nOutputs = nargout;
+
+            % switch nOutputs
+            % 
+            %     case 1
+            %         varargout{1} = [geoHeightInterp;windU;windV]';
+            %     case 2
+            %         varargout{1} = geoHeightInterp';
+            %         varargout{2} = [windU;windV]';
+            %     case 3
+            %         varargout{1} = geoHeightInterp';
+            %         varargout{2} = [windU;windV]';
+            %         varargout{3} = tempInterp';
+            %     case 4
+            %         varargout{1} = geoHeightInterp';
+            %         varargout{2} = [windUInterp;windVInterp]';
+            %         varargout{3} = tempInterp';
+            %         varargout{4} = surfGust;
+            %     case 5
+            %         varargout{1} = geoHeightInterp';
+            %         varargout{2} = [windUInterp;windVInterp]';
+            %         varargout{3} = tempInterp';
+            %         varargout{4} = surfGust;
+            %         varargout{5} = surfPres;
+            % end
 
         end
     end

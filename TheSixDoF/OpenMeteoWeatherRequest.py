@@ -72,7 +72,7 @@ def getHourlyWeather(lat, lon):
 	params = {
 		"latitude": lat,
 		"longitude": lon,
-		"hourly": ["temperature_1000hPa", "temperature_975hPa", "temperature_950hPa", "temperature_925hPa", "temperature_900hPa", "temperature_850hPa", "temperature_800hPa", "temperature_700hPa", "temperature_600hPa", "temperature_500hPa", "temperature_400hPa", "temperature_300hPa", "temperature_250hPa", "temperature_200hPa", "wind_speed_975hPa", "wind_speed_950hPa", "wind_speed_1000hPa", "wind_speed_925hPa", "wind_speed_900hPa", "wind_speed_850hPa", "wind_speed_800hPa", "wind_speed_700hPa", "wind_speed_600hPa", "wind_speed_500hPa", "wind_speed_300hPa", "wind_speed_400hPa", "wind_speed_250hPa", "wind_speed_200hPa", "geopotential_height_1000hPa", "geopotential_height_975hPa", "geopotential_height_950hPa", "geopotential_height_925hPa", "geopotential_height_900hPa", "geopotential_height_850hPa", "geopotential_height_800hPa", "geopotential_height_700hPa", "geopotential_height_600hPa", "geopotential_height_500hPa", "geopotential_height_400hPa", "geopotential_height_300hPa", "geopotential_height_250hPa", "geopotential_height_200hPa", "temperature_150hPa", "temperature_100hPa", "temperature_70hPa", "temperature_50hPa", "temperature_30hPa", "wind_speed_150hPa", "wind_speed_100hPa", "wind_speed_70hPa", "wind_speed_50hPa", "wind_speed_30hPa", "geopotential_height_150hPa", "geopotential_height_100hPa", "geopotential_height_70hPa", "geopotential_height_50hPa", "geopotential_height_30hPa", "wind_direction_1000hPa", "wind_direction_975hPa", "wind_direction_950hPa", "wind_direction_925hPa", "wind_direction_900hPa", "wind_direction_850hPa", "wind_direction_800hPa", "wind_direction_700hPa", "wind_direction_600hPa", "wind_direction_500hPa", "wind_direction_400hPa", "wind_direction_300hPa", "wind_direction_250hPa", "wind_direction_200hPa", "wind_direction_150hPa", "wind_direction_100hPa", "wind_direction_70hPa", "wind_direction_50hPa", "wind_direction_30hPa", "temperature_2m", "surface_pressure"],
+		"hourly": ["temperature_1000hPa", "temperature_975hPa", "temperature_950hPa", "temperature_925hPa", "temperature_900hPa", "temperature_850hPa", "temperature_800hPa", "temperature_700hPa", "temperature_600hPa", "temperature_500hPa", "temperature_400hPa", "temperature_300hPa", "temperature_250hPa", "temperature_200hPa", "wind_speed_975hPa", "wind_speed_950hPa", "wind_speed_1000hPa", "wind_speed_925hPa", "wind_speed_900hPa", "wind_speed_850hPa", "wind_speed_800hPa", "wind_speed_700hPa", "wind_speed_600hPa", "wind_speed_500hPa", "wind_speed_300hPa", "wind_speed_400hPa", "wind_speed_250hPa", "wind_speed_200hPa", "geopotential_height_1000hPa", "geopotential_height_975hPa", "geopotential_height_950hPa", "geopotential_height_925hPa", "geopotential_height_900hPa", "geopotential_height_850hPa", "geopotential_height_800hPa", "geopotential_height_700hPa", "geopotential_height_600hPa", "geopotential_height_500hPa", "geopotential_height_400hPa", "geopotential_height_300hPa", "geopotential_height_250hPa", "geopotential_height_200hPa", "temperature_150hPa", "temperature_100hPa", "temperature_70hPa", "temperature_50hPa", "temperature_30hPa", "wind_speed_150hPa", "wind_speed_100hPa", "wind_speed_70hPa", "wind_speed_50hPa", "wind_speed_30hPa", "geopotential_height_150hPa", "geopotential_height_100hPa", "geopotential_height_70hPa", "geopotential_height_50hPa", "geopotential_height_30hPa", "wind_direction_1000hPa", "wind_direction_975hPa", "wind_direction_950hPa", "wind_direction_925hPa", "wind_direction_900hPa", "wind_direction_850hPa", "wind_direction_800hPa", "wind_direction_700hPa", "wind_direction_600hPa", "wind_direction_500hPa", "wind_direction_400hPa", "wind_direction_300hPa", "wind_direction_250hPa", "wind_direction_200hPa", "wind_direction_150hPa", "wind_direction_100hPa", "wind_direction_70hPa", "wind_direction_50hPa", "wind_direction_30hPa", "temperature_2m", "surface_pressure", "wind_gusts_10m"],
 		"models": "best_match",
 		"timezone": "auto",
 		"forecast_days": 1,
@@ -168,7 +168,8 @@ def getHourlyWeather(lat, lon):
 	hourly_wind_direction_30hPa = hourly.Variables(75).ValuesAsNumpy()
 	hourly_temperature_2m = hourly.Variables(76).ValuesAsNumpy()
 	hourly_surface_pressure = hourly.Variables(77).ValuesAsNumpy()
-
+	hourly_wind_gusts_10m = hourly.Variables(78).ValuesAsNumpy()
+ 
 	hourly_data = {"date": pd.date_range(
 		start = pd.to_datetime(hourly.Time(), unit = "s", utc = True),
 		end = pd.to_datetime(hourly.TimeEnd(), unit = "s", utc = True),
@@ -257,6 +258,7 @@ def getHourlyWeather(lat, lon):
 	hourly_data["wind_direction_30hPa"] = hourly_wind_direction_30hPa
 	hourly_data["temperature_2m"] = hourly_temperature_2m
 	hourly_data["surface_pressure"] = hourly_surface_pressure
+	hourly_data["wind_gusts_10m"] = hourly_wind_gusts_10m
 
 	# Convert all hourly_data entries to numpy arrays if they aren't already
 	hourly_numpy = {}
