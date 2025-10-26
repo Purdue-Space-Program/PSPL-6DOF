@@ -1,9 +1,10 @@
 classdef Environment
     % The environment class models the environment system for the rocket,
     % including the sea level height of the location, local gravity, and
+    % atmospheric conditions at the current time.
 
     properties
-        Date (1,1) datetime = datetime("now");
+        Date (1,1) datetime = datetime("now", "TimeZone", "UTC");
         Elevation (1,1) double = 627.91;
         LatLong (1,2) double = [35.347444074690735, -117.8090720168799]
         railHeight (1,1) double = 18.29; % FAR rail height [m]
@@ -15,13 +16,17 @@ classdef Environment
             % environment and the position in latitude and longitude. The
             % function automatically generates the elevation
             arguments
-                lat (1,1) double
-                long (1,1) double
-                date (1,1) datetime = datetime("now")
+                lat (1,1) double = 35.347444074690735
+                long (1,1) double = -117.8090720168799
+                date (1,1) datetime = datetime("now", "TimeZone", "UTC")
             end
                 env.LatLong = [lat,long];
                 env.Elevation = getElevation(env);
                 env.Date = date;
+        end
+
+        function modifyTime(env)
+
         end
 
         function elev = getElevation(env)
