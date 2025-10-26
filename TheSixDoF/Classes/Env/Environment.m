@@ -6,21 +6,26 @@ classdef Environment
         Date (1,1) datetime = datetime("now");
         Elevation (1,1) double = 627.91;
         LatLong (1,2) double = [35.347444074690735, -117.8090720168799]
-        geocentricRadius (1,1) double = 6.371077849286893e6;
         railHeight (1,1) double = 18.29; % FAR rail height [m]
     end
 
     methods
         function env = Environment(lat, long, date)
-            % setLaunchSite creates a new launch site given an input
+            % Environment creates a new launch site given an input
             % environment and the position in latitude and longitude. The
             % function automatically generates the elevation
+            arguments
+                lat (1,1) double
+                long (1,1) double
+                date (1,1) datetime = datetime("now")
+            end
                 env.LatLong = [lat,long];
                 env.Elevation = getElevation(env);
                 env.Date = date;
         end
 
         function elev = getElevation(env)
+            % the open-meteo also gives elevation, may switch over to this.
             loc = txsite("Latitude", env.LatLong(1),"Longitude",env.LatLong(2));
             elev = elevation(loc);
         end
