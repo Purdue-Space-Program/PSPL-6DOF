@@ -2,6 +2,10 @@
 """
 Open-Meteo Ensemble API fetcher — single date *or* date range.
 
+- Past-only windows -> Historical Weather API (/v1/archive)
+- Today/Future-only windows -> Ensemble API (/v1/ensemble)
+- Mixed windows (return is kinda weird, try to avoid) -> split return {"archive": {...}, "ensemble": {...}}
+
 Usage examples
 --------------
 # Single calendar date (local time if timezone=auto):
@@ -15,7 +19,7 @@ python openmeteo_ensemble.py --lat 28.5 --lon -80.6 \
 
 Notes
 -----
-• This endpoint supports absolute time windows via &start_date=&end_date= (ISO YYYY-MM-DD) and also the relative
+• This supports absolute time windows via &start_date=&end_date= (ISO YYYY-MM-DD) and also the relative
   &forecast_days= / &past_days= alternatives. We use absolute dates for clarity. The forecast horizon is
   available **up to 35 days ahead** (model-dependent). Beyond that, the API won’t return future data. 
 • If you request a date/window partly beyond a model’s horizon, that model will return no values there.
@@ -29,12 +33,13 @@ import argparse
 import datetime as dt
 import json
 import sys
-from typing import List, Optional
+from typing import List, Optional, Tuple, Dict, Any
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
 
-API_URL = "https://ensemble-api.open-meteo.com/v1/ensemble"
+ENSEMBLE_URL = "https://ensemble-api.open-meteo.com/v1/ensemble"
+ARCHIVE_URL  = "https://archive-api.open-meteo.com/v1/archive"
 
 # Rocket-friendly defaults (you can override with --hourly)
 DEFAULT_HOURLY = [
@@ -56,33 +61,25 @@ def _parse_date(s: str) -> dt.date:
     except Exception as e:
         raise SystemExit(f"Invalid date '{s}' (use YYYY-MM-DD). Error: {e}")
 
-def _validate_window(start: dt.date, end: dt.date) -> None:
+def _validate_future_window(start: dt.date, end: dt.date, today: dt.date) -> None:
+    if start < today:
+        raise SystemExit("Internal error: future window starts before today.")
     if end < start:
         raise SystemExit("end-date must be >= start-date.")
-    today = dt.date.today()
-    if start < today:
-        raise SystemExit("Requested start-date is in the past. Use Past/Previous APIs for historical data.")
     if (end - today).days > 35:
-        raise SystemExit("Window goes beyond 35 days ahead (API limit). Choose earlier dates.")
+        raise SystemExit("Future window extends beyond 35 days ahead (Ensemble API limit).")
 
-def _build_params(lat, lon, models, hourly_list, timezone, start_date, end_date) -> List[tuple]:
-    # Return a list of (key, value) tuples so we can repeat &hourly= many times
-    params = [
-        ("latitude", lat),
-        ("longitude", lon),
-        ("models", models),
-        ("timezone", timezone),
-        ("timeformat", "iso8601"),
-        ("start_date", start_date),
-        ("end_date", end_date),
-    ]
+def _build_params_common(lat: float, lon: float, timezone: str) -> List[Tuple[str, Any]]:
+    return [("latitude", lat), ("longitude", lon), ("timezone", timezone), ("timeformat", "iso8601")]
+
+def _build_params_hourly(params: List[Tuple[str, Any]], hourly_list: List[str]) -> None:
+    # Use repeated &hourly=... to avoid CSV enum parsing issues
     for v in hourly_list:
-        params.append(("hourly", v))  # repeated params to avoid CSV parsing BS
-    return params
+        params.append(("hourly", v))
 
-def fetch_json(params_kv: List[tuple], timeout: int = 60) -> dict:
-    url = f"{API_URL}?{urlencode(params_kv, doseq=True)}"
-    req = Request(url, headers={"User-Agent": "openmeteo-ensemble-client/1.2"})
+def _fetch(url: str, params_kv: List[Tuple[str, Any]], timeout: int = 60) -> Dict[str, Any]:
+    req_url = f"{url}?{urlencode(params_kv, doseq=True)}"
+    req = Request(req_url, headers={"User-Agent": "openmeteo-router/1.0"})
     try:
         with urlopen(req, timeout=timeout) as r:
             body = r.read().decode("utf-8")
@@ -102,41 +99,75 @@ def fetch_json(params_kv: List[tuple], timeout: int = 60) -> dict:
     except Exception as e:
         raise SystemExit(f"Request failed: {e}")
 
+def _fetch_ensemble(lat, lon, hourly_list, timezone, start, end, models) -> Dict[str, Any]:
+    params = _build_params_common(lat, lon, timezone)
+    params += [("models", models), ("start_date", start.isoformat()), ("end_date", end.isoformat())]
+    _build_params_hourly(params, hourly_list)
+    return _fetch(ENSEMBLE_URL, params)
+
+def _fetch_archive(lat, lon, hourly_list, timezone, start, end) -> Dict[str, Any]:
+    params = _build_params_common(lat, lon, timezone)
+    params += [("start_date", start.isoformat()), ("end_date", end.isoformat())]
+    _build_params_hourly(params, hourly_list)
+    return _fetch(ARCHIVE_URL, params)
+
 def main(argv: Optional[List[str]] = None) -> None:
-    ap = argparse.ArgumentParser(description="Open-Meteo Ensemble API (single date or date range)")
+    ap = argparse.ArgumentParser(description="Open-Meteo router: Ensemble (future) + Archive (past)")
     ap.add_argument("--lat", "--latitude", dest="lat", type=float, required=True)
     ap.add_argument("--lon", "--longitude", dest="lon", type=float, required=True)
+
     grp = ap.add_mutually_exclusive_group(required=True)
     grp.add_argument("--date", type=str, help="Single date (YYYY-MM-DD).")
     grp.add_argument("--start-date", dest="start_date", type=str, help="Start date (YYYY-MM-DD) — use with --end-date")
     ap.add_argument("--end-date", dest="end_date", type=str, help="End date (YYYY-MM-DD) — required with --start-date")
+
     ap.add_argument("--hourly", type=str, default=",".join(DEFAULT_HOURLY),
-                    help="Comma- or semicolon-separated hourly variables (see docs).")
+                    help="Comma-/semicolon-separated hourly variables (exact API names).")
     ap.add_argument("--models", type=str, default="gfs_seamless",
-                    help="Comma-separated model codes (default: gfs_seamless).")
+                    help="Ensemble models for FUTURE part (ignored for archive).")
     ap.add_argument("--timezone", type=str, default="auto", help="e.g., 'auto' or 'America/New_York'.")
     args = ap.parse_args(argv)
 
     # Resolve dates
     if args.date:
-        d = _parse_date(args.date)
-        start, end = d, d
+        start = end = _parse_date(args.date)
     else:
         if not args.start_date or not args.end_date:
             raise SystemExit("Both --start-date and --end-date are required for a range.")
-        start = _parse_date(args.start_date)
-        end = _parse_date(args.end_date)
+        start, end = _parse_date(args.start_date), _parse_date(args.end_date)
+        if end < start:
+            raise SystemExit("end-date must be >= start-date.")
 
-    _validate_window(start, end)
+    today = dt.date.today()
     hourly_list = _hourly_to_list(args.hourly)
-    params_kv = _build_params(
-        lat=args.lat, lon=args.lon, models=args.models,
-        hourly_list=hourly_list, timezone=args.timezone,
-        start_date=start.isoformat(), end_date=end.isoformat()
-    )
-    data = fetch_json(params_kv)
-    json.dump(data, sys.stdout, ensure_ascii=False)
-    sys.stdout.write("\n")
+
+    # Case 1: all past
+    if end < today:
+        data = _fetch_archive(args.lat, args.lon, hourly_list, args.timezone, start, end)
+        json.dump(data, sys.stdout, ensure_ascii=False); sys.stdout.write("\n")
+        return
+
+    # Case 2: all future/today
+    if start >= today:
+        _validate_future_window(start, end, today)
+        data = _fetch_ensemble(args.lat, args.lon, hourly_list, args.timezone, start, end, args.models)
+        json.dump(data, sys.stdout, ensure_ascii=False); sys.stdout.write("\n")
+        return
+
+    # Case 3: mixed window (split)
+    past_end = min(end, today - dt.timedelta(days=1))
+    future_start = max(start, today)
+    _validate_future_window(future_start, end, today)
+
+    archive_part  = _fetch_archive(args.lat, args.lon, hourly_list, args.timezone, start, past_end)
+    ensemble_part = _fetch_ensemble(args.lat, args.lon, hourly_list, args.timezone, future_start, end, args.models)
+
+    out = {
+        "note": "Window crosses past/future boundary; results are split by API.",
+        "archive": archive_part,
+        "ensemble": ensemble_part
+    }
+    json.dump(out, sys.stdout, ensure_ascii=False); sys.stdout.write("\n")
 
 if __name__ == "__main__":
     main()
