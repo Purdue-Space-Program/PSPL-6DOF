@@ -342,7 +342,7 @@ end
 function makePlots(seg)
 %MAKEPLOTS Quick-look launch weather plots:
 %   1. 10 m wind & gusts
-%   2. 100 m wind (low-level shear)
+%   2. 100 m wind
 %   3. 10 m wind direction
 %   4. Pressure / cloud cover / precip
 %
@@ -396,7 +396,7 @@ function makePlots(seg)
         end
         ylabel(ylabelStr);
         xlabel(sprintf('Time (%s)', tz));
-        title('100 m AGL Winds (Low-Level Shear / Max-Q)');
+        title('100 m AGL Winds');
         legend('Location','best');
     end
 
