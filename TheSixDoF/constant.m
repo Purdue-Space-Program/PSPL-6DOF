@@ -12,7 +12,6 @@
          % properties of gases:
          R_u = 8.31446261815324; % universal gas constant [J·K/mol]
 
-
          % Gas properties for air:
          MW_air = 28.9647/1000;  % weight of air [kg/mol]
 
