@@ -79,7 +79,7 @@ classdef Rocket < handle
 
         function saveRocket(rocketObj)
             filename = rocketObj.name;
-            filepath = 'TheSixDoF' + filesep + 'Inputs' + filesep + 'Saved Rockets' + filesep + filename;
+            filepath = "TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + filename + ".mat";
             save(filepath, "rocketObj")
         end
 
