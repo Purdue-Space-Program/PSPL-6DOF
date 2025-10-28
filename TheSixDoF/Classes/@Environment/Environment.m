@@ -10,6 +10,7 @@ classdef Environment
         railHeight (1,1) double = 18.29; % FAR rail height [m]
         Atmosphere (:,5) double
         Wind (:,3) double
+        LaunchWeather struct = struct();   % ADDED: full Open-Meteo forecast w/ ensemble stats & times
     end
 
     methods
@@ -231,6 +232,52 @@ classdef Environment
             %         varargout{5} = surfPres;
             % end
 
+        end
+
+        function env = getLaunchWeather(env, startDate, endDate, hourlyVars)
+            % getLaunchWeather
+            % (MORE INFO IN get_openmeteo_ensemble.m)
+            % Pull Open-Meteo launch weather/forecast (or historical, if in the past)
+            % and store it on env.LaunchWeather.
+            %
+            % After calling this method:
+            %   env.LaunchWeather
+            %       .ensemble (for today/future) or .archive (for past)
+            %       .ensemble.time  -> datetime array for each forecast hour
+            %       .ensemble.stats.wind_speed_10m.mean
+            %       .ensemble.stats.wind_gusts_10m.max
+            %       .ensemble.stats.wind_speed_100m.mean
+            %       .ensemble.stats.cloud_cover.mean
+            %       .ensemble.stats.precipitation.mean
+            %
+            % NOTE: get_openmeteo_ensemble() also drops a copy into
+            % base workspace as weatherEnsemblePrediction for convenience.
+            %
+            % EXAMPLE:
+            %   env = env.getLaunchWeather();  % use env.Date
+            %   env = env.getLaunchWeather('2025-11-10');         % that single day
+            %   env = env.getLaunchWeather('2025-11-10','2025-11-12'); % 3-day window
+
+            if nargin < 2 || isempty(startDate)
+                startDate = datestr(env.Date,'yyyy-mm-dd');  % use the env.Date property
+            end
+
+            if nargin < 3 || isempty(endDate)
+                endDate = startDate;  % single-day window by default
+            end
+
+            if nargin < 4
+                hourlyVars = [];      % let get_openmeteo_ensemble use its default launch vars
+            end
+            wx = get_openmeteo_ensemble( ...
+                    env.LatLong(1), ...   % lat
+                    env.LatLong(2), ...   % lon
+                    startDate, ...
+                    endDate, ...
+                    hourlyVars);
+
+            % Save into the object so the rest of the sim can access it.
+            env.LaunchWeather = wx;
         end
     end
 end
