@@ -81,7 +81,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             noseLeng = app.NoseConeLengthmEditField.Value;
             dia = app.RocketDiameterEditField.Value;
 
-            if any([leng, noseLeng,dia])
+            if isempty(leng) || isempty(noseLeng) || isempty(dia)
                 uialert(app.UIFigure,"One or more parameters of the rocket are empty " + ...
                     "and plotting cannot proceed.", "Input Error!")
                 return
