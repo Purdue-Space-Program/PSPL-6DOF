@@ -8,49 +8,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         GridLayout9                    matlab.ui.container.GridLayout
         ComponentBrowserPanel          matlab.ui.container.Panel
         GridLayout10                   matlab.ui.container.GridLayout
+        UITable                        matlab.ui.control.Table
         EditComponentListBox           matlab.ui.control.ListBox
         EditComponentListBoxLabel      matlab.ui.control.Label
-        FinDesignPanel                 matlab.ui.container.Panel
-        GridLayout5                    matlab.ui.container.GridLayout
-        TabGroup3                      matlab.ui.container.TabGroup
-        AirfoilTab                     matlab.ui.container.Tab
-        GridLayout7                    matlab.ui.container.GridLayout
-        DoubleAngleLabel               matlab.ui.control.Label
-        DoubleAngleEditField           matlab.ui.control.EditField
-        NACAEditField                  matlab.ui.control.NumericEditField
-        NACAEditFieldLabel             matlab.ui.control.Label
-        AirfoilGeometryDropDown        matlab.ui.control.DropDown
-        AirfoilGeometryDropDownLabel   matlab.ui.control.Label
-        PlanformTab                    matlab.ui.container.Tab
-        GridLayout6                    matlab.ui.container.GridLayout
-        SweepEditField                 matlab.ui.control.NumericEditField
-        SweepEditFieldLabel            matlab.ui.control.Label
-        SpanEditField                  matlab.ui.control.NumericEditField
-        SpanEditFieldLabel             matlab.ui.control.Label
-        TipChordEditField              matlab.ui.control.NumericEditField
-        TipChordEditFieldLabel         matlab.ui.control.Label
-        RootChordEditField             matlab.ui.control.NumericEditField
-        RootChordEditFieldLabel        matlab.ui.control.Label
-        FinGraph                       matlab.ui.control.UIAxes
         Switchto2D                     matlab.ui.control.Button
         Switchto3DButton               matlab.ui.control.Button
         Panel                          matlab.ui.container.Panel
         GridLayout                     matlab.ui.container.GridLayout
         TabGroup2                      matlab.ui.container.TabGroup
-        ComponentTab                   matlab.ui.container.Tab
-        GridLayout4                    matlab.ui.container.GridLayout
-        ComponentOptionsLabel          matlab.ui.control.Label
-        DryMasskgEditField             matlab.ui.control.NumericEditField
-        DryMasskgEditFieldLabel        matlab.ui.control.Label
-        AddComponentButton             matlab.ui.control.Button
-        TankDiametermEditField         matlab.ui.control.NumericEditField
-        TankDiametermEditFieldLabel    matlab.ui.control.Label
-        TankLengthmEditField           matlab.ui.control.NumericEditField
-        TankLengthmEditFieldLabel      matlab.ui.control.Label
-        DistancefromNosemEditField     matlab.ui.control.NumericEditField
-        DistancefromNosemEditFieldLabel  matlab.ui.control.Label
-        ComponentSelectionDropDown     matlab.ui.control.DropDown
-        ComponentSelectionDropDownLabel  matlab.ui.control.Label
         GeometryTab                    matlab.ui.container.Tab
         GridLayout3                    matlab.ui.container.GridLayout
         RocketDryMass                  matlab.ui.control.NumericEditField
@@ -69,11 +34,63 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         RocketDiametermEditFieldLabel  matlab.ui.control.Label
         RocketLengthEditField          matlab.ui.control.NumericEditField
         RocketLengthmEditFieldLabel    matlab.ui.control.Label
+        ComponentTab                   matlab.ui.container.Tab
+        GridLayout4                    matlab.ui.container.GridLayout
+        AddComponentButton             matlab.ui.control.Button
+        TanksPanel                     matlab.ui.container.Panel
+        GridLayout11                   matlab.ui.container.GridLayout
+        DensityLabel                   matlab.ui.control.Label
+        FuelDensity                    matlab.ui.control.NumericEditField
+        FuelOxidizerDropDown           matlab.ui.control.DropDown
+        FuelOxidizerDropDownLabel      matlab.ui.control.Label
+        DryMasskgEditField             matlab.ui.control.NumericEditField
+        DryMasskgEditFieldLabel        matlab.ui.control.Label
+        DistancefromNosemEditField     matlab.ui.control.NumericEditField
+        DistancefromNosemEditFieldLabel  matlab.ui.control.Label
+        TankDiametermEditField         matlab.ui.control.NumericEditField
+        TankDiametermEditFieldLabel    matlab.ui.control.Label
+        TankLengthmEditField           matlab.ui.control.NumericEditField
+        TankLengthmEditFieldLabel      matlab.ui.control.Label
+        PointMassPanel                 matlab.ui.container.Panel
+        GridLayout12                   matlab.ui.container.GridLayout
+        pointMassWeight                matlab.ui.control.NumericEditField
+        DryMasskgEditField_2Label_2    matlab.ui.control.Label
+        ZValuePtMass                   matlab.ui.control.NumericEditField
+        yValuePtMass                   matlab.ui.control.NumericEditField
+        YZPositionmEditFieldLabel      matlab.ui.control.Label
+        distFromNosePtMass             matlab.ui.control.NumericEditField
+        DistancefromNosemEditField_2Label  matlab.ui.control.Label
+        ComponentOptionsLabel          matlab.ui.control.Label
+        ComponentSelectionDropDown     matlab.ui.control.DropDown
+        ComponentSelectionDropDownLabel  matlab.ui.control.Label
+        FinDesignPanel                 matlab.ui.container.Panel
+        GridLayout5                    matlab.ui.container.GridLayout
+        TabGroup3                      matlab.ui.container.TabGroup
+        PlanformTab                    matlab.ui.container.Tab
+        GridLayout6                    matlab.ui.container.GridLayout
+        SweepEditField                 matlab.ui.control.NumericEditField
+        SweepEditFieldLabel            matlab.ui.control.Label
+        SpanEditField                  matlab.ui.control.NumericEditField
+        SpanEditFieldLabel             matlab.ui.control.Label
+        TipChordEditField              matlab.ui.control.NumericEditField
+        TipChordEditFieldLabel         matlab.ui.control.Label
+        RootChordEditField             matlab.ui.control.NumericEditField
+        RootChordEditFieldLabel        matlab.ui.control.Label
+        AirfoilTab                     matlab.ui.container.Tab
+        GridLayout7                    matlab.ui.container.GridLayout
+        DoubleAngleLabel               matlab.ui.control.Label
+        DoubleAngleEditField           matlab.ui.control.EditField
+        NACAEditField                  matlab.ui.control.NumericEditField
+        NACAEditFieldLabel             matlab.ui.control.Label
+        AirfoilGeometryDropDown        matlab.ui.control.DropDown
+        AirfoilGeometryDropDownLabel   matlab.ui.control.Label
+        FinGraph                       matlab.ui.control.UIAxes
         UIAxes                         matlab.ui.control.UIAxes
         SimulationTab                  matlab.ui.container.Tab
         LaunchLocationPanel            matlab.ui.container.Panel
         Panel_2                        matlab.ui.container.Panel
         GridLayout2                    matlab.ui.container.GridLayout
+        SimulateLaunchButton           matlab.ui.control.Button
         LongitudedegEditField          matlab.ui.control.NumericEditField
         LongitudedegEditFieldLabel     matlab.ui.control.Label
         LatitudedegEditField           matlab.ui.control.NumericEditField
@@ -98,16 +115,16 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             leng = app.RocketLengthEditField.Value;
             noseLeng = app.NoseConeLengthmEditField.Value;
             dia = app.RocketDiameterEditField.Value;
+            R = dia/2;
 
             % define the geometry over the nose cone:
             xNose = linspace(0,noseLeng, 50);
 
             % change the y profile based on the selection.
 
-            R = dia/2;
+            
 
             switch app.NoseConeGeometryDropDown.Value
-
 
                 case 'Conic'
                     yNose = xNose.*dia./(noseLeng*2);
@@ -133,14 +150,66 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             x = [xNose,x];
             y = [2*yNose,y];
 
-            % if the plot is in 3d, modify it
+            % if the plot is in 3d
             if app.ThreeDPlot
+                
+                view(app.UIAxes, 3) %set view to 3D
+                cla(app.UIAxes) %reset axis
+                cameratoolbar("show");
+                cameratoolbar("SetMode","orbit");
+                cameratoolbar("SetCoordSys", "none")
 
-                % [X, Y, Z] = cylinder(y);
-                %
-                % surf(app.UIAxes, X,Y,Z, "FaceColor",'r', 'EdgeAlpha',0);
-                % axis(app.UIAxes, "equal")
+                %body
+                [Z, Y, X] = cylinder(R,100); %make unit cyliner along x axis
+                X_body = X*leng + noseLeng;
+                
+                surf(app.UIAxes, X_body,Y,Z, "FaceColor","#aaaaaa",'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                axis(app.UIAxes, "equal")
+                hold(app.UIAxes, "on")
+                
+                %nose
+                resolution = 100;
+                x_res_nose = 0:noseLeng/resolution:noseLeng;
+                switch app.NoseConeGeometryDropDown.Value
+                    
+                    case 'Conic'
+                        nose_radius_func_ish = R.*(x_res_nose./noseLeng);
+                    case 'Tangent Ogive'
+                        L = noseLeng;
+                        rho = (R^2 + L^2) / (2*R);
+                        nose_radius_func_ish = sqrt(rho^2-(L-x_res_nose).^2) + R - rho;
+                    case 'Von Karman'
+                        theta = linspace(0,pi,resolution);
+                        L = noseLeng;
+                        xNose = L/2 * (1-cos(theta));
+                        y_nose = R/sqrt(pi) * sqrt(theta-sin(2*theta)/2);                       
+                        nose_radius_func_ish = interp1(xNose,y_nose,x_res_nose);
+                    case 'Elliptical'
+                        nose_radius_func_ish = sqrt((R^2) -(R^2).*((x_res_nose-noseLeng).^2)./(noseLeng^2));
+                end
+                [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                X_nose = X*noseLeng;
+                
+                surf(app.UIAxes, X_nose,Y,Z, "FaceColor","#aaaaaa",'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                
+                %wireframe
+                thet = 0:2*pi/resolution:2*pi;
+                y = R*sin(thet);
+                z = R*cos(thet);
+                x = noseLeng.*thet.^0;
+                plot3(app.UIAxes, x,y,z, 'w')
+                plot3(app.UIAxes, x+leng, y, z, 'w')
+
+
+
+                %view(app.UIAxes, 0, 90)
+                
+
+
             else
+                view(app.UIAxes, 2)
+                cla(app.UIAxes)
+                cameratoolbar("SetMode","dollyhv");
 
                 % plot the base body of the rocket:
                 plot(app.UIAxes, x,y/2, app.lineColor)
@@ -306,15 +375,47 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                         % Diameter
                         % Dist from Nose
                         % Dry Mass
+                        % fuel/ox (0,1)
+                        % density of fuel/ox
+
 
                         length = itemData(2);
                         rad = itemData(3)/2;
                         dist = itemData(4);
 
+                        fuelOx = itemData(6);
+
+                        if fuelOx == 0
+                            color = 'r';
+                        else
+                            color = 'b';
+                        end
+                          
                         xTank = [dist, dist, dist+length, dist+length, dist];
                         yTank = [-rad, rad, rad, -rad, -rad];
 
-                        plot(app.UIAxes, xTank, yTank, 'b-')
+                        plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+
+                    case 5 % point mass
+
+                        % for the point mass, the data is in the order:
+                        % Component Type (5)
+                        % Dry Mass
+                        % Dist from Nose
+                        % y dist
+                        % z dist
+
+                        dist = itemData(2);
+                        y = itemData(3);
+                        z = itemData(4);
+
+                        x = dist;
+                        y = y;
+
+                        plot(app.UIAxes, x, y, 'MarkerSize', 10, 'Marker','.','Color','k')
+
+
+
                 end
             end
         end
@@ -553,12 +654,47 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             switch name
                 case "Tank"
-                    app.ComponentDetails(leng,:) = [1,app.TankLengthmEditField.Value, ...
-                    app.TankDiametermEditField.Value, ...
-                    app.DistancefromNosemEditField.Value, app.DryMasskgEditField.Value];
+                    % The tank has a component number of 1:
+                    % list of all of the parameters of the tank:
+                    % length
+                    % dia
+                    % noseDist
+                    % dry mass
+                    % fuel (0), ox(1)
+                    % density
+
+                    length = app.TankLengthmEditField.Value;
+                    dia = app.TankDiametermEditField.Value;
+                    noseDist = app.DistancefromNosemEditField.Value;
+                    dryMass = app.DryMasskgEditField.Value;
+
+                    if strcmp(app.FuelOxidizerDropDown.Value,'Fuel')
+                        fuelOx = 0;
+                    else
+                        fuelOx = 1;
+                    end
+
+                    density = app.FuelDensity.Value;
+                   
+                    app.ComponentDetails(leng,:) = [1,length,dia, noseDist, dryMass, ...
+                        fuelOx, density];
+
+                case "Point Mass"
+                    % The point mass has a component number of 5:
+                    % list of all of the parameters of the point mass:
+                    % mass
+                    % nose dist
+                    % [y,z] position
+
+                    mass = app.pointMassWeight.Value;
+                    noseDist = app.distFromNosePtMass.Value;
+                    yVal = app.yValuePtMass.Value;
+                    zVal = app.ZValuePtMass.Value;
+
+                    app.ComponentDetails(leng,:) = [5, mass, noseDist, yVal, zVal];
 
                 otherwise
-                    app.EditComponentListBox.ItemsData = {};
+
             end 
 
             app.RocketPlotter();
@@ -578,6 +714,84 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 app.ComponentBrowserPanel.Visible = 'on';
                 app.ComponentBrowserPanel.Enable = 'on';
             end
+            
+        end
+
+        % Value changed function: ComponentSelectionDropDown
+        function ComponentSelectionChanged(app, event)
+            value = app.ComponentSelectionDropDown.Value;
+
+            switch value
+                case "Tank"
+
+                    app.TanksPanel.Visible = 'on';
+                    app.TanksPanel.Enable = 'on';
+
+                    app.PointMassPanel.Visible = 'off';
+                    app.PointMassPanel.Enable = 'off';
+
+                case "Point Mass"
+                    app.TanksPanel.Visible = 'off';
+                    app.TanksPanel.Enable = 'off';
+
+                    app.PointMassPanel.Visible = 'on';
+                    app.PointMassPanel.Enable = 'on';
+                otherwise
+
+                    app.TanksPanel.Enable = 'off';
+                    app.TanksPanel.Visible = 'off';
+
+            end
+            
+        end
+
+        % Double-clicked callback: EditComponentListBox
+        function ComponentDoubleClicked(app, event)
+            item = event.InteractionInformation.Item;
+
+            itemDetails = app.ComponentDetails;
+
+            componentInfo = itemDetails(item,:)';
+
+        switch componentInfo(1)
+
+            case 1
+
+                nameList = {'Length [m]', "Diameter [m]", "Nose Distance", ...
+                    "Dry Mass", "Fuel/Ox", "Density"};
+
+                app.UITable.RowName = nameList;
+
+            app.UITable.Data = componentInfo(2:end);
+        end
+
+            
+            
+        end
+
+        % Value changed function: FuelOxidizerDropDown
+        function FuelOxChanged(app, event)
+            value = app.FuelOxidizerDropDown.Value;
+
+            if strcmp(value, 'Fuel')
+                app.DensityLabel.Text = 'Fuel Density [kg/m³]';
+            else
+                app.DensityLabel.Text = 'Ox Density [kg/m³]';
+            end
+            
+        end
+
+        % Button pushed function: SimulateLaunchButton
+        function SimulateLaunchClicked(app, event)
+           Main();
+        end
+
+        % Cell edit callback: UITable
+        function ComponentValueChanged(app, event)
+            indices = event.Indices;
+            newData = event.NewData;
+
+            % update the item in question with the new value.
             
         end
     end
@@ -611,10 +825,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create UIAxes
             app.UIAxes = uiaxes(app.GridLayout9);
-            title(app.UIAxes, 'Rocket Layout', 'Interpreter', 'latex')
-            xlabel(app.UIAxes, 'X', 'Interpreter', 'latex')
-            ylabel(app.UIAxes, 'Y', 'Interpreter', 'latex')
-            zlabel(app.UIAxes, 'Z', 'Interpreter', 'latex')
+            title(app.UIAxes, 'Rocket Layout')
+            xlabel(app.UIAxes, 'X')
+            ylabel(app.UIAxes, 'Y')
+            zlabel(app.UIAxes, 'Z')
             app.UIAxes.Layout.Row = 1;
             app.UIAxes.Layout.Column = [2 4];
 
@@ -631,10 +845,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create FinGraph
             app.FinGraph = uiaxes(app.GridLayout5);
-            title(app.FinGraph, 'Fin Design', 'Interpreter', 'latex')
-            xlabel(app.FinGraph, 'X', 'Interpreter', 'latex')
-            ylabel(app.FinGraph, 'Y', 'Interpreter', 'latex')
-            zlabel(app.FinGraph, 'Z', 'Interpreter', 'latex')
+            title(app.FinGraph, 'Fin Design')
+            xlabel(app.FinGraph, 'X')
+            ylabel(app.FinGraph, 'Y')
+            zlabel(app.FinGraph, 'Z')
             app.FinGraph.Layout.Row = [1 5];
             app.FinGraph.Layout.Column = 3;
 
@@ -802,6 +1016,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create RocketLengthEditField
             app.RocketLengthEditField = uieditfield(app.GridLayout3, 'numeric');
+            app.RocketLengthEditField.Limits = [0 Inf];
             app.RocketLengthEditField.ValueChangedFcn = createCallbackFcn(app, @RocketLengthChanged, true);
             app.RocketLengthEditField.HorizontalAlignment = 'left';
             app.RocketLengthEditField.Layout.Row = 2;
@@ -818,6 +1033,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create RocketDiameterEditField
             app.RocketDiameterEditField = uieditfield(app.GridLayout3, 'numeric');
+            app.RocketDiameterEditField.Limits = [0 Inf];
             app.RocketDiameterEditField.ValueChangedFcn = createCallbackFcn(app, @RocketDiaChanged, true);
             app.RocketDiameterEditField.HorizontalAlignment = 'left';
             app.RocketDiameterEditField.Layout.Row = 3;
@@ -865,7 +1081,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create FinNumberSpinner
             app.FinNumberSpinner = uispinner(app.GridLayout3);
-            app.FinNumberSpinner.Limits = [0 6];
+            app.FinNumberSpinner.Limits = [3 4];
             app.FinNumberSpinner.ValueChangedFcn = createCallbackFcn(app, @FinNumberChanged, true);
             app.FinNumberSpinner.Layout.Row = 8;
             app.FinNumberSpinner.Layout.Column = 2;
@@ -911,6 +1127,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create RocketDryMass
             app.RocketDryMass = uieditfield(app.GridLayout3, 'numeric');
+            app.RocketDryMass.Limits = [0 Inf];
             app.RocketDryMass.Layout.Row = 6;
             app.RocketDryMass.Layout.Column = 2;
 
@@ -920,7 +1137,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create GridLayout4
             app.GridLayout4 = uigridlayout(app.ComponentTab);
-            app.GridLayout4.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
+            app.GridLayout4.RowHeight = {50, 45, '2x', 55};
 
             % Create ComponentSelectionDropDownLabel
             app.ComponentSelectionDropDownLabel = uilabel(app.GridLayout4);
@@ -932,72 +1149,11 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create ComponentSelectionDropDown
             app.ComponentSelectionDropDown = uidropdown(app.GridLayout4);
-            app.ComponentSelectionDropDown.Items = {'Tank', 'Engine', 'Point Mass', 'Sensor'};
+            app.ComponentSelectionDropDown.Items = {'Tank', 'Engine', 'Sensor', 'Parachute', 'Point Mass'};
+            app.ComponentSelectionDropDown.ValueChangedFcn = createCallbackFcn(app, @ComponentSelectionChanged, true);
             app.ComponentSelectionDropDown.Layout.Row = 1;
             app.ComponentSelectionDropDown.Layout.Column = 2;
-            app.ComponentSelectionDropDown.Value = 'Tank';
-
-            % Create DistancefromNosemEditFieldLabel
-            app.DistancefromNosemEditFieldLabel = uilabel(app.GridLayout4);
-            app.DistancefromNosemEditFieldLabel.HorizontalAlignment = 'center';
-            app.DistancefromNosemEditFieldLabel.WordWrap = 'on';
-            app.DistancefromNosemEditFieldLabel.Layout.Row = 5;
-            app.DistancefromNosemEditFieldLabel.Layout.Column = 1;
-            app.DistancefromNosemEditFieldLabel.Text = 'Distance from Nose [m]';
-
-            % Create DistancefromNosemEditField
-            app.DistancefromNosemEditField = uieditfield(app.GridLayout4, 'numeric');
-            app.DistancefromNosemEditField.Layout.Row = 5;
-            app.DistancefromNosemEditField.Layout.Column = 2;
-
-            % Create TankLengthmEditFieldLabel
-            app.TankLengthmEditFieldLabel = uilabel(app.GridLayout4);
-            app.TankLengthmEditFieldLabel.HorizontalAlignment = 'center';
-            app.TankLengthmEditFieldLabel.WordWrap = 'on';
-            app.TankLengthmEditFieldLabel.Layout.Row = 3;
-            app.TankLengthmEditFieldLabel.Layout.Column = 1;
-            app.TankLengthmEditFieldLabel.Text = 'Tank Length [m]';
-
-            % Create TankLengthmEditField
-            app.TankLengthmEditField = uieditfield(app.GridLayout4, 'numeric');
-            app.TankLengthmEditField.Limits = [0 Inf];
-            app.TankLengthmEditField.Layout.Row = 3;
-            app.TankLengthmEditField.Layout.Column = 2;
-
-            % Create TankDiametermEditFieldLabel
-            app.TankDiametermEditFieldLabel = uilabel(app.GridLayout4);
-            app.TankDiametermEditFieldLabel.HorizontalAlignment = 'center';
-            app.TankDiametermEditFieldLabel.WordWrap = 'on';
-            app.TankDiametermEditFieldLabel.Layout.Row = 4;
-            app.TankDiametermEditFieldLabel.Layout.Column = 1;
-            app.TankDiametermEditFieldLabel.Text = 'Tank Diameter [m]';
-
-            % Create TankDiametermEditField
-            app.TankDiametermEditField = uieditfield(app.GridLayout4, 'numeric');
-            app.TankDiametermEditField.Limits = [0 Inf];
-            app.TankDiametermEditField.Layout.Row = 4;
-            app.TankDiametermEditField.Layout.Column = 2;
-
-            % Create AddComponentButton
-            app.AddComponentButton = uibutton(app.GridLayout4, 'push');
-            app.AddComponentButton.ButtonPushedFcn = createCallbackFcn(app, @AddComponent, true);
-            app.AddComponentButton.Layout.Row = 7;
-            app.AddComponentButton.Layout.Column = [1 2];
-            app.AddComponentButton.Text = 'Add Component';
-
-            % Create DryMasskgEditFieldLabel
-            app.DryMasskgEditFieldLabel = uilabel(app.GridLayout4);
-            app.DryMasskgEditFieldLabel.HorizontalAlignment = 'center';
-            app.DryMasskgEditFieldLabel.WordWrap = 'on';
-            app.DryMasskgEditFieldLabel.Layout.Row = 6;
-            app.DryMasskgEditFieldLabel.Layout.Column = 1;
-            app.DryMasskgEditFieldLabel.Text = 'Dry Mass [kg]';
-
-            % Create DryMasskgEditField
-            app.DryMasskgEditField = uieditfield(app.GridLayout4, 'numeric');
-            app.DryMasskgEditField.Limits = [0 Inf];
-            app.DryMasskgEditField.Layout.Row = 6;
-            app.DryMasskgEditField.Layout.Column = 2;
+            app.ComponentSelectionDropDown.Value = 'Engine';
 
             % Create ComponentOptionsLabel
             app.ComponentOptionsLabel = uilabel(app.GridLayout4);
@@ -1006,6 +1162,162 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.ComponentOptionsLabel.Layout.Row = 2;
             app.ComponentOptionsLabel.Layout.Column = [1 2];
             app.ComponentOptionsLabel.Text = 'Component Options';
+
+            % Create PointMassPanel
+            app.PointMassPanel = uipanel(app.GridLayout4);
+            app.PointMassPanel.Enable = 'off';
+            app.PointMassPanel.Visible = 'off';
+            app.PointMassPanel.Layout.Row = 3;
+            app.PointMassPanel.Layout.Column = [1 2];
+
+            % Create GridLayout12
+            app.GridLayout12 = uigridlayout(app.PointMassPanel);
+            app.GridLayout12.ColumnWidth = {'1x', '1x', '1x'};
+            app.GridLayout12.RowHeight = {'1x', '1x', '1x'};
+
+            % Create DistancefromNosemEditField_2Label
+            app.DistancefromNosemEditField_2Label = uilabel(app.GridLayout12);
+            app.DistancefromNosemEditField_2Label.HorizontalAlignment = 'center';
+            app.DistancefromNosemEditField_2Label.WordWrap = 'on';
+            app.DistancefromNosemEditField_2Label.Layout.Row = 2;
+            app.DistancefromNosemEditField_2Label.Layout.Column = 1;
+            app.DistancefromNosemEditField_2Label.Text = 'Distance from Nose [m]';
+
+            % Create distFromNosePtMass
+            app.distFromNosePtMass = uieditfield(app.GridLayout12, 'numeric');
+            app.distFromNosePtMass.Layout.Row = 2;
+            app.distFromNosePtMass.Layout.Column = [2 3];
+
+            % Create YZPositionmEditFieldLabel
+            app.YZPositionmEditFieldLabel = uilabel(app.GridLayout12);
+            app.YZPositionmEditFieldLabel.HorizontalAlignment = 'center';
+            app.YZPositionmEditFieldLabel.WordWrap = 'on';
+            app.YZPositionmEditFieldLabel.Layout.Row = 3;
+            app.YZPositionmEditFieldLabel.Layout.Column = 1;
+            app.YZPositionmEditFieldLabel.Text = 'Y,Z Position [m]';
+
+            % Create yValuePtMass
+            app.yValuePtMass = uieditfield(app.GridLayout12, 'numeric');
+            app.yValuePtMass.Layout.Row = 3;
+            app.yValuePtMass.Layout.Column = 2;
+
+            % Create ZValuePtMass
+            app.ZValuePtMass = uieditfield(app.GridLayout12, 'numeric');
+            app.ZValuePtMass.Layout.Row = 3;
+            app.ZValuePtMass.Layout.Column = 3;
+
+            % Create DryMasskgEditField_2Label_2
+            app.DryMasskgEditField_2Label_2 = uilabel(app.GridLayout12);
+            app.DryMasskgEditField_2Label_2.HorizontalAlignment = 'center';
+            app.DryMasskgEditField_2Label_2.WordWrap = 'on';
+            app.DryMasskgEditField_2Label_2.Layout.Row = 1;
+            app.DryMasskgEditField_2Label_2.Layout.Column = 1;
+            app.DryMasskgEditField_2Label_2.Text = 'Mass [kg]';
+
+            % Create pointMassWeight
+            app.pointMassWeight = uieditfield(app.GridLayout12, 'numeric');
+            app.pointMassWeight.Limits = [0 Inf];
+            app.pointMassWeight.Layout.Row = 1;
+            app.pointMassWeight.Layout.Column = [2 3];
+
+            % Create TanksPanel
+            app.TanksPanel = uipanel(app.GridLayout4);
+            app.TanksPanel.Layout.Row = 3;
+            app.TanksPanel.Layout.Column = [1 2];
+
+            % Create GridLayout11
+            app.GridLayout11 = uigridlayout(app.TanksPanel);
+            app.GridLayout11.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x'};
+
+            % Create TankLengthmEditFieldLabel
+            app.TankLengthmEditFieldLabel = uilabel(app.GridLayout11);
+            app.TankLengthmEditFieldLabel.HorizontalAlignment = 'center';
+            app.TankLengthmEditFieldLabel.WordWrap = 'on';
+            app.TankLengthmEditFieldLabel.Layout.Row = 1;
+            app.TankLengthmEditFieldLabel.Layout.Column = 1;
+            app.TankLengthmEditFieldLabel.Text = 'Tank Length [m]';
+
+            % Create TankLengthmEditField
+            app.TankLengthmEditField = uieditfield(app.GridLayout11, 'numeric');
+            app.TankLengthmEditField.Limits = [0 Inf];
+            app.TankLengthmEditField.Layout.Row = 1;
+            app.TankLengthmEditField.Layout.Column = 2;
+
+            % Create TankDiametermEditFieldLabel
+            app.TankDiametermEditFieldLabel = uilabel(app.GridLayout11);
+            app.TankDiametermEditFieldLabel.HorizontalAlignment = 'center';
+            app.TankDiametermEditFieldLabel.WordWrap = 'on';
+            app.TankDiametermEditFieldLabel.Layout.Row = 2;
+            app.TankDiametermEditFieldLabel.Layout.Column = 1;
+            app.TankDiametermEditFieldLabel.Text = 'Tank Diameter [m]';
+
+            % Create TankDiametermEditField
+            app.TankDiametermEditField = uieditfield(app.GridLayout11, 'numeric');
+            app.TankDiametermEditField.Limits = [0 Inf];
+            app.TankDiametermEditField.Layout.Row = 2;
+            app.TankDiametermEditField.Layout.Column = 2;
+
+            % Create DistancefromNosemEditFieldLabel
+            app.DistancefromNosemEditFieldLabel = uilabel(app.GridLayout11);
+            app.DistancefromNosemEditFieldLabel.HorizontalAlignment = 'center';
+            app.DistancefromNosemEditFieldLabel.WordWrap = 'on';
+            app.DistancefromNosemEditFieldLabel.Layout.Row = 3;
+            app.DistancefromNosemEditFieldLabel.Layout.Column = 1;
+            app.DistancefromNosemEditFieldLabel.Text = 'Distance from Nose [m]';
+
+            % Create DistancefromNosemEditField
+            app.DistancefromNosemEditField = uieditfield(app.GridLayout11, 'numeric');
+            app.DistancefromNosemEditField.Layout.Row = 3;
+            app.DistancefromNosemEditField.Layout.Column = 2;
+
+            % Create DryMasskgEditFieldLabel
+            app.DryMasskgEditFieldLabel = uilabel(app.GridLayout11);
+            app.DryMasskgEditFieldLabel.HorizontalAlignment = 'center';
+            app.DryMasskgEditFieldLabel.WordWrap = 'on';
+            app.DryMasskgEditFieldLabel.Layout.Row = 4;
+            app.DryMasskgEditFieldLabel.Layout.Column = 1;
+            app.DryMasskgEditFieldLabel.Text = 'Dry Mass [kg]';
+
+            % Create DryMasskgEditField
+            app.DryMasskgEditField = uieditfield(app.GridLayout11, 'numeric');
+            app.DryMasskgEditField.Limits = [0 Inf];
+            app.DryMasskgEditField.Layout.Row = 4;
+            app.DryMasskgEditField.Layout.Column = 2;
+
+            % Create FuelOxidizerDropDownLabel
+            app.FuelOxidizerDropDownLabel = uilabel(app.GridLayout11);
+            app.FuelOxidizerDropDownLabel.HorizontalAlignment = 'center';
+            app.FuelOxidizerDropDownLabel.Layout.Row = 5;
+            app.FuelOxidizerDropDownLabel.Layout.Column = 1;
+            app.FuelOxidizerDropDownLabel.Text = 'Fuel / Oxidizer';
+
+            % Create FuelOxidizerDropDown
+            app.FuelOxidizerDropDown = uidropdown(app.GridLayout11);
+            app.FuelOxidizerDropDown.Items = {'Fuel', 'Oxidizer'};
+            app.FuelOxidizerDropDown.ValueChangedFcn = createCallbackFcn(app, @FuelOxChanged, true);
+            app.FuelOxidizerDropDown.Layout.Row = 5;
+            app.FuelOxidizerDropDown.Layout.Column = 2;
+            app.FuelOxidizerDropDown.Value = 'Fuel';
+
+            % Create FuelDensity
+            app.FuelDensity = uieditfield(app.GridLayout11, 'numeric');
+            app.FuelDensity.Limits = [0 Inf];
+            app.FuelDensity.Layout.Row = 6;
+            app.FuelDensity.Layout.Column = 2;
+
+            % Create DensityLabel
+            app.DensityLabel = uilabel(app.GridLayout11);
+            app.DensityLabel.HorizontalAlignment = 'center';
+            app.DensityLabel.Layout.Row = 6;
+            app.DensityLabel.Layout.Column = 1;
+            app.DensityLabel.Text = 'Fuel Density [kg/m³]';
+
+            % Create AddComponentButton
+            app.AddComponentButton = uibutton(app.GridLayout4, 'push');
+            app.AddComponentButton.ButtonPushedFcn = createCallbackFcn(app, @AddComponent, true);
+            app.AddComponentButton.Layout.Row = 4;
+            app.AddComponentButton.Layout.Column = [1 2];
+            app.AddComponentButton.Text = 'Add Component';
 
             % Create Switchto3DButton
             app.Switchto3DButton = uibutton(app.GridLayout9, 'push');
@@ -1051,7 +1363,17 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.EditComponentListBox.Items = {};
             app.EditComponentListBox.Layout.Row = 2;
             app.EditComponentListBox.Layout.Column = 1;
+            app.EditComponentListBox.DoubleClickedFcn = createCallbackFcn(app, @ComponentDoubleClicked, true);
             app.EditComponentListBox.Value = {};
+
+            % Create UITable
+            app.UITable = uitable(app.GridLayout10);
+            app.UITable.ColumnName = '';
+            app.UITable.RowName = {};
+            app.UITable.ColumnEditable = true;
+            app.UITable.CellEditCallback = createCallbackFcn(app, @ComponentValueChanged, true);
+            app.UITable.Layout.Row = 2;
+            app.UITable.Layout.Column = 2;
 
             % Create SimulationTab
             app.SimulationTab = uitab(app.TabGroup);
@@ -1106,6 +1428,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.LongitudedegEditField.Layout.Row = 3;
             app.LongitudedegEditField.Layout.Column = 2;
             app.LongitudedegEditField.Value = -117.8091;
+
+            % Create SimulateLaunchButton
+            app.SimulateLaunchButton = uibutton(app.GridLayout2, 'push');
+            app.SimulateLaunchButton.ButtonPushedFcn = createCallbackFcn(app, @SimulateLaunchClicked, true);
+            app.SimulateLaunchButton.Layout.Row = 7;
+            app.SimulateLaunchButton.Layout.Column = [1 2];
+            app.SimulateLaunchButton.Text = 'Simulate Launch';
 
             % Create LaunchLocationPanel
             app.LaunchLocationPanel = uipanel(app.SimulationTab);
