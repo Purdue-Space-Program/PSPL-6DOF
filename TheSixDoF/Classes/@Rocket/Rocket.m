@@ -2,7 +2,8 @@ classdef Rocket < handle
 
     properties
         name (1,1) string
-        totalLength (1,1) double
+        totalLength
+        outerDiameter
         componentList dictionary
         aeroData
 
@@ -70,9 +71,15 @@ classdef Rocket < handle
 
             filepath = "TheSixDoF" + filesep + "Inputs" + filesep + "RASAero" + filesep + filename + ".csv";
             rawData = readmatrix(filepath);
-            data = [[rawData(1:300,1:5) rawData(1:300,8) rawData(1:300,13:15)]; 
-                    [rawData(2501:2800,1:5) rawData(2501:2800,8) rawData(2501:2801,13:15)]; 
-                    [rawData(5001:5300,1:5) rawData(5001:5300,8) rawData(5001:5301,13:15)]];
+
+            if (size(rawData) == [7500, 15])
+                data = [[rawData(1:300,1:5) rawData(1:300,8) rawData(1:300,13:15)]; 
+                        [rawData(2501:2800,1:5) rawData(2501:2800,8) rawData(2501:2801,13:15)];
+                        [rawData(5001:5300,1:5) rawData(5001:5300,8) rawData(5001:5301,13:15)]];
+            else
+                data = rawData;
+            end
+
             rocketObj.aeroData = data;
 
         end

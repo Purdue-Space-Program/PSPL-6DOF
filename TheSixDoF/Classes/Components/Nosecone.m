@@ -7,6 +7,10 @@ classdef Nosecone < RocketComponent
 
     methods
         function obj = Nosecone(name)
+            arguments
+               name string
+            end
+            
             obj.name = name;
         end
     end
