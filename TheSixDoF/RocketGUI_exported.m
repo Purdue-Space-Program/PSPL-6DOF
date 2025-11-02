@@ -187,6 +187,9 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 X_fin = zeros(length(xOut),2);
                 Y_fin = zeros(length(xOut),2);
                 Z_fin = zeros(length(xOut),2);
+                X_fin_top = zeros(length(xOut));
+                Y_fin_top = zeros(length(xOut));
+                Z_fin_top = zeros(length(xOut));
 
                 for n = 1:length(xOut)
                     X_fin(n,1) = (leng - fin_offset) + rootChord.*xOut(n);
@@ -194,17 +197,24 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     Y_fin(n,1) = yOut(n);
                     Y_fin(n,2) = yOut(n);
                     Z_fin(n,1) = R;
-                    Z_fin(n,2) = R + span;
+                    Z_fin(n,2) = R + span;                 
+                end
+                for n = 1:length(xOut)
+                    X_fin_top(n) = (leng - fin_offset) + tipChord.*xOut(n) + sweep;
+                    Y_fin_top(n) = yOut(n);
+                    Z_fin_top(n) = R+span;
                 end
                 
-                
                 scopy = zeros(num_Fins);
-                
+                stcopy = zeros(length(xOut), num_Fins);
+
                 for i = 1:num_Fins
-                    scopy(i) = surf(app.UIAxes,X_fin,Y_fin,Z_fin, "FaceColor","#0000ff",'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                    scopy(i) = surf(app.UIAxes,X_fin,Y_fin,Z_fin, "FaceColor","#aaaaaa",'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                    stcopy(:,i) = fill3(app.UIAxes,X_fin_top,Y_fin_top,Z_fin_top, [1,1,1], 'FaceColor','#aaaaaa');
                     direction = [1 0 0];
                     origin = [0 0 0];
                     rotate(scopy(i),direction,rad2deg((i-1)*(2*pi)/num_Fins),origin);
+                    rotate(stcopy(:,i), direction,rad2deg((i-1)*(2*pi)/num_Fins),origin)
                     
                 end
                 
