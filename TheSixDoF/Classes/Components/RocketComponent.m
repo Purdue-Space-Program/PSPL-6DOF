@@ -1,10 +1,10 @@
 classdef (Abstract) RocketComponent
     properties
-        name (1,1) string
-        mass (1,1) double
-        position (1,1) double
-        length (1,1) double = 0
-        material (1,1) string = "None"
+        Name (1,1) string
+        Mass (1,1) double
+        Position (1,1) double
+        Length (1,1) double = 0
+        Material (1,1) string = "None"
  
     end
 
