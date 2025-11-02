@@ -47,6 +47,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         LaunchLocationPanel            matlab.ui.container.Panel
         Panel_2                        matlab.ui.container.Panel
         GridLayout2                    matlab.ui.container.GridLayout
+        GetWeatherConditionsButton     matlab.ui.control.Button
         SimulateLaunchButton           matlab.ui.control.Button
         LongitudedegEditField          matlab.ui.control.NumericEditField
         LongitudedegEditFieldLabel     matlab.ui.control.Label
@@ -108,7 +109,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 case 'Elliptical'
                     L = noseLeng;
                     yNose = R*sqrt(1-((xNose-L).^2./L^2));
-
             end
 
             x = [noseLeng,leng];
@@ -409,6 +409,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RevertButton.Enable = 'off';
 
             % set up the filepath:
+            path
             
         end
 
@@ -633,14 +634,36 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 propertyEditLabels(idx).Layout.Row = idx;
                 propertyEditLabels(idx).Layout.Column = 1;
                 app.PropertyEditLabels = propertyEditLabels;
-                if contains(string(propertyArray(idx).Validation.Class.Name), ["int", "double", "single"])
-                    fieldType = 'numeric';
-                else
-                    fieldType = 'text';
-                end
-                propertyEditFields(idx) = uieditfield(app.PropertyGrid, fieldType);
+
+                % Check if the property is 'Position' and handle it differently
+                if propertyList(idx) == "Position"
+                % Create a custom input field for Position (3x1 vector)
+                propertyEditFields(idx) = uieditfield(app.PropertyGrid, 'text');
                 propertyEditFields(idx).Layout.Row = idx;
                 propertyEditFields(idx).Layout.Column = 2;
+                propertyEditFields(idx).Value = '[0, 0, 0]'; % Default value for Position
+                %propertyEditFields(idx).UserData = 'Position'; % Mark as Position for validation
+
+                elseif propertyList(idx) == "Color"
+                    % Create a color picker for the Color property
+                    propertyEditFields(idx) = uicolorpicker(app.PropertyGrid);
+                    propertyEditFields(idx).Layout.Row = idx;
+                    propertyEditFields(idx).Layout.Column = 2;  % Input field on the left side
+                    propertyEditFields(idx).Value = [1, 1, 1];  % Default to white color (RGB)
+                    propertyEditFields(idx).UserData = 'Color';  % Mark as Color for validation
+
+                elseif contains(string(propertyArray(idx).Validation.Class.Name), ["int", "double", "single"])
+                    fieldType = 'numeric';
+                    propertyEditFields(idx) = uieditfield(app.PropertyGrid, fieldType);
+                    propertyEditFields(idx).Layout.Row = idx;
+                    propertyEditFields(idx).Layout.Column = 2;
+                else
+                    fieldType = 'text';
+                    propertyEditFields(idx) = uieditfield(app.PropertyGrid, fieldType);
+                    propertyEditFields(idx).Layout.Row = idx;
+                    propertyEditFields(idx).Layout.Column = 2;
+                end
+
                 app.PropertyEditFields = propertyEditFields;
             end
         end
@@ -658,6 +681,18 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             if ~isempty(app.rocket.outerDiameter)
                 app.RocketDiameterEditField.Value = app.rocket.outerDiameter;
             end
+        end
+
+        % Button pushed function: GetWeatherConditionsButton
+        function getWeather(app, event)
+            % get the weather if the appropriate fields are filled out:
+
+            date = app.DateSelectionDatePicker.Value;
+
+            if isempty(date)
+                uialert(app.UIFigure, "Date field is empty!", "Input Error")
+            end
+            
         end
     end
 
@@ -968,6 +1003,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create DateSelectionDatePicker
             app.DateSelectionDatePicker = uidatepicker(app.GridLayout2);
+            app.DateSelectionDatePicker.Limits = [datetime([1940 1 1]) datetime([9999 12 31])];
             app.DateSelectionDatePicker.Layout.Row = 1;
             app.DateSelectionDatePicker.Layout.Column = 2;
 
@@ -1007,6 +1043,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.SimulateLaunchButton.Layout.Row = 7;
             app.SimulateLaunchButton.Layout.Column = [1 2];
             app.SimulateLaunchButton.Text = 'Simulate Launch';
+
+            % Create GetWeatherConditionsButton
+            app.GetWeatherConditionsButton = uibutton(app.GridLayout2, 'push');
+            app.GetWeatherConditionsButton.ButtonPushedFcn = createCallbackFcn(app, @getWeather, true);
+            app.GetWeatherConditionsButton.Layout.Row = 4;
+            app.GetWeatherConditionsButton.Layout.Column = [1 2];
+            app.GetWeatherConditionsButton.Text = 'Get Weather Conditions';
 
             % Create LaunchLocationPanel
             app.LaunchLocationPanel = uipanel(app.SimulationTab);
