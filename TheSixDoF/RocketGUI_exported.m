@@ -116,39 +116,15 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             noseLeng = app.NoseConeLengthmEditField.Value;
             dia = app.RocketDiameterEditField.Value;
             R = dia/2;
-
-            % define the geometry over the nose cone:
-            xNose = linspace(0,noseLeng, 50);
-
-            % change the y profile based on the selection.
+            %fins
+            num_Fins = app.FinNumberSpinner.Value;
+            rootChord = app.RootChordEditField.Value;
+            tipChord = app.TipChordEditField.Value;
+            span = app.SpanEditField.Value;
+            sweep = app.SweepEditField.Value;
+            fin_offset = app.DistancefromRear.Value;
 
             
-
-            switch app.NoseConeGeometryDropDown.Value
-
-                case 'Conic'
-                    yNose = xNose.*dia./(noseLeng*2);
-                case 'Tangent Ogive'
-                    L = noseLeng;
-                    rho = (R^2 + L^2) / (2*R);
-                    yNose = sqrt(rho^2-(L-xNose).^2) + R - rho;
-
-                case 'Von Karman'
-                    theta = linspace(0,pi,50);
-                    L = noseLeng;
-                    xNose = L/2 * (1-cos(theta));
-                    yNose = R/sqrt(pi) * sqrt(theta-sin(2*theta)/2);
-
-                case 'Elliptical'
-                    L = noseLeng;
-                    yNose = R*sqrt(1-((xNose-L).^2./L^2));
-
-            end
-
-            x = [noseLeng,leng];
-            y = dia* ones(1,numel(x));
-            x = [xNose,x];
-            y = [2*yNose,y];
 
             % if the plot is in 3d
             if app.ThreeDPlot
@@ -159,15 +135,16 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 cameratoolbar("SetMode","orbit");
                 cameratoolbar("SetCoordSys", "none")
 
-                %body
+                % body
                 [Z, Y, X] = cylinder(R,100); %make unit cyliner along x axis
-                X_body = X*leng + noseLeng;
+                X_body = X*(leng-noseLeng) + noseLeng;
                 
                 surf(app.UIAxes, X_body,Y,Z, "FaceColor","#aaaaaa",'FaceAlpha', 0.7, 'EdgeAlpha',0);
                 axis(app.UIAxes, "equal")
+                axis(app.UIAxes, 'auto')
                 hold(app.UIAxes, "on")
                 
-                %nose
+                % nose
                 resolution = 100;
                 x_res_nose = 0:noseLeng/resolution:noseLeng;
                 switch app.NoseConeGeometryDropDown.Value
@@ -192,24 +169,87 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 
                 surf(app.UIAxes, X_nose,Y,Z, "FaceColor","#aaaaaa",'FaceAlpha', 0.7, 'EdgeAlpha',0);
                 
-                %wireframe
+                % wireframe
                 thet = 0:2*pi/resolution:2*pi;
                 y = R*sin(thet);
                 z = R*cos(thet);
                 x = noseLeng.*thet.^0;
                 plot3(app.UIAxes, x,y,z, 'w')
-                plot3(app.UIAxes, x+leng, y, z, 'w')
+                plot3(app.UIAxes, x+leng-noseLeng, y, z, 'w')
 
+                % fins
 
+                    % create rectangle until introduce naca airfoils for fins
+                    xOut = [0,0,1,1,0];
+                    yOut = [-0.01,0.01,0.01,-0.01,-0.01];
+                    %assumes y comes pre-scaled
+                
+                X_fin = zeros(length(xOut),2);
+                Y_fin = zeros(length(xOut),2);
+                Z_fin = zeros(length(xOut),2);
 
-                %view(app.UIAxes, 0, 90)
+                for n = 1:length(xOut)
+                    X_fin(n,1) = (leng - fin_offset) + rootChord.*xOut(n);
+                    X_fin(n,2) = (leng - fin_offset) + tipChord.*xOut(n) + sweep;
+                    Y_fin(n,1) = yOut(n);
+                    Y_fin(n,2) = yOut(n);
+                    Z_fin(n,1) = R;
+                    Z_fin(n,2) = R + span;
+                end
+                
+                
+                scopy = zeros(num_Fins);
+                
+                for i = 1:num_Fins
+                    scopy(i) = surf(app.UIAxes,X_fin,Y_fin,Z_fin, "FaceColor","#0000ff",'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                    direction = [1 0 0];
+                    origin = [0 0 0];
+                    rotate(scopy(i),direction,rad2deg((i-1)*(2*pi)/num_Fins),origin);
+                    
+                end
+                
+
+           
                 
 
 
-            else
+            else % plot is in 2D
+
+
+
                 view(app.UIAxes, 2)
                 cla(app.UIAxes)
                 cameratoolbar("SetMode","dollyhv");
+
+                % define the geometry over the nose cone:
+                xNose = linspace(0,noseLeng, 50);
+    
+                % change the y profile based on the selection.
+                switch app.NoseConeGeometryDropDown.Value
+    
+                    case 'Conic'
+                        yNose = xNose.*dia./(noseLeng*2);
+                    case 'Tangent Ogive'
+                        L = noseLeng;
+                        rho = (R^2 + L^2) / (2*R);
+                        yNose = sqrt(rho^2-(L-xNose).^2) + R - rho;
+    
+                    case 'Von Karman'
+                        theta = linspace(0,pi,50);
+                        L = noseLeng;
+                        xNose = L/2 * (1-cos(theta));
+                        yNose = R/sqrt(pi) * sqrt(theta-sin(2*theta)/2);
+    
+                    case 'Elliptical'
+                        L = noseLeng;
+                        yNose = R*sqrt(1-((xNose-L).^2./L^2));
+    
+                end
+    
+                x = [noseLeng,leng];
+                y = dia* ones(1,numel(x));
+                x = [xNose,x];
+                y = [2*yNose,y];
 
                 % plot the base body of the rocket:
                 plot(app.UIAxes, x,y/2, app.lineColor)
