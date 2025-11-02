@@ -1,9 +1,8 @@
 classdef (Abstract) RocketComponent
     properties
-        Name (1,1) string
-        Mass (1,1) double
-        Position (1,1) double
-        Length (1,1) double = 0
+        Name (1,1) string % Name
+        Mass (1,1) double % Mass [kg]
+        Position (1,1) double % Position [m] (x,y,z)
         Color
         Material (1,1) string = "None"
  

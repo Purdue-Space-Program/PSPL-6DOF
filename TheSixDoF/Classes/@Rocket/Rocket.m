@@ -6,7 +6,8 @@ classdef Rocket < handle
         outerDiameter
         componentList dictionary
         aeroData
-
+        CenterOfMass
+        CenterOfPressure
     end
 
     methods
