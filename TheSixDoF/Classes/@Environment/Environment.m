@@ -258,26 +258,38 @@ classdef Environment
             %   env = env.getLaunchWeather('2025-11-10');         % that single day
             %   env = env.getLaunchWeather('2025-11-10','2025-11-12'); % 3-day window
 
+            % Default argument handling
             if nargin < 2 || isempty(startDate)
-                startDate = datestr(env.Date,'yyyy-mm-dd');  % use the env.Date property
+            % default: use env.Date rounded to date string
+            startDate = datestr(env.Date, 'yyyy-mm-dd');
             end
-
+    
             if nargin < 3 || isempty(endDate)
-                endDate = startDate;  % single-day window by default
+                endDate = startDate;
             end
-
+    
             if nargin < 4
-                hourlyVars = [];      % let get_openmeteo_ensemble use its default launch vars
+                hourlyVars = [];
             end
+    
+            % Call the main fetcher/plotter
             wx = get_openmeteo_ensemble( ...
                     env.LatLong(1), ...   % lat
                     env.LatLong(2), ...   % lon
                     startDate, ...
                     endDate, ...
                     hourlyVars);
-
-            % Save into the object so the rest of the sim can access it.
+    
+            % Stash the full struct
             env.LaunchWeather = wx;
+    
+            % Also mirror the pieces we care about for sim:
+            if isfield(wx,'Atmosphere')
+                env.Atmosphere = wx.Atmosphere;
+            end
+            if isfield(wx,'Wind')
+                env.Wind = wx.Wind;
+            end
         end
     end
 end
