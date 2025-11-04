@@ -125,6 +125,35 @@ function [s,output] = n4dig(ID,writefile);
         % CAUSES EXCESSIVE PANEL ANGLE ON TE ^^^        
         writematrix(selig_out, write_ID,'Delimiter',' ','WriteMode','append');        
     end
+
+    airfoilWS = struct();
+    airfoilWS.ID        = s;            % e.g., '2412'
+    airfoilWS.chord     = c;            % chord length used
+    airfoilWS.res       = res;          % resolution
+    airfoilWS.header    = header;       % first line in the .dat
+    airfoilWS.selig_out = selig_out;    % [x y] in Selig ordering (what we wrote)
+
+    % (Optional but handy) also keep the raw upper/lower arrays we plotted:
+    airfoilWS.xu = xu(:); airfoilWS.yu = yu(:);
+    airfoilWS.xl = xl(:); airfoilWS.yl = yl(:);
+    airfoilWS.x  = x(:);  airfoilWS.yt = yt(:);
+    if exist('yc','var'); airfoilWS.yc = yc(:); else; airfoilWS.yc = []; end
+
+    % Put it in the base workspace under a consistent name and a per-ID name
+    varName = matlab.lang.makeValidName(['NACA_' s]);  % e.g., NACA_2412
+    assignin('base',varName, airfoilWS);
+
+    % save (x,y) into workspace as one N×2 array
+    % Use Selig ordering to match the .dat: upper surface TE→LE (skip
+    % endpoints to avoid duplicates), then lower surface LE→TE.
+    upperXY = [xu(:) yu(:)];
+    lowerXY = [xl(:) yl(:)];
+    airfoilXY = [ flipud(upperXY(2:end-1,:)); lowerXY ];   % N×2
+
+    % Put it in the base workspace
+    assignin('base', matlab.lang.makeValidName([varName '_airfoilXY']), airfoilXY);
+    % ============================================================
+
        
 end
 function [ nonLinVec ] = nonLinspace( mn, mx, num, spacetype )
