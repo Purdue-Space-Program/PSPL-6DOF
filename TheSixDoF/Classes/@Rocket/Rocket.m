@@ -26,18 +26,18 @@ classdef Rocket < handle
             numComponents = numEntries(rocketObj.componentList);
 
             if numComponents == 0
-                rocketObj.componentList(componentObj.name) = {componentObj};
-            elseif isKey(rocketObj.componentList, componentObj.name)
+                rocketObj.componentList(componentObj.Name) = {componentObj};
+            elseif isKey(rocketObj.componentList, componentObj.Name)
                 %this should be removed for GUI implementation, only added here for testing
-                warning("Replacing existing component '%s', do you want to proceed? (Y/N)", componentObj.name)
+                warning("Replacing existing component '%s', do you want to proceed? (Y/N)", componentObj.Name)
                 response = input("", "s");
                 if strcmp(response, "Y")
-                    rocketObj.componentList(componentObj.name) = {componentObj};
+                    rocketObj.componentList(componentObj.Name) = {componentObj};
                 else
                     fprintf("\nStopping . . .\n")
                 end
             else
-                rocketObj.componentList(componentObj.name) = {componentObj};
+                rocketObj.componentList(componentObj.Name) = {componentObj};
             end
         end
 

@@ -78,15 +78,36 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             R = dia/2;
             %fins
 
-            % need to update this later with the new fin stuff
-            if 0 == 1
-            num_Fins = 3;
-            rootChord = app.RootChordEditField.Value;
-            tipChord = app.TipChordEditField.Value;
-            span = app.SpanEditField.Value;
-            sweep = app.SweepEditField.Value;
-            fin_offset = app.DistancefromRear.Value;
+            % look at the rocket object and see if there are fins
+            % associated with it:
+
+            % first, check if the rocket is empty. If not, proceed:
+            if ~isempty(app.rocket)
+                compList = app.rocket.componentList;
+
+                % in the event that the rocket has components:
+                if numEntries(compList) > 0
+                    len = numEntries(compList);
+                    values = compList.values;
+
+                    % go through each and check for fins
+                    for idx = 1:len
+                        if isa(values{idx}, 'Fins')
+                            finObject = values{idx};
+                            num_Fins = double(finObject.Count);
+                            rootChord = finObject.RootChord;
+                            tipChord = finObject.TipChord;
+                            span = finObject.Span;
+                            sweep = finObject.Sweep;
+                            fin_offset = finObject.Position(1);
+                        end
+                    end
+                end
+
+            else
+                num_Fins = 0;
             end
+
 
             % if the plot is in 3d
             if app.ThreeDPlot
@@ -139,8 +160,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 plot3(app.UIAxes, x,y,z, 'w')
                 plot3(app.UIAxes, x+leng-noseLeng, y, z, 'w')
 
-                if 0 == 1
-
                 % fins
 
                     % create rectangle until introduce naca airfoils for fins
@@ -163,6 +182,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     Z_fin(n,1) = R;
                     Z_fin(n,2) = R + span;                 
                 end
+                
                 for n = 1:length(xOut)
                     X_fin_top(n) = (leng - fin_offset) + tipChord.*xOut(n) + sweep;
                     Y_fin_top(n) = yOut(n);
@@ -181,8 +201,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     rotate(stcopy(:,i), direction,rad2deg((i-1)*(2*pi)/num_Fins),origin)
                     
                 end
-
-                end                
 
 
             else % plot is in 2D
@@ -232,10 +250,9 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 % plot the fins of the rocket, if they exist
 
                 % need to change this back when fins
-                numFin = 3;
 
-                if numFin ~= 0
-                    %app.PlotFins(numFin)
+                if num_Fins ~= 0
+                    %app.PlotFins(num_Fins)
                 end
 
                 %app.PlotComponents();
@@ -559,17 +576,21 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     value = app.PropertyEditFields(idx).Value;
                     
                     if property == 'Position'
-                        value = str2num(app.PropertyEditFields(idx).Value)
+                        value = str2num(app.PropertyEditFields(idx).Value);
                     end
 
                     if isempty(value)
                         return
+                    elseif property == 'Position'
+                        component.(property) = str2num(app.PropertyEditFields(idx).Value);
                     else
                         component.(property) = app.PropertyEditFields(idx).Value;
                     end
                 end
 
                 app.rocket.addComponent(component);
+
+                uiconfirm(app.UIFigure, 'Component Addition Successful', 'Component Addition')
             end
         end
 
