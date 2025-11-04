@@ -9,7 +9,7 @@ classdef Tank < RocketComponent
                 name string
             end
 
-            obj.name = name;
+            obj.Name = name;
         end
     end
 

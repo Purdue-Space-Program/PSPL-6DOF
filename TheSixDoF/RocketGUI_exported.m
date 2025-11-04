@@ -20,7 +20,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         ButtonGrid                     matlab.ui.container.GridLayout
         RevertButton                   matlab.ui.control.Button
         CreateNewRocketButton          matlab.ui.control.Button
-        Switch                         matlab.ui.control.Switch
         SaveRocketButton               matlab.ui.control.Button
         LoadRocketButton               matlab.ui.control.Button
         RASAeroDataLabel               matlab.ui.control.Label
@@ -70,109 +69,158 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
     methods (Access = private)
 
-        function RocketPlotter(app)
+           function RocketPlotter(app)
 
             % create general parameters for the rocket:
             leng = app.RocketLengthEditField.Value;
             noseLeng = app.NoseConeLengthmEditField.Value;
             dia = app.RocketDiameterEditField.Value;
-
-            if isempty(leng) || isempty(noseLeng) || isempty(dia)
-                uialert(app.UIFigure,"One or more parameters of the rocket are empty " + ...
-                    "and plotting cannot proceed.", "Input Error!")
-                return
-            end
-
-            % define the geometry over the nose cone:
-            xNose = linspace(0,noseLeng, 50);
-
-            % change the y profile based on the selection.
-
             R = dia/2;
+            %fins
 
-            switch app.NoseConeGeometryDropDown.Value
-
-
-                case 'Conic'
-                    yNose = xNose.*dia./(noseLeng*2);
-                case 'Tangent Ogive'
-                    L = noseLeng;
-                    rho = (R^2 + L^2) / (2*R);
-                    yNose = sqrt(rho^2-(L-xNose).^2) + R - rho;
-
-                case 'Von Karman'
-                    theta = linspace(0,pi,50);
-                    L = noseLeng;
-                    xNose = L/2 * (1-cos(theta));
-                    yNose = R/sqrt(pi) * sqrt(theta-sin(2*theta)/2);
-
-                case 'Elliptical'
-                    L = noseLeng;
-                    yNose = R*sqrt(1-((xNose-L).^2./L^2));
+            % need to update this later with the new fin stuff
+            if 0 == 1
+            num_Fins = 3;
+            rootChord = app.RootChordEditField.Value;
+            tipChord = app.TipChordEditField.Value;
+            span = app.SpanEditField.Value;
+            sweep = app.SweepEditField.Value;
+            fin_offset = app.DistancefromRear.Value;
             end
 
-            x = [noseLeng,leng];
-            y = dia* ones(1,numel(x));
-            x = [xNose,x];
-            y = [2*yNose,y];
-
-            % if the plot is in 3d, modify it
+            % if the plot is in 3d
             if app.ThreeDPlot
-
+                
                 view(app.UIAxes, 3) %set view to 3D
                 cla(app.UIAxes) %reset axis
                 cameratoolbar("show");
                 cameratoolbar("SetMode","orbit");
                 cameratoolbar("SetCoordSys", "none")
 
-                %body
+                % body
                 [Z, Y, X] = cylinder(R,100); %make unit cyliner along x axis
-                X_body = X*leng + noseLeng;
-
+                X_body = X*(leng-noseLeng) + noseLeng;
+                
                 surf(app.UIAxes, X_body,Y,Z, "FaceColor","#aaaaaa",'FaceAlpha', 0.7, 'EdgeAlpha',0);
                 axis(app.UIAxes, "equal")
+                axis(app.UIAxes, 'auto')
                 hold(app.UIAxes, "on")
-
-                %nose
+                
+                % nose
                 resolution = 100;
                 x_res_nose = 0:noseLeng/resolution:noseLeng;
                 switch app.NoseConeGeometryDropDown.Value
-
+                    
                     case 'Conic'
-                        nose_radius_func = R.*(x_res_nose./noseLeng);
+                        nose_radius_func_ish = R.*(x_res_nose./noseLeng);
                     case 'Tangent Ogive'
                         L = noseLeng;
                         rho = (R^2 + L^2) / (2*R);
-                        nose_radius_func = sqrt(rho^2-(L-x_res_nose).^2) + R - rho;
+                        nose_radius_func_ish = sqrt(rho^2-(L-x_res_nose).^2) + R - rho;
                     case 'Von Karman'
                         theta = linspace(0,pi,resolution);
                         L = noseLeng;
                         xNose = L/2 * (1-cos(theta));
-                        y_nose = R/sqrt(pi) * sqrt(theta-sin(2*theta)/2);
-                        nose_radius_func = interp1(xNose,y_nose,x_res_nose);
+                        y_nose = R/sqrt(pi) * sqrt(theta-sin(2*theta)/2);                       
+                        nose_radius_func_ish = interp1(xNose,y_nose,x_res_nose);
                     case 'Elliptical'
-                        nose_radius_func = sqrt((R^2) -(R^2).*((x_res_nose-noseLeng).^2)./(noseLeng^2));
+                        nose_radius_func_ish = sqrt((R^2) -(R^2).*((x_res_nose-noseLeng).^2)./(noseLeng^2));
                 end
-                [Z, Y, X] = cylinder(nose_radius_func, 100);
+                [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
                 X_nose = X*noseLeng;
-
+                
                 surf(app.UIAxes, X_nose,Y,Z, "FaceColor","#aaaaaa",'FaceAlpha', 0.7, 'EdgeAlpha',0);
-
-                %wireframe
+                
+                % wireframe
                 thet = 0:2*pi/resolution:2*pi;
                 y = R*sin(thet);
                 z = R*cos(thet);
                 x = noseLeng.*thet.^0;
                 plot3(app.UIAxes, x,y,z, 'w')
-                plot3(app.UIAxes, x+leng, y, z, 'w')
+                plot3(app.UIAxes, x+leng-noseLeng, y, z, 'w')
+
+                if 0 == 1
+
+                % fins
+
+                    % create rectangle until introduce naca airfoils for fins
+                    xOut = [0,0,1,1,0];
+                    yOut = [-0.01,0.01,0.01,-0.01,-0.01];
+                    %assumes y comes pre-scaled
+                
+                X_fin = zeros(length(xOut),2);
+                Y_fin = zeros(length(xOut),2);
+                Z_fin = zeros(length(xOut),2);
+                X_fin_top = zeros(length(xOut));
+                Y_fin_top = zeros(length(xOut));
+                Z_fin_top = zeros(length(xOut));
+
+                for n = 1:length(xOut)
+                    X_fin(n,1) = (leng - fin_offset) + rootChord.*xOut(n);
+                    X_fin(n,2) = (leng - fin_offset) + tipChord.*xOut(n) + sweep;
+                    Y_fin(n,1) = yOut(n);
+                    Y_fin(n,2) = yOut(n);
+                    Z_fin(n,1) = R;
+                    Z_fin(n,2) = R + span;                 
+                end
+                for n = 1:length(xOut)
+                    X_fin_top(n) = (leng - fin_offset) + tipChord.*xOut(n) + sweep;
+                    Y_fin_top(n) = yOut(n);
+                    Z_fin_top(n) = R+span;
+                end
+                
+                scopy = zeros(num_Fins);
+                stcopy = zeros(length(xOut), num_Fins);
+
+                for i = 1:num_Fins
+                    scopy(i) = surf(app.UIAxes,X_fin,Y_fin,Z_fin, "FaceColor","#aaaaaa",'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                    stcopy(:,i) = fill3(app.UIAxes,X_fin_top,Y_fin_top,Z_fin_top, [1,1,1], 'FaceColor','#aaaaaa');
+                    direction = [1 0 0];
+                    origin = [0 0 0];
+                    rotate(scopy(i),direction,rad2deg((i-1)*(2*pi)/num_Fins),origin);
+                    rotate(stcopy(:,i), direction,rad2deg((i-1)*(2*pi)/num_Fins),origin)
+                    
+                end
+
+                end                
 
 
+            else % plot is in 2D
 
-            else
                 view(app.UIAxes, 2)
                 cla(app.UIAxes)
                 cameratoolbar("SetMode","dollyhv");
-                cameratoolbar("hide")
+                %cameratoolbar("hide");
+
+                % define the geometry over the nose cone:
+                xNose = linspace(0,noseLeng, 50);
+    
+                % change the y profile based on the selection.
+                switch app.NoseConeGeometryDropDown.Value
+    
+                    case 'Conic'
+                        yNose = xNose.*dia./(noseLeng*2);
+                    case 'Tangent Ogive'
+                        L = noseLeng;
+                        rho = (R^2 + L^2) / (2*R);
+                        yNose = sqrt(rho^2-(L-xNose).^2) + R - rho;
+    
+                    case 'Von Karman'
+                        theta = linspace(0,pi,50);
+                        L = noseLeng;
+                        xNose = L/2 * (1-cos(theta));
+                        yNose = R/sqrt(pi) * sqrt(theta-sin(2*theta)/2);
+    
+                    case 'Elliptical'
+                        L = noseLeng;
+                        yNose = R*sqrt(1-((xNose-L).^2./L^2));
+    
+                end
+    
+                x = [noseLeng,leng];
+                y = dia* ones(1,numel(x));
+                x = [xNose,x];
+                y = [2*yNose,y];
 
                 % plot the base body of the rocket:
                 plot(app.UIAxes, x,y/2, app.lineColor)
@@ -183,11 +231,12 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
                 % plot the fins of the rocket, if they exist
 
-                % numFin = app.FinNumberSpinner.Value;
-                % 
-                % if numFin ~= 0
-                %     app.PlotFins(numFin)
-                % end
+                % need to change this back when fins
+                numFin = 3;
+
+                if numFin ~= 0
+                    %app.PlotFins(numFin)
+                end
 
                 %app.PlotComponents();
 
@@ -508,6 +557,11 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 for idx = 1:nProperties
                     property = string(app.PropertyEditLabels(idx).Text);
                     value = app.PropertyEditFields(idx).Value;
+                    
+                    if property == 'Position'
+                        value = str2num(app.PropertyEditFields(idx).Value)
+                    end
+
                     if isempty(value)
                         return
                     else
@@ -563,7 +617,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     filename = name + "_aero.csv";
                     filepath = fullfile(path, file);
                     savepath = "TheSixDoF" + filesep + "Inputs" + filesep + "RASAero" + filesep + name + ".csv";
-                    movefile(filepath, savepath);
+                    path = pwd;
+                    savepath = fullfile(path, savepath);
+
+                    if savepath ~= filepath
+                        % maybe change this 
+                        movefile(filepath, savepath);
+                    end
 
                     app.AeroDataButton.Text = filename;
                 end
@@ -606,6 +666,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             rocketObj = app.rocket;
 
             save(path, "rocketObj")
+
+            uiconfirm(app.UIFigure, "Rocket saved.", "Congratulations!")
         end
 
         % Value changed function: RocketNameEditField
@@ -629,6 +691,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             nFields = length(propertyList);
             app.PropertyGrid.RowHeight = repmat({'fit'}, 1, nFields);
 
+            % Set up grid layout for PropertyGrid with extra row for the plot
+            % gridLayout = uigridlayout(app.PropertyGrid, [nFields + 1, 2]);  % Extra row for the plot
+            % gridLayout.RowHeight = [repmat({'fit'}, 1, nFields), '1x'];  % Make the last row flexible for the plot
+
             for idx = 1:nFields
                 propertyEditLabels(idx) = uilabel(app.PropertyGrid, 'Text', propertyList(idx));
                 propertyEditLabels(idx).Layout.Row = idx;
@@ -649,7 +715,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     propertyEditFields(idx) = uicolorpicker(app.PropertyGrid);
                     propertyEditFields(idx).Layout.Row = idx;
                     propertyEditFields(idx).Layout.Column = 2;  % Input field on the left side
-                    propertyEditFields(idx).Value = [1, 1, 1];  % Default to white color (RGB)
+                    propertyEditFields(idx).Value = [0.7, 0.7, 0.7];  % Default to white color (RGB)
                     propertyEditFields(idx).UserData = 'Color';  % Mark as Color for validation
 
                 elseif contains(string(propertyArray(idx).Validation.Class.Name), ["int", "double", "single"])
@@ -665,6 +731,16 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 end
 
                 app.PropertyEditFields = propertyEditFields;
+
+                % Add a plot for "Fins" if it is selected from the component selection
+                % if type == "Fins"
+                %     % Create an axes for the plot (this will take the last row)
+                %     plotAxes = axes(gridLayout);
+                %     plotAxes.Layout.Row = nFields + 1;  % Put plot in the last row (nFields + 1)
+                %     plotAxes.Layout.Column = [1, 2];    % Span across both columns
+                %     %plotAxes.Position = [0.1, 0.1, 0.8, 0.8];  % Adjust plot size within the cell
+                %     plot(plotAxes, 1:10, rand(1, 10));  % Example plot (replace with actual data for Fins)
+                % end
             end
         end
 
@@ -878,14 +954,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.SaveRocketButton.Layout.Row = 2;
             app.SaveRocketButton.Layout.Column = 1;
             app.SaveRocketButton.Text = 'Save';
-
-            % Create Switch
-            app.Switch = uiswitch(app.ButtonGrid, 'slider');
-            app.Switch.Items = {'SI', 'Imperial'};
-            app.Switch.Enable = 'off';
-            app.Switch.Layout.Row = 1;
-            app.Switch.Layout.Column = 2;
-            app.Switch.Value = 'SI';
 
             % Create CreateNewRocketButton
             app.CreateNewRocketButton = uibutton(app.ButtonGrid, 'push');
