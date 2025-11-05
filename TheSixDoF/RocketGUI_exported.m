@@ -6,6 +6,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         TabGroup                       matlab.ui.container.TabGroup
         RocketDesignTab                matlab.ui.container.Tab
         GridLayout9                    matlab.ui.container.GridLayout
+        Tree                           matlab.ui.container.Tree
         UITable                        matlab.ui.control.Table
         ListBox                        matlab.ui.control.ListBox
         Switchto3D                     matlab.ui.control.Button
@@ -16,6 +17,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         TabGroup2                      matlab.ui.container.TabGroup
         RocketTab                      matlab.ui.container.Tab
         RocketGrid                     matlab.ui.container.GridLayout
+        RocketColor                    matlab.ui.control.ColorPicker
+        ColorColorPickerLabel          matlab.ui.control.Label
         ButtonPanel                    matlab.ui.container.Panel
         ButtonGrid                     matlab.ui.container.GridLayout
         RevertButton                   matlab.ui.control.Button
@@ -65,6 +68,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         rocket Rocket
         PropertyEditFields
         PropertyEditLabels
+        autoRefresh = 0;
     end
 
     methods (Access = private)
@@ -100,9 +104,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                             span = finObject.Span;
                             sweep = finObject.Sweep;
                             fin_offset = finObject.Position(1);
+                            finColor = finObject.Color;
                         end
                     end
+
+                else
+                    num_Fins = 0;
                 end
+                
 
             else
                 num_Fins = 0;
@@ -122,7 +131,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 [Z, Y, X] = cylinder(R,100); %make unit cyliner along x axis
                 X_body = X*(leng-noseLeng) + noseLeng;
                 
-                surf(app.UIAxes, X_body,Y,Z, "FaceColor","#aaaaaa",'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                surf(app.UIAxes, X_body,Y,Z, "FaceColor",app.RocketColor.Value,'FaceAlpha', 0.7, 'EdgeAlpha',0);
                 axis(app.UIAxes, "equal")
                 axis(app.UIAxes, 'auto')
                 hold(app.UIAxes, "on")
@@ -150,7 +159,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
                 X_nose = X*noseLeng;
                 
-                surf(app.UIAxes, X_nose,Y,Z, "FaceColor","#aaaaaa",'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                surf(app.UIAxes, X_nose,Y,Z, "FaceColor",app.RocketColor.Value,'FaceAlpha', 0.7, 'EdgeAlpha',0);
                 
                 % wireframe
                 thet = 0:2*pi/resolution:2*pi;
@@ -159,6 +168,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 x = noseLeng.*thet.^0;
                 plot3(app.UIAxes, x,y,z, 'w')
                 plot3(app.UIAxes, x+leng-noseLeng, y, z, 'w')
+
+                if num_Fins ~= 0
 
                 % fins
 
@@ -175,8 +186,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 Z_fin_top = zeros(length(xOut));
 
                 for n = 1:length(xOut)
-                    X_fin(n,1) = (leng - fin_offset) + rootChord.*xOut(n);
-                    X_fin(n,2) = (leng - fin_offset) + tipChord.*xOut(n) + sweep;
+                    X_fin(n,1) = (fin_offset) + rootChord.*xOut(n);
+                    X_fin(n,2) = (fin_offset) + tipChord.*xOut(n) + sweep;
                     Y_fin(n,1) = yOut(n);
                     Y_fin(n,2) = yOut(n);
                     Z_fin(n,1) = R;
@@ -184,7 +195,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 end
                 
                 for n = 1:length(xOut)
-                    X_fin_top(n) = (leng - fin_offset) + tipChord.*xOut(n) + sweep;
+                    X_fin_top(n) = (fin_offset) + tipChord.*xOut(n) + sweep;
                     Y_fin_top(n) = yOut(n);
                     Z_fin_top(n) = R+span;
                 end
@@ -193,13 +204,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 stcopy = zeros(length(xOut), num_Fins);
 
                 for i = 1:num_Fins
-                    scopy(i) = surf(app.UIAxes,X_fin,Y_fin,Z_fin, "FaceColor","#aaaaaa",'FaceAlpha', 0.7, 'EdgeAlpha',0);
-                    stcopy(:,i) = fill3(app.UIAxes,X_fin_top,Y_fin_top,Z_fin_top, [1,1,1], 'FaceColor','#aaaaaa');
+                    scopy(i) = surf(app.UIAxes,X_fin,Y_fin,Z_fin, "FaceColor",finColor,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                    stcopy(:,i) = fill3(app.UIAxes,X_fin_top,Y_fin_top,Z_fin_top, [1,1,1], 'FaceColor',finColor, 'EdgeAlpha', 0);
                     direction = [1 0 0];
                     origin = [0 0 0];
                     rotate(scopy(i),direction,rad2deg((i-1)*(2*pi)/num_Fins),origin);
                     rotate(stcopy(:,i), direction,rad2deg((i-1)*(2*pi)/num_Fins),origin)
                     
+                end
                 end
 
 
@@ -252,7 +264,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 % need to change this back when fins
 
                 if num_Fins ~= 0
-                    %app.PlotFins(num_Fins)
+                    app.PlotFins()
                 end
 
                 %app.PlotComponents();
@@ -283,6 +295,39 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         end
 
         function [finPtsX, finPtsY] = FinPlotter(app)
+
+            % look at the rocket object and see if there are fins
+            % associated with it:
+
+            % first, check if the rocket is empty. If not, proceed:
+            if ~isempty(app.rocket)
+                compList = app.rocket.componentList;
+
+                % in the event that the rocket has components:
+                if numEntries(compList) > 0
+                    len = numEntries(compList);
+                    values = compList.values;
+
+                    % go through each and check for fins
+                    for idx = 1:len
+                        if isa(values{idx}, 'Fins')
+                            finObject = values{idx};
+                            num_Fins = double(finObject.Count);
+                            rootChord = finObject.RootChord;
+                            tipChord = finObject.TipChord;
+                            span = finObject.Span;
+                            sweep = finObject.Sweep;
+                            fin_offset = finObject.Position(1);
+                        end
+                    end
+                end
+
+            else
+                num_Fins = 0;
+                return
+            end
+
+            
             % get the basic parameters of the fin:
             rootChord = app.RootChordEditField.Value;
             tipChord = app.TipChordEditField.Value;
@@ -303,21 +348,51 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             axis(app.FinGraph, "equal");
         end
 
-        function PlotFins(app, numFin)
+        function PlotFins(app)
 
             % get the default fin geometry from the fin plotter function
-            [xFin, yFin] = app.FinPlotter;
+            %[xFin, yFin] = app.FinPlotter;
+
+            if ~isempty(app.rocket)
+                compList = app.rocket.componentList;
+
+                % in the event that the rocket has components:
+                if numEntries(compList) > 0
+                    len = numEntries(compList);
+                    values = compList.values;
+
+                    % go through each and check for fins
+                    for idx = 1:len
+                        if isa(values{idx}, 'Fins')
+                            finObject = values{idx};
+                            numFins = double(finObject.Count);
+                            rootChord = finObject.RootChord;
+                            tipChord = finObject.TipChord;
+                            span = finObject.Span;
+                            sweep = finObject.Sweep;
+                            finOffset = finObject.Position(1);
+                        end
+                    end
+                end
+
+            else
+                numFins = 0;
+                return
+            end
+
+            finPtsX = [0, sweep, sweep+tipChord, rootChord, 0];
+            finPtsY = [0, span, span, 0, 0];
 
             % get parameters from user input:
-            rearDist = app.DistancefromRear.Value;
-            dia = app.RocketDiameterEditField.Value;
-            leng = app.RocketLengthEditField.Value;
+            rearDist = finOffset;
+            dia = app.rocket.outerDiameter;
+            leng = app.rocket.totalLength;
 
             % first, check which fins should be plotted based on occlusion
             % (manually for now lmao, don't know how to write this
             % programmatically)
 
-            switch numFin
+            switch numFins
                 case 1
                     % why?
                     plotFin = 1;
@@ -340,11 +415,11 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
                 % the first fin always points up towards us, so use
                 % that as the baseline reference (theta = 0):
-                theta = (2*pi)/numFin * (idx-1);
+                theta = (2*pi)/numFins * (idx-1);
 
                 % generate an array of matrices for the projected fins.
-                xFinShifted = xFin + leng - rearDist;
-                yFinProjection = yFin*sin(theta);
+                xFinShifted = finPtsX + rearDist;
+                yFinProjection = finPtsY*sin(theta);
 
                 % add the radial component to the y-values:
                 rad = dia/2 * sin(theta);
@@ -371,7 +446,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     % update the x-position based on the y-points if the
                     % distance is less than zero (inside the body), shift
                     % the points by the slope:
-
 
                     yFinProjection(yFinProjection<dia/2) = dia/2;
 
@@ -492,6 +566,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             end
 
+            if app.autoRefresh
+                app.RocketPlotter();
+            end
+
 
         end
 
@@ -504,6 +582,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         % Value changed function: RocketDiameterEditField
         function RocketDiaChanged(app, event)
             app.RevertButton.Enable = 'on';
+
+            if app.autoRefresh
+                app.RocketPlotter();
+            end
 
         end
 
@@ -519,12 +601,19 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 return
             end
 
+            if app.autoRefresh
+                app.RocketPlotter()
+            end
 
         end
 
         % Value changed function: NoseConeGeometryDropDown
         function NoseConeTypeChanged(app, event)
             app.RevertButton.Enable = 'on';
+
+            if app.autoRefresh
+                app.RocketPlotter();
+            end
         end
 
         % Button pushed function: Switchto3D
@@ -588,7 +677,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     end
                 end
 
+                % add the component to the rocket object
                 app.rocket.addComponent(component);
+
+                % add the component to the tree:
 
                 uiconfirm(app.UIFigure, 'Component Addition Successful', 'Component Addition')
             end
@@ -688,7 +780,15 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             save(path, "rocketObj")
 
+            % update the tree node with the rocket object:
+            rootNode = uitreenode(app.Tree, 'Text', name);
+            expand(rootNode);
+
             uiconfirm(app.UIFigure, "Rocket saved.", "Congratulations!")
+
+            % after creating a rocket object, auto refresh the plot with
+            % changes:
+            app.autoRefresh = 1;
         end
 
         % Value changed function: RocketNameEditField
@@ -791,6 +891,15 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             end
             
         end
+
+        % Callback function: RocketColor
+        function BaseColorChanged(app, event)
+            value = app.RocketColor.Value;
+            
+            if app.autoRefresh
+                app.RocketPlotter();
+            end
+        end
     end
 
     % Component initialization
@@ -851,7 +960,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create RocketGrid
             app.RocketGrid = uigridlayout(app.RocketTab);
             app.RocketGrid.ColumnWidth = {'1x', '2x'};
-            app.RocketGrid.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
+            app.RocketGrid.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
 
             % Create TotalLengthmLabel
             app.TotalLengthmLabel = uilabel(app.RocketGrid);
@@ -956,7 +1065,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create ButtonPanel
             app.ButtonPanel = uipanel(app.RocketGrid);
             app.ButtonPanel.BorderType = 'none';
-            app.ButtonPanel.Layout.Row = [7 8];
+            app.ButtonPanel.Layout.Row = [8 9];
             app.ButtonPanel.Layout.Column = [1 2];
 
             % Create ButtonGrid
@@ -988,6 +1097,20 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RevertButton.Layout.Row = 1;
             app.RevertButton.Layout.Column = 2;
             app.RevertButton.Text = 'Revert';
+
+            % Create ColorColorPickerLabel
+            app.ColorColorPickerLabel = uilabel(app.RocketGrid);
+            app.ColorColorPickerLabel.HorizontalAlignment = 'center';
+            app.ColorColorPickerLabel.Layout.Row = 7;
+            app.ColorColorPickerLabel.Layout.Column = 1;
+            app.ColorColorPickerLabel.Text = 'Color';
+
+            % Create RocketColor
+            app.RocketColor = uicolorpicker(app.RocketGrid);
+            app.RocketColor.Value = [0.8 0.8 0.8];
+            app.RocketColor.ValueChangedFcn = createCallbackFcn(app, @BaseColorChanged, true);
+            app.RocketColor.Layout.Row = 7;
+            app.RocketColor.Layout.Column = 2;
 
             % Create ComponentsTab
             app.ComponentsTab = uitab(app.TabGroup2);
@@ -1059,10 +1182,12 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create ListBox
             app.ListBox = uilistbox(app.GridLayout9);
-            app.ListBox.Items = {'RocketName', '   ComponentClass1', '      Component1', '   ComponentClass2', '      Component2', '      Component3'};
+            app.ListBox.Items = {};
+            app.ListBox.Enable = 'off';
+            app.ListBox.Visible = 'off';
             app.ListBox.Layout.Row = 3;
             app.ListBox.Layout.Column = 2;
-            app.ListBox.Value = 'RocketName';
+            app.ListBox.Value = {};
 
             % Create UITable
             app.UITable = uitable(app.GridLayout9);
@@ -1070,6 +1195,11 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.UITable.RowName = {'Property1, Property2, Property3'};
             app.UITable.Layout.Row = 3;
             app.UITable.Layout.Column = 3;
+
+            % Create Tree
+            app.Tree = uitree(app.GridLayout9);
+            app.Tree.Layout.Row = 3;
+            app.Tree.Layout.Column = 2;
 
             % Create SimulationTab
             app.SimulationTab = uitab(app.TabGroup);
