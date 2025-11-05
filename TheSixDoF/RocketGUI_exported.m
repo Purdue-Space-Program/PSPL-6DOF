@@ -73,7 +73,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
     methods (Access = private)
 
-           function RocketPlotter(app)
+        function RocketPlotter(app)
 
             % create general parameters for the rocket:
             leng = app.RocketLengthEditField.Value;
@@ -111,7 +111,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 else
                     num_Fins = 0;
                 end
-                
+
 
             else
                 num_Fins = 0;
@@ -120,7 +120,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % if the plot is in 3d
             if app.ThreeDPlot
-                
+
                 view(app.UIAxes, 3) %set view to 3D
                 cla(app.UIAxes) %reset axis
                 cameratoolbar("show");
@@ -130,17 +130,17 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 % body
                 [Z, Y, X] = cylinder(R,100); %make unit cyliner along x axis
                 X_body = X*(leng-noseLeng) + noseLeng;
-                
+
                 surf(app.UIAxes, X_body,Y,Z, "FaceColor",app.RocketColor.Value,'FaceAlpha', 0.7, 'EdgeAlpha',0);
                 axis(app.UIAxes, "equal")
                 axis(app.UIAxes, 'auto')
                 hold(app.UIAxes, "on")
-                
+
                 % nose
                 resolution = 100;
                 x_res_nose = 0:noseLeng/resolution:noseLeng;
                 switch app.NoseConeGeometryDropDown.Value
-                    
+
                     case 'Conic'
                         nose_radius_func_ish = R.*(x_res_nose./noseLeng);
                     case 'Tangent Ogive'
@@ -151,16 +151,16 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                         theta = linspace(0,pi,resolution);
                         L = noseLeng;
                         xNose = L/2 * (1-cos(theta));
-                        y_nose = R/sqrt(pi) * sqrt(theta-sin(2*theta)/2);                       
+                        y_nose = R/sqrt(pi) * sqrt(theta-sin(2*theta)/2);
                         nose_radius_func_ish = interp1(xNose,y_nose,x_res_nose);
                     case 'Elliptical'
                         nose_radius_func_ish = sqrt((R^2) -(R^2).*((x_res_nose-noseLeng).^2)./(noseLeng^2));
                 end
                 [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
                 X_nose = X*noseLeng;
-                
+
                 surf(app.UIAxes, X_nose,Y,Z, "FaceColor",app.RocketColor.Value,'FaceAlpha', 0.7, 'EdgeAlpha',0);
-                
+
                 % wireframe
                 thet = 0:2*pi/resolution:2*pi;
                 y = R*sin(thet);
@@ -169,49 +169,52 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 plot3(app.UIAxes, x,y,z, 'w')
                 plot3(app.UIAxes, x+leng-noseLeng, y, z, 'w')
 
+                % components:
+                app.PlotComponents();
+
                 if num_Fins ~= 0
 
-                % fins
+                    % fins
 
                     % create rectangle until introduce naca airfoils for fins
                     xOut = [0,0,1,1,0];
                     yOut = [-0.01,0.01,0.01,-0.01,-0.01];
                     %assumes y comes pre-scaled
-                
-                X_fin = zeros(length(xOut),2);
-                Y_fin = zeros(length(xOut),2);
-                Z_fin = zeros(length(xOut),2);
-                X_fin_top = zeros(length(xOut));
-                Y_fin_top = zeros(length(xOut));
-                Z_fin_top = zeros(length(xOut));
 
-                for n = 1:length(xOut)
-                    X_fin(n,1) = (fin_offset) + rootChord.*xOut(n);
-                    X_fin(n,2) = (fin_offset) + tipChord.*xOut(n) + sweep;
-                    Y_fin(n,1) = yOut(n);
-                    Y_fin(n,2) = yOut(n);
-                    Z_fin(n,1) = R;
-                    Z_fin(n,2) = R + span;                 
-                end
-                
-                for n = 1:length(xOut)
-                    X_fin_top(n) = (fin_offset) + tipChord.*xOut(n) + sweep;
-                    Y_fin_top(n) = yOut(n);
-                    Z_fin_top(n) = R+span;
-                end
-                
-                scopy = zeros(num_Fins);
-                stcopy = zeros(length(xOut), num_Fins);
+                    X_fin = zeros(length(xOut),2);
+                    Y_fin = zeros(length(xOut),2);
+                    Z_fin = zeros(length(xOut),2);
+                    X_fin_top = zeros(length(xOut));
+                    Y_fin_top = zeros(length(xOut));
+                    Z_fin_top = zeros(length(xOut));
 
-                for i = 1:num_Fins
-                    scopy(i) = surf(app.UIAxes,X_fin,Y_fin,Z_fin, "FaceColor",finColor,'FaceAlpha', 0.7, 'EdgeAlpha',0);
-                    stcopy(:,i) = fill3(app.UIAxes,X_fin_top,Y_fin_top,Z_fin_top, [1,1,1], 'FaceColor',finColor, 'EdgeAlpha', 0);
-                    direction = [1 0 0];
-                    origin = [0 0 0];
-                    rotate(scopy(i),direction,rad2deg((i-1)*(2*pi)/num_Fins),origin);
-                    rotate(stcopy(:,i), direction,rad2deg((i-1)*(2*pi)/num_Fins),origin)
-                    
-                end
+                    for n = 1:length(xOut)
+                        X_fin(n,1) = (fin_offset) + rootChord.*xOut(n);
+                        X_fin(n,2) = (fin_offset) + tipChord.*xOut(n) + sweep;
+                        Y_fin(n,1) = yOut(n);
+                        Y_fin(n,2) = yOut(n);
+                        Z_fin(n,1) = R;
+                        Z_fin(n,2) = R + span;
+                    end
+
+                    for n = 1:length(xOut)
+                        X_fin_top(n) = (fin_offset) + tipChord.*xOut(n) + sweep;
+                        Y_fin_top(n) = yOut(n);
+                        Z_fin_top(n) = R+span;
+                    end
+
+                    scopy = zeros(num_Fins);
+                    stcopy = zeros(length(xOut), num_Fins);
+
+                    for i = 1:num_Fins
+                        scopy(i) = surf(app.UIAxes,X_fin,Y_fin,Z_fin, "FaceColor",finColor,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                        stcopy(:,i) = fill3(app.UIAxes,X_fin_top,Y_fin_top,Z_fin_top, [1,1,1], 'FaceColor',finColor, 'EdgeAlpha', 0);
+                        direction = [1 0 0];
+                        origin = [0 0 0];
+                        rotate(scopy(i),direction,rad2deg((i-1)*(2*pi)/num_Fins),origin);
+                        rotate(stcopy(:,i), direction,rad2deg((i-1)*(2*pi)/num_Fins),origin)
+
+                    end
                 end
 
 
@@ -224,29 +227,29 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
                 % define the geometry over the nose cone:
                 xNose = linspace(0,noseLeng, 50);
-    
+
                 % change the y profile based on the selection.
                 switch app.NoseConeGeometryDropDown.Value
-    
+
                     case 'Conic'
                         yNose = xNose.*dia./(noseLeng*2);
                     case 'Tangent Ogive'
                         L = noseLeng;
                         rho = (R^2 + L^2) / (2*R);
                         yNose = sqrt(rho^2-(L-xNose).^2) + R - rho;
-    
+
                     case 'Von Karman'
                         theta = linspace(0,pi,50);
                         L = noseLeng;
                         xNose = L/2 * (1-cos(theta));
                         yNose = R/sqrt(pi) * sqrt(theta-sin(2*theta)/2);
-    
+
                     case 'Elliptical'
                         L = noseLeng;
                         yNose = R*sqrt(1-((xNose-L).^2./L^2));
-    
+
                 end
-    
+
                 x = [noseLeng,leng];
                 y = dia* ones(1,numel(x));
                 x = [xNose,x];
@@ -259,15 +262,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 plot(app.UIAxes, [x(end),x(end)], [dia/2,-dia/2], app.lineColor)
 
 
-                % plot the fins of the rocket, if they exist
+                % plot the fins of the rocket
+                app.PlotFins()
 
-                % need to change this back when fins
-
-                if num_Fins ~= 0
-                    app.PlotFins()
-                end
-
-                %app.PlotComponents();
+                app.PlotComponents();
 
                 % define the standard limits for the plot
                 hold(app.UIAxes, 'off')
@@ -327,7 +325,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 return
             end
 
-            
+
             % get the basic parameters of the fin:
             rootChord = app.RootChordEditField.Value;
             tipChord = app.TipChordEditField.Value;
@@ -351,7 +349,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         function PlotFins(app)
 
             % get the default fin geometry from the fin plotter function
-            %[xFin, yFin] = app.FinPlotter;
 
             if ~isempty(app.rocket)
                 compList = app.rocket.componentList;
@@ -373,6 +370,9 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                             finOffset = finObject.Position(1);
                         end
                     end
+
+                else
+                    return
                 end
 
             else
@@ -380,7 +380,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 return
             end
 
-            finPtsX = [0, sweep, sweep+tipChord, rootChord, 0];
+            % replace this
+
+            try
+                finPtsX = [0, sweep, sweep+tipChord, rootChord, 0];
+            catch
+                return
+            end
             finPtsY = [0, span, span, 0, 0];
 
             % get parameters from user input:
@@ -461,66 +467,87 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         function PlotComponents(app)
 
-            leng = numel(app.EditComponentListBox.Items);
+            % get the components from the rocket
 
-            for idx = 1:leng
+            if ~isempty(app.rocket)
+                compList = app.rocket.componentList;
 
-                itemData = app.ComponentDetails(idx,:);
+                % in the event that the rocket has components:
+                if numEntries(compList) > 0
+                    len = numEntries(compList);
+                    values = compList.values;
 
-                componentType = itemData(1);
+                    % go through each and check for fins
+                    for idx = 1:len
+                        % first case is a tank
+                        if isa(values{idx}, 'Tank')
 
-                switch componentType
-                    case 1 % tank
+                            tankObj = values{idx};
 
-                        % for the tank, the data is in the order:
-                        % Component Type
-                        % Length
-                        % Diameter
-                        % Dist from Nose
-                        % Dry Mass
-                        % fuel/ox (0,1)
-                        % density of fuel/ox
+                            leng = tankObj.Length;
+                            rad = tankObj.TankDia/2;
+                            FuelOx = tankObj.FuelOx;
+                            dist = tankObj.Position(1);
+                            if strcmp(FuelOx, 'Fuel')
+                                color = 'r';
+                            else
+                                color = 'b';
+                            end
 
+                            xTank = [dist, dist, dist+leng, dist+leng, dist];
+                            yTank = [-rad, rad, rad, -rad, -rad];
 
-                        length = itemData(2);
-                        rad = itemData(3)/2;
-                        dist = itemData(4);
+                            if app.ThreeDPlot
 
-                        fuelOx = itemData(6);
+                                [Z, Y, X] = cylinder(rad,100); %make unit cyliner along x axis
+                                X_body = X*(leng)+dist;
+                
+                                surf(app.UIAxes, X_body,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                            else
 
-                        if fuelOx == 0
-                            color = 'r';
-                        else
-                            color = 'b';
+                            plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+
+                            end
+
                         end
-
-                        xTank = [dist, dist, dist+length, dist+length, dist];
-                        yTank = [-rad, rad, rad, -rad, -rad];
-
-                        plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
-
-                    case 5 % point mass
-
-                        % for the point mass, the data is in the order:
-                        % Component Type (5)
-                        % Dry Mass
-                        % Dist from Nose
-                        % y dist
-                        % z dist
-
-                        dist = itemData(2);
-                        y = itemData(3);
-                        z = itemData(4);
-
-                        x = dist;
-                        y = y;
-
-                        plot(app.UIAxes, x, y, 'MarkerSize', 10, 'Marker','.','Color','k')
-
-
-
+                    end
                 end
+
+            else
+                return
             end
+
+            leng = numel(compList);
+
+            % for idx = 1:leng
+            % 
+            %     itemData = app.ComponentDetails(idx,:);
+            % 
+            %     componentType = itemData(1);
+            % 
+            %     switch componentType
+            %         case 5 % point mass
+            % 
+            %             % for the point mass, the data is in the order:
+            %             % Component Type (5)
+            %             % Dry Mass
+            %             % Dist from Nose
+            %             % y dist
+            %             % z dist
+            % 
+            %             dist = itemData(2);
+            %             y = itemData(3);
+            %             z = itemData(4);
+            % 
+            %             x = dist;
+            %             y = y;
+            % 
+            %             plot(app.UIAxes, x, y, 'MarkerSize', 10, 'Marker','.','Color','k')
+            % 
+            % 
+            % 
+            %     end
+            % end
         end
 
         function plotCoM()
@@ -550,13 +577,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % set up the filepath:
             path
-            
+
         end
 
         % Value changed function: RocketLengthEditField
         function RocketLengthChanged(app, event)
             app.RevertButton.Enable = 'on';
-            
+
             rocketLeng = app.RocketLengthEditField.Value;
 
             if rocketLeng < app.NoseConeLengthmEditField.Value
@@ -592,7 +619,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         % Value changed function: NoseConeLengthmEditField
         function NoseCoseLengthChanged(app, event)
             app.RevertButton.Enable = 'on';
-            
+
             noseLeng = app.NoseConeLengthmEditField.Value;
 
             if noseLeng >= app.RocketLengthEditField.Value
@@ -663,7 +690,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 for idx = 1:nProperties
                     property = string(app.PropertyEditLabels(idx).Text);
                     value = app.PropertyEditFields(idx).Value;
-                    
+
                     if property == 'Position'
                         value = str2num(app.PropertyEditFields(idx).Value);
                     end
@@ -683,6 +710,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 % add the component to the tree:
 
                 uiconfirm(app.UIFigure, 'Component Addition Successful', 'Component Addition')
+
+                app.RocketPlotter();
             end
         end
 
@@ -703,7 +732,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 files(idx-2) = string(fileStruct(idx).name);
             end
             componentNames = erase(files, ".m");
-            
+
             app.ComponentSelectionDropDown.Items = componentNames;
         end
 
@@ -734,7 +763,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     savepath = fullfile(path, savepath);
 
                     if savepath ~= filepath
-                        % maybe change this 
+                        % maybe change this
                         movefile(filepath, savepath);
                     end
 
@@ -748,18 +777,21 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         function LoadRocketButtonPushed(app, event)
             [file, path] = uigetfile('*.mat', 'Select a Stored Rocket File');
 
-            filepath = fullfile(path, file);
-            app.rocket = load(filepath, "rocketObj").rocketObj;
-
-            app.AeroDataButton.Text = app.rocket.name + "_aero.csv";
-            app.RocketNameEditField.Value = app.rocket.name;
-
-            if ~isempty(app.rocket.totalLength)
-                app.RocketLengthEditField.Value = app.rocket.totalLength;
-            end
-
-            if ~isempty(app.rocket.outerDiameter)
-                app.RocketDiameterEditField.Value = app.rocket.outerDiameter;
+            if file ~= 0
+    
+                filepath = fullfile(path, file);
+                app.rocket = load(filepath, "rocketObj").rocketObj;
+    
+                app.AeroDataButton.Text = app.rocket.name + "_aero.csv";
+                app.RocketNameEditField.Value = app.rocket.name;
+    
+                if ~isempty(app.rocket.totalLength)
+                    app.RocketLengthEditField.Value = app.rocket.totalLength;
+                end
+    
+                if ~isempty(app.rocket.outerDiameter)
+                    app.RocketDiameterEditField.Value = app.rocket.outerDiameter;
+                end
             end
 
 
@@ -771,7 +803,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             path = "TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + name + ".mat";
 
             app.rocket = Rocket(name);
-            
+
             app.rocket.totalLength = app.RocketLengthEditField.Value;
             app.rocket.outerDiameter = app.RocketDiameterEditField.Value;
             app.rocket.aeroData = name;
@@ -797,7 +829,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             value = app.RocketNameEditField.Value;
 
             app.UIAxes.Title.String = [value, ' Layout'];
-            
+
         end
 
         % Value changed function: ComponentSelectionDropDown
@@ -824,12 +856,12 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
                 % Check if the property is 'Position' and handle it differently
                 if propertyList(idx) == "Position"
-                % Create a custom input field for Position (3x1 vector)
-                propertyEditFields(idx) = uieditfield(app.PropertyGrid, 'text');
-                propertyEditFields(idx).Layout.Row = idx;
-                propertyEditFields(idx).Layout.Column = 2;
-                propertyEditFields(idx).Value = '[0, 0, 0]'; % Default value for Position
-                %propertyEditFields(idx).UserData = 'Position'; % Mark as Position for validation
+                    % Create a custom input field for Position (3x1 vector)
+                    propertyEditFields(idx) = uieditfield(app.PropertyGrid, 'text');
+                    propertyEditFields(idx).Layout.Row = idx;
+                    propertyEditFields(idx).Layout.Column = 2;
+                    propertyEditFields(idx).Value = '[0, 0, 0]'; % Default value for Position
+                    %propertyEditFields(idx).UserData = 'Position'; % Mark as Position for validation
 
                 elseif propertyList(idx) == "Color"
                     % Create a color picker for the Color property
@@ -889,13 +921,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             if isempty(date)
                 uialert(app.UIFigure, "Date field is empty!", "Input Error")
             end
-            
+
         end
 
         % Callback function: RocketColor
         function BaseColorChanged(app, event)
             value = app.RocketColor.Value;
-            
+
             if app.autoRefresh
                 app.RocketPlotter();
             end

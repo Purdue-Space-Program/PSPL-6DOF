@@ -3,7 +3,7 @@ classdef Tank < RocketComponent
     properties
         Length (1,1) double % Length [m]
         TankDia (1,1) double % Tank Diameter [m]
-        FuelOx {mustBeMember(FuelOx,{'Fuel', 'Prop'})} = 'Fuel' % Fuel or Oxidizer ('Fuel', 'Ox')
+        FuelOx {mustBeMember(FuelOx,{'Fuel', 'Ox'})} = 'Fuel' % Fuel or Oxidizer ('Fuel', 'Ox')
         LiquidMass (1,1) double % Mass of Liquid Propellant [kg]
     end
 
