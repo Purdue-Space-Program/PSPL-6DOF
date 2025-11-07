@@ -1,4 +1,4 @@
-function Main(rocket, env, wind, settings)
+function Main(rocket, env, settings)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: MainRK4

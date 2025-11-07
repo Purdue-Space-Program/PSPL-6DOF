@@ -36,7 +36,13 @@ omega = [input(7); input(8); input(9)];
 
 quat = [input(10); input(11); input(12); input(13)];
 
-motor = rocket.PropulsionSystem;
+components = values(rocket.ComponentList);
+
+for idx = 1:length(components)
+    if isa(components(idx), PropulsionSystem)
+        motor = components(idx);
+    end
+end
 
 A = rocket.refArea;          % reference area (m^2), as defined by RasAero (cross-sectional area)
 thrustMag = motor.thrust;  % thrust of rocket in N.
