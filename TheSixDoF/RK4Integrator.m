@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, wind, windOnOff, rocket, sim)
+function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, windData, rocket, settings, env)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator
@@ -20,7 +20,6 @@ function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, 
 % totMass - Array of total mass values at different time steps [s|kg]
 % J - Moment of Inertia of the rocket [m^4]
 % wind - Array of data with wind information
-% windOnOff - string to turn the wind on and off
 % params - extraneous parameters to be passed into function
 %
 % Outputs:
@@ -37,14 +36,13 @@ omega = [input(7); input(8); input(9)];
 
 quat = [input(10); input(11); input(12); input(13)];
 
-if strcmpi(rocket.name, 'CMS') == 1
-    A = rocket.refArea;          % reference area (m^2), as defined by RasAero (cross-sectional area)
-    thrustMag = rocket.thrust;  % thrust of rocket in N.
-    bodyVector = [1;0;0]; % vector in the body axis running through the nose.
-    ExitA = rocket.exitArea;    % exit area of the nozzle [m^2]
-    ExitP = rocket.exitPressure;      % exit pressure of the nozzle [Pa]
-    radius = rocket.radius;    % radius of rocket [m]
-end
+
+A = rocket.refArea;          % reference area (m^2), as defined by RasAero (cross-sectional area)
+thrustMag = rocket.thrust;  % thrust of rocket in N.
+bodyVector = [1;0;0]; % vector in the body axis running through the nose.
+ExitA = rocket.exitArea;    % exit area of the nozzle [m^2]
+ExitP = rocket.exitPressure;      % exit pressure of the nozzle [Pa]
+radius = rocket.OuterDiameter / 2;    % radius of rocket [m]
 
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
 
@@ -64,9 +62,9 @@ P = atmosphere(atmosIndex, 3);
 
 %---------------- Wind -----------------------------------------------------
 
-windAlt = wind(:,1);
-windMagList = wind(:,2);
-windDirList = wind(:,3);
+windAlt = windData(:,1);
+windMagList = windData(:,2);
+windDirList = windData(:,3);
 
 [~, heightIndex] = min(abs(windAlt-height));
 
@@ -74,7 +72,7 @@ windDir = windDirList(heightIndex);
 windMag = windMagList(heightIndex);
 windVector = windMag * [0;sin(windDir);cos(windDir)];
 
-if strcmpi('on', windOnOff) == 1
+if settings.Wind == true
     freestreamVel = vel - windVector;
 else
     freestreamVel = vel;
@@ -96,11 +94,9 @@ CoM = CoMTable(timeIndexCoM);
 
 %---------------- Gravity force --------------------------------------------
 
-env = Env.Environment;
-
-if strcmpi(sim.Fidelity, "low")
+if strcmpi(settings.Fidelity, "low")
     g = 9.8;
-elseif strcmpi(sim.Fidelity,"medium") || strcmpi(sim.Fidelity,"high")
+elseif strcmpi(settings.Fidelity,"medium") || strcmpi(settings.Fidelity,"high")
 g = gravitywgs84(env.Elevation + height, env.LatLong(1), env.LatLong(2), 'Exact');
 end
 

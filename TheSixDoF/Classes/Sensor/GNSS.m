@@ -1,4 +1,4 @@
-classdef GNSS < Sensor.Sensor
+classdef GNSS < Sensor
     % The GNSS class is a subclass of Sensor and inherits from the
     % sensor properties. See Sensor for input clarification
 
@@ -14,7 +14,7 @@ classdef GNSS < Sensor.Sensor
                 bias (1,1) double
                 scaleFactor (1,1) double = 0
             end
-            gnss@Sensor.Sensor(name,samplingRate,variance,resolution,bias, scaleFactor)
+            gnss@Sensor(name,samplingRate,variance,resolution,bias, scaleFactor)
         end
 
         function [posOut, velOut] = GNSSMeasurement(sensor,pos, vel, dt)

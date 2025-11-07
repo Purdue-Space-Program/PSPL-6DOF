@@ -1,3 +1,4 @@
+function Main(rocket, env, wind, settings)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: MainRK4
@@ -30,10 +31,6 @@
 % clear the console and figures before running the code:
 clear;clc;close all force
 
-% Create a rocket object, the default values are for CMS:
-rocketFile = load("TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + "CMS.mat");
-rocket = rocketFile.rocketObj;
-
 %---------------- Sensor Definition ------------------------------------------
 
 % Make a really bad altimeter for testing
@@ -48,45 +45,19 @@ mag = Sensor.Magnetometer("Mag",0.01,0,0,0);
 % Make a gyroscope:
 gyro = Sensor.Gyroscope("Gyro",.25,1e-4,.005,.01,0);
 
-%---------------- Environment ------------------------------------------
-
-% Import the environment, the default values give a location of Mojave
-% desert with the current date and weather.
-env = Env.Environment;
-
-%---------------- Simulation Settings --------------------------------------
-
-% Set the end condition, timestep, simulation fidelity, and outputs
-% run 'help Sim.IntegratorSettings' for more details
-sim = Sim.IntegratorSettings('full', 0.1, 'medium');
-
-% set the outputs to be shown:
-output = 1;
-
-% run rotation visualization (outputs must be on also)
-rotationVis = 'on';
-
-% TO-DO: This wind should go into a seperate class script
-
-% change the month for wind data (First 3 letters of month):
-month = 'Mar';
-
-% turn wind on and off
-windOnOff = 'off';
-
 % create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end
 % condition.
 
-if strcmpi('burnout', sim.EndCondition) == 1
-    time = constant.burnTime;
-elseif ~isnan(str2double(sim.EndCondition)) == 1
+if strcmpi('burnout', settings.EndCondition)
+    time = rocket.BurnTime;
+elseif ~isnan(str2double(settings.EndCondition))
     time = round(str2double(endCondition),1);
 else
     time = 70;
 end
 
-arrayLength = (time / sim.Timestep);
+arrayLength = (time / settings.Timestep);
 tspan = linspace(0,time,arrayLength+1);
 
 % set the initial position (x,y,z). Accoun ts for starting elevation.
@@ -111,45 +82,40 @@ Init = [pos;vel;omega;quatVector];
 rasData = rocket.aeroData;
 
 % import wind data
-%wind = Wind;
-%windData = readmatrix("Inputs/WindData.xlsx");
-wind = Env.Wind;
-windData = wind.windData;
-windDataInput = parseWind(windData, month);
+windData = wind.parseWind();
 
 % import atmosphere;
 atmosphere = readmatrix("Inputs" + filesep + "AtmosphereModel.csv");
 
 % create an array of the center of mass, mass, and moment of inertia of the
 % rocket
-[totCoM, totMass, MoI] = VariableCoM(sim.Timestep, tspan, 0);
+[totCoM, totMass, MoI] = VariableCoM(settings.Timestep, tspan, 0, rocket);
 
 % additional options for RK4 (stop after reaching final condition)
-opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, sim.EndCondition), ...
-    'RelTol', sim.relTol, 'AbsTol', sim.absTol);
+opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, settings.EndCondition), ...
+    'RelTol', settings.relTol, 'AbsTol', settings.absTol);
 
 %---------------- Run the RK4 Integration ----------------------------------
 tic;
 [timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere, ...
-    totCoM,totMass,MoI,windDataInput,windOnOff, rocket, sim), tspan, Init, opt);
+    totCoM,totMass,MoI,windData, rocket, settings, env), tspan, Init, opt);
 toc;
 
 %% Outputs:
 
 % create a struct which contains all of the output information:
 outputStruct = struct;
-
 outputStruct.time = timeArray;
 
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
     [~, outputStruct.mach(k,1), outputStruct.AoA(k,1), outputStruct.accel(k,:), ...
         outputStruct.cD(k,:), moment(k,:)] = RK4Integrator(timeArray(k), out(k,:), ...
-        atmosphere,totCoM, totMass, MoI, windDataInput, windOnOff, rocket, sim);
+        atmosphere,totCoM, totMass, MoI, windData, rocket, settings, env);
 end
 
 
-if output == 1
+if settings.Outputs == true
     % make the outputs real (long monte carlo runs can generate complex values)
     out = real(out);
     outputStruct.AoA = real(outputStruct.AoA);
@@ -166,11 +132,11 @@ if output == 1
     outputStruct.quat = quatArray;
 
     % get the height measurement based on the sensor properties
-    heightMeasAltimeter = altimeter.AltitudeMeasurement(posArray(:,1),sim.Timestep, velArray(:,1));
+    heightMeasAltimeter = altimeter.AltitudeMeasurement(posArray(:,1),settings.Timestep, velArray(:,1));
 
-    [posMeasGps, velMeasGps] = gps.GNSSMeasurement(posArray,velArray,sim.Timestep);
+    [posMeasGps, velMeasGps] = gps.GNSSMeasurement(posArray,velArray,settings.Timestep);
 
-    angleVelMeasGyro = gyro.GyroscopeMeasurement(omega,sim.Timestep);
+    angleVelMeasGyro = gyro.GyroscopeMeasurement(omega,settings.Timestep);
 
     % convert to lat and long for plotting on map:
 
@@ -178,7 +144,7 @@ if output == 1
     [lats,longs, ~] = ned2geodetic(out(:,3),out(:,2),-out(:,1),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
 
     % get the outputs from the magnetometer
-    xyzMag =  mag.MagnetometerMeasurement(env,[lats,longs,posArray(:,1)], sim.Timestep);
+    xyzMag =  mag.MagnetometerMeasurement(env,[lats,longs,posArray(:,1)], settings.Timestep);
 
     uif = uifigure;
     g = geoglobe(uif);
@@ -190,7 +156,7 @@ if output == 1
     
 
     % find end conditions for graphs / animations
-    endTime = length(outputStruct.AoA) * sim.Timestep;
+    endTime = length(outputStruct.AoA) * settings.Timestep;
 
     % grab parameters at max Q and off the rail
     [maxVel, maxIndex] = max(out(:,4));
@@ -203,7 +169,7 @@ if output == 1
     [~, maxqMachIndex] = min(abs(machTable-maxqMach));
     maxqCD = cdTable(maxqMachIndex);
 
-    [~, railIndex] = min(abs(posArray(1:100,1)-constant.railHeight));
+    [~, railIndex] = min(abs(posArray(1:100,1)-env.railHeight));
     railVel = out(railIndex,4);
     railAccel = outputStruct.accel(railIndex,1);
 
@@ -290,7 +256,7 @@ if output == 1
 
     % Rocket Trajectory Plot:
     figure;
-    plot3(posArray(1:int32(endTime / sim.Timestep),3), posArray(1:int32(endTime / sim.Timestep),2), posArray(1:int32(endTime / sim.Timestep),1))
+    plot3(posArray(1:int32(endTime / settings.Timestep),3), posArray(1:int32(endTime / settings.Timestep),2), posArray(1:int32(endTime / settings.Timestep),1))
     % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
     % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
     % plot3(zeros(endTime / dt), posArray(1:endTime / dt,2), posArray(1:endTime / dt,1), '--')
@@ -318,13 +284,13 @@ if output == 1
     legend('x','y','z')
     
 
-    if strcmpi('on', rotationVis) == 1
+    if settings.RotationVis == true
         % run the rotation visualizer script
         playbackSpeed = 3;
         quatArray = quatArray';
         posArray = posArray';
 
-        RotationsVisualizer(posArray, quatArray, timeArray, endTime, sim.Timestep, playbackSpeed, 0);
+        RotationsVisualizer(posArray, quatArray, timeArray, endTime, settings.Timestep, playbackSpeed, 0);
 
         %% csv outputs:
 
@@ -332,4 +298,6 @@ if output == 1
 
         writematrix(output, 'Outputs/MachTime.csv')
     end
+end
+
 end
