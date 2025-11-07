@@ -12,8 +12,8 @@ classdef Rocket < handle
 
     methods
         function obj = Rocket(name)
-            obj.name = name;
-            obj.componentList = dictionary();
+            obj.Name = name;
+            obj.ComponentList = dictionary();
         end
 
 
@@ -23,29 +23,29 @@ classdef Rocket < handle
                 componentObj RocketComponent
             end
 
-            numComponents = numEntries(rocketObj.componentList);
+            numComponents = numEntries(rocketObj.ComponentList);
 
             if numComponents == 0
-                rocketObj.componentList(componentObj.Name) = {componentObj};
-            elseif isKey(rocketObj.componentList, componentObj.Name)
+                rocketObj.ComponentList(componentObj.Name) = {componentObj};
+            elseif isKey(rocketObj.ComponentList, componentObj.Name)
                 %this should be removed for GUI implementation, only added here for testing
                 warning("Replacing existing component '%s', do you want to proceed? (Y/N)", componentObj.Name)
                 response = input("", "s");
                 if strcmp(response, "Y")
-                    rocketObj.componentList(componentObj.Name) = {componentObj};
+                    rocketObj.ComponentList(componentObj.Name) = {componentObj};
                 else
                     fprintf("\nStopping . . .\n")
                 end
             else
-                rocketObj.componentList(componentObj.Name) = {componentObj};
+                rocketObj.ComponentList(componentObj.Name) = {componentObj};
             end
         end
 
 
         function removeComponent(rocketObj, componentName)
-            if iskey(rocketObj.componentList, componentName)
+            if iskey(rocketObj.ComponentList, componentName)
 
-                rocketObj.componentList = remove(rocketObj.componentList, componentName);
+                rocketObj.ComponentList = remove(rocketObj.ComponentList, componentName);
             else
                 %this should be removed for GUI implementation, only added here for testing
                 warning("The component you are trying to remove does not exist, try using a different name")
@@ -58,13 +58,13 @@ classdef Rocket < handle
                 rocketObj Rocket
             end
 
-            componentArray = values(rocketObj.componentList);
+            componentArray = values(rocketObj.ComponentList);
             mass = cellfun(@(c) c.mass, componentArray);
             m = sum(mass);
         end
 
 
-        function set.aeroData(rocketObj, filename)
+        function set.AeroData(rocketObj, filename)
             arguments
                 rocketObj Rocket
                 filename (1,1) string
@@ -81,12 +81,12 @@ classdef Rocket < handle
                 data = rawData;
             end
 
-            rocketObj.aeroData = data;
+            rocketObj.AeroData = data;
 
         end
 
         function saveRocket(rocketObj)
-            filename = rocketObj.name;
+            filename = rocketObj.Name;
             filepath = "TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + filename + ".mat";
             save(filepath, "rocketObj")
         end
