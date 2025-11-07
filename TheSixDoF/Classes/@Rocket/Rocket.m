@@ -1,11 +1,11 @@
 classdef Rocket < handle
 
     properties
-        name (1,1) string
-        totalLength
-        outerDiameter
-        componentList dictionary
-        aeroData
+        Name (1,1) string
+        TotalLength
+        OuterDiameter
+        ComponentList dictionary
+        AeroData
         CenterOfMass
         CenterOfPressure
     end

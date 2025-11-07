@@ -26,11 +26,6 @@ function Main(rocket, env, wind, settings)
 % Monte Script is not up to date with main.
 
 
-%---------------- Initialization ---------------------------------------------
-
-% clear the console and figures before running the code:
-clear;clc;close all force
-
 %---------------- Sensor Definition ------------------------------------------
 
 % Make a really bad altimeter for testing
