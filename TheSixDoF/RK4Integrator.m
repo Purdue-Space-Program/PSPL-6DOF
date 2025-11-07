@@ -39,12 +39,12 @@ quat = [input(10); input(11); input(12); input(13)];
 components = values(rocket.ComponentList);
 
 for idx = 1:length(components)
-    if isa(components(idx), PropulsionSystem)
+    if isa(components(idx), 'PropulsionSystem')
         motor = components(idx);
     end
 end
 
-A = rocket.refArea;          % reference area (m^2), as defined by RasAero (cross-sectional area)
+A = rocket.refArea();          % reference area (m^2), as defined by RasAero (cross-sectional area)
 thrustMag = motor.thrust;  % thrust of rocket in N.
 bodyVector = [1;0;0]; % vector in the body axis running through the nose.
 ExitA = motor.exitArea;    % exit area of the nozzle [m^2]

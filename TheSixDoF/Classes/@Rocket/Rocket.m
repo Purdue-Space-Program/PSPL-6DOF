@@ -2,12 +2,12 @@ classdef Rocket < handle
 
     properties
         Name (1,1) string
-        TotalLength
-        OuterDiameter
-        ComponentList dictionary
-        AeroData
-        CenterOfMass
-        CenterOfPressure
+        TotalLength % Vehicle Length [m]
+        OuterDiameter % Vehicle OD [m]
+        ComponentList dictionary % Component Dictionary
+        AeroData % RASAero data
+        CoMOverride % Manual CoM Override
+        CoPOverride % Manual CoP Override
     end
 
     methods
@@ -89,6 +89,21 @@ classdef Rocket < handle
             filename = rocketObj.Name;
             filepath = "TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + filename + ".mat";
             save(filepath, "rocketObj")
+        end
+
+
+        function A = refArea(rocketObj)
+            A = 0;
+
+            components = values(rocketObj.ComponentList);
+            for idx = 1:length(components)
+                if isa(components(idx), 'Fins')
+                    fins = components(idx);
+                    A = A + (fins.Thickness * fins.Span * fins.Count);
+                end
+            end
+
+            A = A + pi * (rocketObj.OuterDiameter / 2)^2;
         end
 
     end
