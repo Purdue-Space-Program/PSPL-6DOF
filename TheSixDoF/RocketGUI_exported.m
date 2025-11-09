@@ -186,7 +186,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 % plot the fins of the rocket
                 app.PlotFins()
 
-                app.F();
+                app.PlotComponents();
 
                 % define the standard limits for the plot
                 hold(app.UIAxes, 'off')
@@ -220,30 +220,30 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % This function is only called when a fin plot is present, pull
             % the parameters from here:
 
-                    delete(findall(app.PropertyGrid, 'Type', 'axes'))
-                    % Create an axes for the plot (this will take the last row)
-                    plotAxes = axes(app.PropertyGrid);
-                    plotAxes.Layout.Row = nFields + 1;  % Put plot in the last row (nFields + 1)
-                    plotAxes.Layout.Column = [1, 2];    % Span across both columns
+            delete(findall(app.PropertyGrid, 'Type', 'axes'))
+            % Create an axes for the plot (this will take the last row)
+            plotAxes = axes(app.PropertyGrid);
+            plotAxes.Layout.Row = nFields + 1;  % Put plot in the last row (nFields + 1)
+            plotAxes.Layout.Column = [1, 2];    % Span across both columns
 
-                    % plot the fins:
-                    span = app.PropertyEditFields(3).Value;
-                    rootChord = app.PropertyEditFields(4).Value;
-                    tipChord = app.PropertyEditFields(5).Value;
-                    sweep = app.PropertyEditFields(6).Value;
-        
-                    % the fin will always be defined by four points, with the first
-                    % point begin [0,0]. These are defined in the order:
-                    % [0,0]
-                    % [sweep,span]
-                    % [sweep+tipChord, span]
-                    % [rootChord, 0]
-        
-                    finPtsX = [0, sweep, sweep+tipChord, rootChord, 0];
-                    finPtsY = [0, span, span, 0, 0];
-        
-                    plot(plotAxes, finPtsX, finPtsY, app.lineColor);
-                    axis(plotAxes, "equal");
+            % plot the fins:
+            span = app.PropertyEditFields(3).Value;
+            rootChord = app.PropertyEditFields(4).Value;
+            tipChord = app.PropertyEditFields(5).Value;
+            sweep = app.PropertyEditFields(6).Value;
+
+            % the fin will always be defined by four points, with the first
+            % point begin [0,0]. These are defined in the order:
+            % [0,0]
+            % [sweep,span]
+            % [sweep+tipChord, span]
+            % [rootChord, 0]
+
+            finPtsX = [0, sweep, sweep+tipChord, rootChord, 0];
+            finPtsY = [0, span, span, 0, 0];
+
+            plot(plotAxes, finPtsX, finPtsY, app.lineColor);
+            axis(plotAxes, "equal");
         end
 
         function PlotFins(app)
@@ -292,140 +292,140 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             for idx = 1:count
 
-            if ~app.ThreeDPlot
+                if ~app.ThreeDPlot
 
-                % replace this (get rid of catch statement)
-                try
-                    finPtsX = [0, sweep(idx), sweep(idx)+tipChord(idx), rootChord(idx), 0];
-                catch
-                    return
-                end
-                finPtsY = [0, span(idx), span(idx), 0, 0];
+                    % replace this (get rid of catch statement)
+                    try
+                        finPtsX = [0, sweep(idx), sweep(idx)+tipChord(idx), rootChord(idx), 0];
+                    catch
+                        return
+                    end
+                    finPtsY = [0, span(idx), span(idx), 0, 0];
 
-                % get parameters from user input:
-                rearDist = finOffset(idx);
-                dia = app.rocket.OuterDiameter;
-                leng = app.rocket.TotalLength;
+                    % get parameters from user input:
+                    rearDist = finOffset(idx);
+                    dia = app.rocket.OuterDiameter;
+                    leng = app.rocket.TotalLength;
 
-                % first, check which fins should be plotted based on occlusion
-                % (manually for now lmao, don't know how to write this
-                % programmatically)
+                    % first, check which fins should be plotted based on occlusion
+                    % (manually for now lmao, don't know how to write this
+                    % programmatically)
 
-                switch numFins(idx)
-                    case 1
-                        plotFin = 1;
-                    case 2
-                        plotFin = [1,2];
-                    case 3
-                        plotFin = [1,2,3];
-                    case 4
-                        plotFin = [1,2,4];
-                    case 5
-                        plotFin = [1,2,5];
-                    case 6
-                        plotFin = [1,2,6];
-                end
-
-
-                % run a for loop for each of the fins, calculated the projected
-                % view
-                for idx2 = plotFin
-
-                    % the first fin always points up towards us, so use
-                    % that as the baseline reference (theta = 0):
-                    theta = (2*pi)/numFins(idx) * (idx2-1);
-
-                    % generate an array of matrices for the projected fins.
-                    xFinShifted = finPtsX + rearDist;
-                    yFinProjection = finPtsY*sin(theta);
-
-                    % add the radial component to the y-values:
-                    rad = dia/2 * sin(theta);
-
-                    yFinProjection = yFinProjection+rad;
-
-                    % if the y-component is less than the rocket body
-                    % radius, it is occluded from the view. Calculate how much
-                    % of the fin to show in this case:
-
-                    % start by calculating the slope of the front and back
-                    % lines:
-                    slopeFront = (yFinProjection(2)-yFinProjection(1)) ...
-                        / (xFinShifted(2) - xFinShifted(1));
-
-                    slopeBack = (yFinProjection(2)-yFinProjection(1)) ...
-                        / (xFinShifted(3) - xFinShifted(4));
-
-                    % in the region from the top to the back of the view:
-                    if theta > pi/2 && theta <= pi
-                        % figure out the distance for each of the y-points:
-                        dist = dia/2 - yFinProjection;
-
-                        % update the x-position based on the y-points if the
-                        % distance is less than zero (inside the body), shift
-                        % the points by the slope:
-
-                        yFinProjection(yFinProjection<dia/2) = dia/2;
-
-                        % in the region from the back to the bottom side:
-                    elseif theta > pi && theta < 3*pi/2
-                        yFinProjection(yFinProjection>-dia/2) = -dia/2;
+                    switch numFins(idx)
+                        case 1
+                            plotFin = 1;
+                        case 2
+                            plotFin = [1,2];
+                        case 3
+                            plotFin = [1,2,3];
+                        case 4
+                            plotFin = [1,2,4];
+                        case 5
+                            plotFin = [1,2,5];
+                        case 6
+                            plotFin = [1,2,6];
                     end
 
-                    plot(app.UIAxes, xFinShifted, yFinProjection, app.lineColor);
 
+                    % run a for loop for each of the fins, calculated the projected
+                    % view
+                    for idx2 = plotFin
+
+                        % the first fin always points up towards us, so use
+                        % that as the baseline reference (theta = 0):
+                        theta = (2*pi)/numFins(idx) * (idx2-1);
+
+                        % generate an array of matrices for the projected fins.
+                        xFinShifted = finPtsX + rearDist;
+                        yFinProjection = finPtsY*sin(theta);
+
+                        % add the radial component to the y-values:
+                        rad = dia/2 * sin(theta);
+
+                        yFinProjection = yFinProjection+rad;
+
+                        % if the y-component is less than the rocket body
+                        % radius, it is occluded from the view. Calculate how much
+                        % of the fin to show in this case:
+
+                        % start by calculating the slope of the front and back
+                        % lines:
+                        slopeFront = (yFinProjection(2)-yFinProjection(1)) ...
+                            / (xFinShifted(2) - xFinShifted(1));
+
+                        slopeBack = (yFinProjection(2)-yFinProjection(1)) ...
+                            / (xFinShifted(3) - xFinShifted(4));
+
+                        % in the region from the top to the back of the view:
+                        if theta > pi/2 && theta <= pi
+                            % figure out the distance for each of the y-points:
+                            dist = dia/2 - yFinProjection;
+
+                            % update the x-position based on the y-points if the
+                            % distance is less than zero (inside the body), shift
+                            % the points by the slope:
+
+                            yFinProjection(yFinProjection<dia/2) = dia/2;
+
+                            % in the region from the back to the bottom side:
+                        elseif theta > pi && theta < 3*pi/2
+                            yFinProjection(yFinProjection>-dia/2) = -dia/2;
+                        end
+
+                        plot(app.UIAxes, xFinShifted, yFinProjection, app.lineColor);
+
+                    end
+
+                else
+
+                    if numFins(idx) ~= 0
+
+                        % fins
+
+                        % create rectangle until introduce naca airfoils for fins
+                        xOut = [0,0,1,1,0];
+                        yOut = [-0.01,0.01,0.01,-0.01,-0.01];
+                        %assumes y comes pre-scaled
+
+                        X_fin = zeros(length(xOut),2);
+                        Y_fin = zeros(length(xOut),2);
+                        Z_fin = zeros(length(xOut),2);
+                        X_fin_top = zeros(length(xOut));
+                        Y_fin_top = zeros(length(xOut));
+                        Z_fin_top = zeros(length(xOut));
+
+                        dia = app.RocketDiameterEditField.Value;
+                        R = dia/2;
+
+                        for n = 1:length(xOut)
+                            X_fin(n,1) = (finOffset(idx)) + rootChord(idx).*xOut(n);
+                            X_fin(n,2) = (finOffset(idx)) + tipChord(idx).*xOut(n) + sweep(idx);
+                            Y_fin(n,1) = yOut(n);
+                            Y_fin(n,2) = yOut(n);
+                            Z_fin(n,1) = R;
+                            Z_fin(n,2) = R + span(idx);
+                        end
+
+                        for n = 1:length(xOut)
+                            X_fin_top(n) = (finOffset(idx)) + tipChord(idx).*xOut(n) + sweep(idx);
+                            Y_fin_top(n) = yOut(n);
+                            Z_fin_top(n) = R+span(idx);
+                        end
+
+                        scopy = zeros(numFins(idx));
+                        stcopy = zeros(length(xOut), numFins(idx));
+
+                        for i = 1:numFins(idx)
+                            scopy(i) = surf(app.UIAxes,X_fin,Y_fin,Z_fin, "FaceColor",finColor,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                            stcopy(:,i) = fill3(app.UIAxes,X_fin_top,Y_fin_top,Z_fin_top, [1,1,1], 'FaceColor',finColor, 'EdgeAlpha', 0);
+                            direction = [1 0 0];
+                            origin = [0 0 0];
+                            rotate(scopy(i),direction,rad2deg((i-1)*(2*pi)/numFins(idx)),origin);
+                            rotate(stcopy(:,i), direction,rad2deg((i-1)*(2*pi)/numFins(idx)),origin)
+
+                        end
+                    end
                 end
-
-            else
-
-                if numFins(idx) ~= 0
-
-                    % fins
-
-                    % create rectangle until introduce naca airfoils for fins
-                    xOut = [0,0,1,1,0];
-                    yOut = [-0.01,0.01,0.01,-0.01,-0.01];
-                    %assumes y comes pre-scaled
-
-                    X_fin = zeros(length(xOut),2);
-                    Y_fin = zeros(length(xOut),2);
-                    Z_fin = zeros(length(xOut),2);
-                    X_fin_top = zeros(length(xOut));
-                    Y_fin_top = zeros(length(xOut));
-                    Z_fin_top = zeros(length(xOut));
-
-                    dia = app.RocketDiameterEditField.Value;
-                    R = dia/2;
-
-                    for n = 1:length(xOut)
-                        X_fin(n,1) = (finOffset(idx)) + rootChord(idx).*xOut(n);
-                        X_fin(n,2) = (finOffset(idx)) + tipChord(idx).*xOut(n) + sweep(idx);
-                        Y_fin(n,1) = yOut(n);
-                        Y_fin(n,2) = yOut(n);
-                        Z_fin(n,1) = R;
-                        Z_fin(n,2) = R + span(idx);
-                    end
-
-                    for n = 1:length(xOut)
-                        X_fin_top(n) = (finOffset(idx)) + tipChord(idx).*xOut(n) + sweep(idx);
-                        Y_fin_top(n) = yOut(n);
-                        Z_fin_top(n) = R+span(idx);
-                    end
-
-                    scopy = zeros(numFins(idx));
-                    stcopy = zeros(length(xOut), numFins(idx));
-
-                    for i = 1:numFins(idx)
-                        scopy(i) = surf(app.UIAxes,X_fin,Y_fin,Z_fin, "FaceColor",finColor,'FaceAlpha', 0.7, 'EdgeAlpha',0);
-                        stcopy(:,i) = fill3(app.UIAxes,X_fin_top,Y_fin_top,Z_fin_top, [1,1,1], 'FaceColor',finColor, 'EdgeAlpha', 0);
-                        direction = [1 0 0];
-                        origin = [0 0 0];
-                        rotate(scopy(i),direction,rad2deg((i-1)*(2*pi)/numFins(idx)),origin);
-                        rotate(stcopy(:,i), direction,rad2deg((i-1)*(2*pi)/numFins(idx)),origin)
-
-                    end
-                end
-            end
             end
         end
 
@@ -458,19 +458,102 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                                 color = 'b';
                             end
 
-                            xTank = [dist, dist, dist+leng, dist+leng, dist];
-                            yTank = [-rad, rad, rad, -rad, -rad];
-
                             if app.ThreeDPlot
 
-                                [Z, Y, X] = cylinder(rad,100); %make unit cyliner along x axis
-                                X_body = X*(leng)+dist;
+                                isSpherica = false;
+                                if isSpherica
+                                    [Z, Y, X] = cylinder(rad,100); %make unit cyliner along x axis
+                                    X_body = X*(leng-2*rad)+dist+rad;
+                                    surf(app.UIAxes, X_body,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
 
-                                surf(app.UIAxes, X_body,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                                    x_res_nose = 0:rad/50:rad;
+                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                    X_nose = X*rad+dist;
+                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+
+                                    x_res_nose = rad:rad/50:2*rad;
+                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                    X_nose = X*rad+dist+leng-rad;
+                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                                else
+                                    l_a = sqrt(2)*rad;
+                                    [Z, Y, X] = cylinder(rad,100); %make unit cyliner along x axis
+                                    X_body = X*(leng-2*l_a)+dist+l_a;
+                                    surf(app.UIAxes, X_body,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+
+                                    x_res_nose = 0:l_a/50:l_a;
+                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                    X_nose = X*l_a+dist;
+                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+
+                                    x_res_nose = l_a:l_a/50:2*l_a;
+                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                    X_nose = X*l_a+dist+leng-l_a;
+                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                                end
+
+                            else % 2d plot
+                                isSpehical = false;
+                                if isSpehical
+                                    xTank = [dist+l_a,  dist+leng-l_a];
+                                    yTank = [rad, rad];
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    xTank = [dist+l_a,  dist+leng-l_a];
+                                    yTank = [-rad, -rad];
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+
+                                    x_res_nose = 0:rad/50:rad;
+                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                    xTank = x_res_nose+dist;
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+
+                                    x_res_nose = rad:rad/50:2*rad;
+                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                    xTank = x_res_nose+dist+leng-2*rad;
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+                                else
+                                    l_a = sqrt(2)*rad;
+                                    xTank = [dist+l_a,  dist+leng-l_a];
+                                    yTank = [rad, rad];
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    xTank = [dist+l_a,  dist+leng-l_a];
+                                    yTank = [-rad, -rad];
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+
+                                    x_res_nose = 0:l_a/50:l_a;
+                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                    xTank = x_res_nose+dist;
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+
+                                    x_res_nose = l_a:l_a/50:2*l_a;
+                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                    xTank = x_res_nose+dist+leng-2*l_a;
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+                                end
+                            end
+
+                        elseif isa(values{idx}, 'PointMass')
+
+                            ptObj = values{idx};
+
+                            xPos = ptObj.Position(1);
+                            yPos = ptObj.Position(2);
+                            zPos = ptObj.Position(3);
+                            color = ptObj.Color;
+
+
+                            if app.ThreeDPlot
+                                plot3(app.UIAxes, xPos, yPos, zPos, '.', 'MarkerSize', 30, 'Color', color)
                             else
-
-                                plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
-
+                                plot(app.UIAxes, xPos, yPos, '.', MarkerSize = 30, Color = color);
                             end
 
                         end
@@ -679,7 +762,12 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 % add the component to the rocket object
                 app.rocket.addComponent(component);
 
+                % save the file with the new components:
+                name = string(app.RocketNameEditField.Value);
+                path = "TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + name + ".mat";
 
+                rocketObj = app.rocket;
+                save(path, "rocketObj")
 
                 % add the component to the tree:
                 uitreenode(app.rootNode, 'Text', component.Name);
@@ -878,13 +966,15 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 end
 
                 app.PropertyEditFields = propertyEditFields;
-                propertyEditFields(idx).ValueChangedFcn = @(src, event) FinPlotter(app, nFields);
+                if type == "Fins"
+                    propertyEditFields(idx).ValueChangedFcn = @(src, event) FinPlotter(app, nFields);
+                end
             end
 
-                % Add a plot for "Fins" if it is selected from the component selection
-                if type == "Fins"
-                    app.FinPlotter(nFields)
-                end
+            % Add a plot for "Fins" if it is selected from the component selection
+            if type == "Fins"
+                app.FinPlotter(nFields)
+            end
         end
 
         % Button pushed function: RevertButton
