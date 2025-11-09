@@ -186,7 +186,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 % plot the fins of the rocket
                 app.PlotFins()
 
-                app.PlotComponents();
+                app.F();
 
                 % define the standard limits for the plot
                 hold(app.UIAxes, 'off')
@@ -198,6 +198,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         end
 
         function Geoplotter(app)
+
+            delete(findall(app.LaunchLocationPanel, 'Type', 'axes'))
 
             lat = app.LatitudedegEditField.Value;
             long = app.LongitudedegEditField.Value;
@@ -213,58 +215,35 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             geolimits(g, [lat-size, lat+size], [long-size,long+size]);
         end
 
-        function [finPtsX, finPtsY] = FinPlotter(app)
+        function [finPtsX, finPtsY] = FinPlotter(app, nFields)
 
-            % look at the rocket object and see if there are fins
-            % associated with it:
+            % This function is only called when a fin plot is present, pull
+            % the parameters from here:
 
-            % first, check if the rocket is empty. If not, proceed:
-            if ~isempty(app.rocket)
-                compList = app.rocket.ComponentList;
+                    delete(findall(app.PropertyGrid, 'Type', 'axes'))
+                    % Create an axes for the plot (this will take the last row)
+                    plotAxes = axes(app.PropertyGrid);
+                    plotAxes.Layout.Row = nFields + 1;  % Put plot in the last row (nFields + 1)
+                    plotAxes.Layout.Column = [1, 2];    % Span across both columns
 
-                % in the event that the rocket has components:
-                if numEntries(compList) > 0
-                    len = numEntries(compList);
-                    values = compList.values;
-
-                    % go through each and check for fins
-                    for idx = 1:len
-                        if isa(values{idx}, 'Fins')
-                            finObject = values{idx};
-                            numFins = double(finObject.Count);
-                            rootChord = finObject.RootChord;
-                            tipChord = finObject.TipChord;
-                            span = finObject.Span;
-                            sweep = finObject.Sweep;
-                            fin_offset = finObject.Position(1);
-                        end
-                    end
-                end
-
-            else
-                numFins = 0;
-                return
-            end
-
-
-            % get the basic parameters of the fin:
-            rootChord = app.RootChordEditField.Value;
-            tipChord = app.TipChordEditField.Value;
-            span = app.SpanEditField.Value;
-            sweep = app.SweepEditField.Value;
-
-            % the fin will always be defined by four points, with the first
-            % point begin [0,0]. These are defined in the order:
-            % [0,0]
-            % [sweep,span]
-            % [sweep+tipChord, span]
-            % [rootChord, 0]
-
-            finPtsX = [0, sweep, sweep+tipChord, rootChord, 0];
-            finPtsY = [0, span, span, 0, 0];
-
-            plot(app.FinGraph, finPtsX, finPtsY, app.lineColor);
-            axis(app.FinGraph, "equal");
+                    % plot the fins:
+                    span = app.PropertyEditFields(3).Value;
+                    rootChord = app.PropertyEditFields(4).Value;
+                    tipChord = app.PropertyEditFields(5).Value;
+                    sweep = app.PropertyEditFields(6).Value;
+        
+                    % the fin will always be defined by four points, with the first
+                    % point begin [0,0]. These are defined in the order:
+                    % [0,0]
+                    % [sweep,span]
+                    % [sweep+tipChord, span]
+                    % [rootChord, 0]
+        
+                    finPtsX = [0, sweep, sweep+tipChord, rootChord, 0];
+                    finPtsY = [0, span, span, 0, 0];
+        
+                    plot(plotAxes, finPtsX, finPtsY, app.lineColor);
+                    axis(plotAxes, "equal");
         end
 
         function PlotFins(app)
@@ -860,11 +839,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             delete(app.PropertyGrid.Children);
 
             nFields = length(propertyList);
-            app.PropertyGrid.RowHeight = repmat({'fit'}, 1, nFields);
+            app.PropertyGrid.RowHeight = repmat({'fit'}, 1, nFields+1);
 
-            % Set up grid layout for PropertyGrid with extra row for the plot
-            % gridLayout = uigridlayout(app.PropertyGrid, [nFields + 1, 2]);  % Extra row for the plot
-            % gridLayout.RowHeight = [repmat({'fit'}, 1, nFields), '1x'];  % Make the last row flexible for the plot
 
             for idx = 1:nFields
                 propertyEditLabels(idx) = uilabel(app.PropertyGrid, 'Text', propertyList(idx));
@@ -902,17 +878,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 end
 
                 app.PropertyEditFields = propertyEditFields;
+                propertyEditFields(idx).ValueChangedFcn = @(src, event) FinPlotter(app, nFields);
+            end
 
                 % Add a plot for "Fins" if it is selected from the component selection
-                % if type == "Fins"
-                %     % Create an axes for the plot (this will take the last row)
-                %     plotAxes = axes(gridLayout);
-                %     plotAxes.Layout.Row = nFields + 1;  % Put plot in the last row (nFields + 1)
-                %     plotAxes.Layout.Column = [1, 2];    % Span across both columns
-                %     %plotAxes.Position = [0.1, 0.1, 0.8, 0.8];  % Adjust plot size within the cell
-                %     plot(plotAxes, 1:10, rand(1, 10));  % Example plot (replace with actual data for Fins)
-                % end
-            end
+                if type == "Fins"
+                    app.FinPlotter(nFields)
+                end
         end
 
         % Button pushed function: RevertButton
@@ -988,7 +960,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create GridLayout9
             app.GridLayout9 = uigridlayout(app.RocketDesignTab);
-            app.GridLayout9.ColumnWidth = {'2x', '2x', '2x'};
+            app.GridLayout9.ColumnWidth = {350, '2x', '2x'};
             app.GridLayout9.RowHeight = {'1.3x', 22, '1x'};
             app.GridLayout9.ColumnSpacing = 5.04001007080078;
             app.GridLayout9.RowSpacing = 5.07499361038208;
@@ -1010,6 +982,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Panel);
+            app.GridLayout.ColumnWidth = {165, 156};
             app.GridLayout.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
 
             % Create TabGroup2
@@ -1033,7 +1006,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.TotalLengthmLabel.WordWrap = 'on';
             app.TotalLengthmLabel.Layout.Row = 2;
             app.TotalLengthmLabel.Layout.Column = 1;
-            app.TotalLengthmLabel.Text = 'Total Length [m]';
+            app.TotalLengthmLabel.Text = 'Airframe Length [m]';
 
             % Create RocketLengthEditField
             app.RocketLengthEditField = uieditfield(app.RocketGrid, 'numeric');
@@ -1277,6 +1250,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create GridLayout2
             app.GridLayout2 = uigridlayout(app.Panel_2);
+            app.GridLayout2.ColumnWidth = {114, 115};
             app.GridLayout2.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
 
             % Create DateSelectionDatePickerLabel
