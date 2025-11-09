@@ -1,6 +1,12 @@
-classdef SolidMotor < RocketComponent.m
+classdef SolidMotor < RocketComponent
     properties
-        Count (1,1) double {mustBePositive} = 1
+        Thrust (1,1) double % Thrust [N]
+        Length (1,1) double % Length [m]
+        Dia (1,1) double % Diameter [m]
+        BurnTime (1,1) double % Burn Time [s]
+        MassFlow (1,1) double % Mass flow rate [kg/s]
+        ExitArea (1,1) double % Exit Area [m²]
+        ExitPressure (1,1) double % Exit Pressure [Pa]
 
     end
 

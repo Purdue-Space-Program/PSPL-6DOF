@@ -2,7 +2,10 @@ classdef Fins < RocketComponent
 
     properties
         Count (1,1) int8 {mustBeMember(Count, [3, 4])} = 3 % Fin Count
-        Airfoil (1,1) string %{mustBeMember(Airfoil, ["Double Wedge", "NACA"])} = "Double Wedge"
+
+        % add the properties for the airfoil later with mustBeMeber
+        
+        Airfoil (1,1) string % Airfoil
         Span (1,1) double % Span [m]
         RootChord (1,1) double % Root Chord Length [m]
         TipChord (1,1) double % Tip Chord Length [m]
