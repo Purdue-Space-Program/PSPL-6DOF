@@ -1,4 +1,3 @@
-@ -0,0 +1,187 @@
 % https://en.wikipedia.org/wiki/NACA_airfoil
 % This function takes input of a 4-digit NACA airfoil identifier and
 % and outputs a plot of the airfoil and .dat file in Selig format.

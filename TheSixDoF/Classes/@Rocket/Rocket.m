@@ -1,17 +1,19 @@
 classdef Rocket < handle
 
     properties
-        name (1,1) string
-        totalLength (1,1) double
-        componentList dictionary
-        aeroData
-
+        Name (1,1) string
+        TotalLength % Vehicle Length [m]
+        OuterDiameter % Vehicle OD [m]
+        ComponentList dictionary % Component Dictionary
+        AeroData % RASAero data
+        CoMOverride % Manual CoM Override
+        CoPOverride % Manual CoP Override
     end
 
     methods
         function obj = Rocket(name)
-            obj.name = name;
-            obj.componentList = dictionary();
+            obj.Name = name;
+            obj.ComponentList = dictionary();
         end
 
 
@@ -21,29 +23,29 @@ classdef Rocket < handle
                 componentObj RocketComponent
             end
 
-            numComponents = numEntries(rocketObj.componentList);
+            numComponents = numEntries(rocketObj.ComponentList);
 
             if numComponents == 0
-                rocketObj.componentList(componentObj.name) = {componentObj};
-            elseif isKey(rocketObj.componentList, componentObj.name)
+                rocketObj.ComponentList(componentObj.Name) = {componentObj};
+            elseif isKey(rocketObj.ComponentList, componentObj.Name)
                 %this should be removed for GUI implementation, only added here for testing
-                warning("Replacing existing component '%s', do you want to proceed? (Y/N)", componentObj.name)
+                warning("Replacing existing component '%s', do you want to proceed? (Y/N)", componentObj.Name)
                 response = input("", "s");
                 if strcmp(response, "Y")
-                    rocketObj.componentList(componentObj.name) = {componentObj};
+                    rocketObj.ComponentList(componentObj.Name) = {componentObj};
                 else
                     fprintf("\nStopping . . .\n")
                 end
             else
-                rocketObj.componentList(componentObj.name) = {componentObj};
+                rocketObj.ComponentList(componentObj.Name) = {componentObj};
             end
         end
 
 
         function removeComponent(rocketObj, componentName)
-            if iskey(rocketObj.componentList, componentName)
+            if iskey(rocketObj.ComponentList, componentName)
 
-                rocketObj.componentList = remove(rocketObj.componentList, componentName);
+                rocketObj.ComponentList = remove(rocketObj.ComponentList, componentName);
             else
                 %this should be removed for GUI implementation, only added here for testing
                 warning("The component you are trying to remove does not exist, try using a different name")
@@ -56,13 +58,13 @@ classdef Rocket < handle
                 rocketObj Rocket
             end
 
-            componentArray = values(rocketObj.componentList);
+            componentArray = values(rocketObj.ComponentList);
             mass = cellfun(@(c) c.mass, componentArray);
             m = sum(mass);
         end
 
 
-        function set.aeroData(rocketObj, filename)
+        function set.AeroData(rocketObj, filename)
             arguments
                 rocketObj Rocket
                 filename (1,1) string
@@ -70,17 +72,38 @@ classdef Rocket < handle
 
             filepath = "TheSixDoF" + filesep + "Inputs" + filesep + "RASAero" + filesep + filename + ".csv";
             rawData = readmatrix(filepath);
-            data = [[rawData(1:300,1:5) rawData(1:300,8) rawData(1:300,13:15)]; 
-                    [rawData(2501:2800,1:5) rawData(2501:2800,8) rawData(2501:2801,13:15)]; 
-                    [rawData(5001:5300,1:5) rawData(5001:5300,8) rawData(5001:5301,13:15)]];
-            rocketObj.aeroData = data;
+
+            if (size(rawData) == [7500, 15])
+                data = [[rawData(1:300,1:5) rawData(1:300,8) rawData(1:300,13:15)]; 
+                        [rawData(2501:2800,1:5) rawData(2501:2800,8) rawData(2501:2801,13:15)];
+                        [rawData(5001:5300,1:5) rawData(5001:5300,8) rawData(5001:5301,13:15)]];
+            else
+                data = rawData;
+            end
+
+            rocketObj.AeroData = data;
 
         end
 
         function saveRocket(rocketObj)
-            filename = rocketObj.name;
-            filepath = 'TheSixDoF' + filesep + 'Inputs' + filesep + 'Saved Rockets' + filesep + filename;
+            filename = rocketObj.Name;
+            filepath = "TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + filename + ".mat";
             save(filepath, "rocketObj")
+        end
+
+
+        function A = refArea(rocketObj)
+            A = 0;
+
+            components = values(rocketObj.ComponentList);
+            for idx = 1:length(components)
+                if isa(components(idx), 'Fins')
+                    fins = components(idx);
+                    A = A + (fins.Thickness * fins.Span * fins.Count);
+                end
+            end
+
+            A = A + pi * (rocketObj.OuterDiameter / 2)^2;
         end
 
     end

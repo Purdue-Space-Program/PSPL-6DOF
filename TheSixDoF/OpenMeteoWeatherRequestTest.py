@@ -2,7 +2,7 @@ import openmeteo_requests
 import requests_cache
 from retry_requests import retry
 
-def getWeather(lat=39.7392, lon=-104.9847):
+def getCurrentWeather(lat=39.7392, lon=-104.9847):
     """Fetch current weather data from Open-Meteo and return a dict
        (automatically converts to MATLAB struct)."""
 

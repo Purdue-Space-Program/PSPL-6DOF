@@ -1,14 +1,14 @@
-classdef Wind < Env.Environment
+classdef Wind < Environment
     % The wind class pulls in the data for the wind at a particular
     % location,
 
     properties
-        windData (:,:) = readmatrix("Inputs/WindData.xlsx")
-        month (1,1) string {mustBeText} = 'Jan'
+        WindData (:,:) = readmatrix("Inputs/WindData.xlsx")
+        Month (1,1) string {mustBeText} = 'Jan'
     end
 
     methods
-        function [windDataOut] = parseWind(windData, month)
+        function [windDataOut] = parseWind(windObj)
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % PSP FLIGHT DYNAMICS:
             %
@@ -32,6 +32,9 @@ classdef Wind < Env.Environment
             % direction = 0 in nominal case.
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+            month = windObj.Month;
+            windData = windObj.WindData;
+            
             %output the wind height in meters
             windHeight = windData(:,1) * 100;
 

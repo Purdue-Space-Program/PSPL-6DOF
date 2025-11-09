@@ -1,22 +1,25 @@
 classdef Fins < RocketComponent
 
     properties
-        count (1,1) {mustBeMember(count, [3, 4])} = 3
-        airfoil (1,1) string {mustBeMember(airfoil, ["Double Wedge", "NACA"])} = "Double Wedge"
-        span (1,1) double
-        rootChord (1,1) double
-        tipChord (1,1) double
-        sweep (1,1) double
+        Count (1,1) int8 {mustBeMember(Count, [3, 4])} = 3 % Fin Count
+
+        % add the properties for the airfoil later with mustBeMeber
+        
+        Airfoil (1,1) string % Airfoil
+        Span (1,1) double % Span [m]
+        RootChord (1,1) double % Root Chord Length [m]
+        TipChord (1,1) double % Tip Chord Length [m]
+        Sweep (1,1) double % Sweep [m]
+        Thickness (1,1) double % Thickness [m]
     end
 
     methods
-        function obj = Fins(root, tip, span, sweep)
-            obj.name = "FinSet";
-            obj.rootChord = root;
-            obj.tipChord = tip;
-            obj.span = span;
-            obj.sweep = sweep;
-
+        function obj = Fins(name)
+            arguments
+                name string
+            end
+            
+            obj.Name = name;
         end
 
 

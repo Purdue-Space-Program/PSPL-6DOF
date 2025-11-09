@@ -1,4 +1,4 @@
-classdef Magnetometer < Sensor.Sensor
+classdef Magnetometer < Sensor
     % The Altimeter class is a subclass of Sensor and inherits from the
     % sensor properties. See Sensor for input clarification
 
@@ -12,7 +12,7 @@ classdef Magnetometer < Sensor.Sensor
                 Bias (1,1) double = 0
                 ScaleFactor (1,1) double = 0
             end
-            alt@Sensor.Sensor(Name,SamplingRate,Variance,Resolution,Bias,ScaleFactor)
+            alt@Sensor(Name,SamplingRate,Variance,Resolution,Bias,ScaleFactor)
         end
 
         function [xyzMag] = MagnetometerMeasurement(sensor,env,pos, dt)

@@ -1,4 +1,4 @@
-function [totCoM, totMass, MoI] = VariableCoM(dt, tspan, graph)
+function [totCoM, totMass, MoI] = VariableCoM(dt, tspan, graph, rocket)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
