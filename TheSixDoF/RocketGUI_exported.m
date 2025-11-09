@@ -479,22 +479,97 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                                 color = 'b';
                             end
 
-                            xTank = [dist, dist, dist+leng, dist+leng, dist];
-                            yTank = [-rad, rad, rad, -rad, -rad];
-
+                            
                             if app.ThreeDPlot
 
-                                [Z, Y, X] = cylinder(rad,100); %make unit cyliner along x axis
-                                X_body = X*(leng)+dist;
+                                isSpherica = false;
+                                if isSpherica
+                                    [Z, Y, X] = cylinder(rad,100); %make unit cyliner along x axis
+                                    X_body = X*(leng-2*rad)+dist+rad;
+                                    surf(app.UIAxes, X_body,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
 
-                                surf(app.UIAxes, X_body,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
-                            else
+                                    x_res_nose = 0:rad/50:rad;
+                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                    X_nose = X*rad+dist;
+                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
 
-                                plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    x_res_nose = rad:rad/50:2*rad;
+                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                    X_nose = X*rad+dist+leng-rad;
+                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                                else
+                                    l_a = sqrt(2)*rad;
+                                    [Z, Y, X] = cylinder(rad,100); %make unit cyliner along x axis
+                                    X_body = X*(leng-2*l_a)+dist+l_a;
+                                    surf(app.UIAxes, X_body,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
 
+                                    x_res_nose = 0:l_a/50:l_a;
+                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                    X_nose = X*l_a+dist;
+                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                                    
+                                   x_res_nose = l_a:l_a/50:2*l_a;
+                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                    X_nose = X*l_a+dist+leng-l_a;
+                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                                end
+                                
+
+                                
+                            else % 2d plot
+                                isSpehical = false;
+                                if isSpehical
+                                    xTank = [dist+l_a,  dist+leng-l_a];
+                                    yTank = [rad, rad];
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    xTank = [dist+l_a,  dist+leng-l_a];
+                                    yTank = [-rad, -rad];
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    
+                                    x_res_nose = 0:rad/50:rad;
+                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                    xTank = x_res_nose+dist;
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+
+                                    x_res_nose = rad:rad/50:2*rad;
+                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                    xTank = x_res_nose+dist+leng-2*rad;
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+                                else
+                                    l_a = sqrt(2)*rad;
+                                    xTank = [dist+l_a,  dist+leng-l_a];
+                                    yTank = [rad, rad];
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    xTank = [dist+l_a,  dist+leng-l_a];
+                                    yTank = [-rad, -rad];
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    
+                                    x_res_nose = 0:l_a/50:l_a;
+                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                    xTank = x_res_nose+dist;
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+
+                                    x_res_nose = l_a:l_a/50:2*l_a;
+                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                    xTank = x_res_nose+dist+leng-2*l_a;
+                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+                                end
                             end
 
                         end
+
+
+
+
+
                     end
                 end
 
@@ -996,10 +1071,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create UIAxes
             app.UIAxes = uiaxes(app.GridLayout9);
-            title(app.UIAxes, 'Rocket Layout', 'Interpreter', 'latex')
-            xlabel(app.UIAxes, 'X', 'Interpreter', 'latex')
-            ylabel(app.UIAxes, 'Y', 'Interpreter', 'latex')
-            zlabel(app.UIAxes, 'Z', 'Interpreter', 'latex')
+            title(app.UIAxes, 'Rocket Layout')
+            xlabel(app.UIAxes, 'X')
+            ylabel(app.UIAxes, 'Y')
+            zlabel(app.UIAxes, 'Z')
             app.UIAxes.Layout.Row = 1;
             app.UIAxes.Layout.Column = [2 3];
 
