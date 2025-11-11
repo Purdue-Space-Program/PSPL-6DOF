@@ -53,19 +53,48 @@ radius = rocket.OuterDiameter / 2;    % radius of rocket [m]
 
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
 
-%---------------- Get atmospheric Conditions -------------------------------
+%---------------- Get atmospheric Conditions (prefer Open-Meteo via env) ---
+height = real(pos(1));  % AGL [m]
 
-%% atmospheric conditions:
-height = pos(1);
+gamma_air = 1.4;
+R_air     = 287.05;
 
-% long monte carlo can result in complex numbers here, take real component
-height = real(height);
+% Preferred: env.MeteoProfile = [alt_m, temp_K, pressure_Pa] (set by GetWeatherConditions)
+if (isstruct(env) && isfield(env,'MeteoProfile')) || (isobject(env) && isprop(env,'MeteoProfile'))
+    met = env.MeteoProfile;             % Nx3: [alt, T(K), P(Pa)]
+    [~, ia] = min(abs(met(:,1) - height));
+    T = met(ia,2);
+    P = met(ia,3);
+    a   = sqrt(gamma_air * R_air * T);
+    rho = P / (R_air * T);
 
-% get atmospheric parameters
-atmosIndex = min(max(round(height,0)+1, 1),length(atmosphere));
-a = atmosphere(atmosIndex, 1);
-rho = atmosphere(atmosIndex,2);
-P = atmosphere(atmosIndex, 3);
+% Fallback: env.Atmosphere already in [a, rho, P] form
+elseif (isstruct(env) && isfield(env,'Atmosphere')) || (isobject(env) && isprop(env,'Atmosphere'))
+    atm = env.Atmosphere;               % Nx3: [a, rho, P] at integer altitudes
+    ia = min(max(round(height,0)+1, 1), size(atm,1));
+    a   = atm(ia,1);
+    rho = atm(ia,2);
+    P   = atm(ia,3);
+
+% Last resort: use the 'atmosphere' input (legacy) or the CSV cache
+else
+    if ~isempty(atmosphere)
+        ia = min(max(round(height,0)+1, 1), size(atmosphere,1));
+        a   = atmosphere(ia,1);
+        rho = atmosphere(ia,2);
+        P   = atmosphere(ia,3);
+    else
+        persistent ATM_CACHE
+        if isempty(ATM_CACHE)
+            ATM_CACHE = readmatrix("Inputs" + filesep + "AtmosphereModel.csv");
+        end
+        ia = min(max(round(height,0)+1, 1), size(ATM_CACHE,1));
+        a   = ATM_CACHE(ia,1);
+        rho = ATM_CACHE(ia,2);
+        P   = ATM_CACHE(ia,3);
+    end
+end
+
 
 %---------------- Wind -----------------------------------------------------
 

@@ -28,17 +28,17 @@ function Main(rocket, env, settings)
 
 %---------------- Sensor Definition ------------------------------------------
 
-% Make a really bad altimeter for testing
-altimeter = Sensor.Altimeter("Altimeter", 0.25, 20^2,.5, 5, .01);
-
-% Make a GPS with measurement update:
-gps = Sensor.GNSS("GPS",2, 3^2, .1, 0);
-
-% Make a magnetometer:
-mag = Sensor.Magnetometer("Mag",0.01,0,0,0);
-
-% Make a gyroscope:
-gyro = Sensor.Gyroscope("Gyro",.25,1e-4,.005,.01,0);
+% % Make a really bad altimeter for testing
+% altimeter = Sensor.Altimeter("Altimeter", 0.25, 20^2,.5, 5, .01);
+% 
+% % Make a GPS with measurement update:
+% gps = Sensor.GNSS("GPS",2, 3^2, .1, 0);
+% 
+% % Make a magnetometer:
+% mag = Sensor.Magnetometer("Mag",0.01,0,0,0);
+% 
+% % Make a gyroscope:
+% gyro = Sensor.Gyroscope("Gyro",.25,1e-4,.005,.01,0);
 
 % create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end
@@ -47,7 +47,7 @@ gyro = Sensor.Gyroscope("Gyro",.25,1e-4,.005,.01,0);
 if strcmpi('burnout', settings.EndCondition)
     time = rocket.BurnTime;
 elseif ~isnan(str2double(settings.EndCondition))
-    time = round(str2double(endCondition),1);
+    time = round(str2double(settings.EndCondition),1);
 else
     time = 70;
 end
@@ -76,8 +76,13 @@ Init = [pos;vel;omega;quatVector];
 % import aerodynamics data
 rasData = rocket.aeroData;
 
-% import wind data
-windData = wind.parseWind();
+% import wind data (prefer Open-Meteo via env, fallback to parser)
+if (isstruct(env) && isfield(env,'WindData')) || (isobject(env) && isprop(env,'WindData'))
+    windData = env.WindData;   % [alt_m, speed_mps, dir_rad]
+else
+    windData = wind.parseWind();
+end
+
 
 % import atmosphere;
 atmosphere = readmatrix("Inputs" + filesep + "AtmosphereModel.csv");
@@ -92,7 +97,7 @@ opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, settings.En
 
 %---------------- Run the RK4 Integration ----------------------------------
 tic;
-[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,atmosphere, ...
+[timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,atmosphere, ...
     totCoM,totMass,MoI,windData, rocket, settings, env), tspan, Init, opt);
 toc;
 
