@@ -43,13 +43,13 @@ for idx = 1:length(components)
         motor = components(idx);
     end
 end
-
-A = rocket.refArea();          % reference area (m^2), as defined by RasAero (cross-sectional area)
-thrustMag = motor.thrust;  % thrust of rocket in N.
-bodyVector = [1;0;0]; % vector in the body axis running through the nose.
-ExitA = motor.exitArea;    % exit area of the nozzle [m^2]
-ExitP = motor.exitPressure;      % exit pressure of the nozzle [Pa]
 radius = rocket.OuterDiameter / 2;    % radius of rocket [m]
+A = pi*radius^2;                % reference area (m^2), as defined by RasAero (cross-sectional area)
+thrustMag = motor.thrust;   % thrust of rocket in N.
+bodyVector = [1;0;0];       % vector in the body axis running through the nose.
+ExitA = motor.exitArea;     % exit area of the nozzle [m^2]
+ExitP = motor.exitPressure;      % exit pressure of the nozzle [Pa]
+
 
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
 

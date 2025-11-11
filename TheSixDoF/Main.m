@@ -74,7 +74,7 @@ quatVector = eul2quat(angleVector.', "ZYX").';
 Init = [pos;vel;omega;quatVector];
 
 % import aerodynamics data
-rasData = rocket.aeroData;
+rasData = rocket.AeroData;
 
 % import wind data (prefer Open-Meteo via env, fallback to parser)
 if (isstruct(env) && isfield(env,'WindData')) || (isobject(env) && isprop(env,'WindData'))
