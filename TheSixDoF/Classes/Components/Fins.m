@@ -11,6 +11,7 @@ classdef Fins < RocketComponent
         TipChord (1,1) double % Tip Chord Length [m]
         Sweep (1,1) double % Sweep [m]
         Thickness (1,1) double % Thickness [m]
+        Color % Color
     end
 
     methods

@@ -68,8 +68,11 @@ classdef Environment
             lat = latlong(1);
             lon = latlong(2);
 
+            % get the folder. Would be better to do this dynamically
+            folder = fullfile(pwd, 'TheSixDoF');
+
             if count(py.sys.path, string(pwd)) == 0
-                insert(py.sys.path, int32(0), string(pwd));
+                insert(py.sys.path, int32(0), string(folder));
             end
 
             % import the python file which contains all of the scripts:
@@ -186,8 +189,8 @@ classdef Environment
             windDirInterp = interp1(geoHeight, windDir, geoHeightInterp, 'pchip', 'extrap');
             tempInterp = interp1(geoHeight, tempKelvin, geoHeightInterp, 'linear', 'extrap');
             presInterp = interp1(geoHeight, presLevels, geoHeightInterp, 'pchip', 'extrap');
-            rhoInterp = presInterp ./ (constant.R_air * tempInterp);
-            aInterp = sqrt(constant.R_air .* constant.gamma_air .* tempInterp);
+            rhoInterp = presInterp ./ (constant.R_AIR * tempInterp);
+            aInterp = sqrt(constant.R_AIR .* constant.GAMMA_AIR .* tempInterp);
 
             % get the wind directions. Get it as the direction the wind is actually
             % going (not the direction it is coming from)!

@@ -1,5 +1,9 @@
 classdef PointMass < RocketComponent
 
+    properties
+        Color % Color
+    end
+
     methods
         function obj = PointMass(name)
             arguments
