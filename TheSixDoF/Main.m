@@ -77,15 +77,15 @@ Init = [pos;vel;omega;quatVector];
 rasData = rocket.AeroData;
 
 % import wind data (prefer Open-Meteo via env, fallback to parser)
-if (isstruct(env) && isfield(env,'WindData')) || (isobject(env) && isprop(env,'WindData'))
-    windData = env.WindData;   % [alt_m, speed_mps, dir_rad]
+if (isstruct(env) && isfield(env,'WindData')) || (isobject(env) && isprop(env,'Wind'))
+    windData = env.Wind;   % [alt_m, speed_mps, dir_rad]
 else
     windData = wind.parseWind();
 end
 
 
 % import atmosphere;
-atmosphere = readmatrix("Inputs" + filesep + "AtmosphereModel.csv");
+atmosphere = env.Atmosphere;
 
 % create an array of the center of mass, mass, and moment of inertia of the
 % rocket
