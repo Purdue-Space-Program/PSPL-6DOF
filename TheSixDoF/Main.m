@@ -21,7 +21,7 @@ function Main(rocket, env, settings)
 % post apogee attitude dynamics are not fully finished, attitude in this
 % regime is likely incorrect
 %
-% non-zero AoA calculations for lift and drag need better modelling
+% non-zero AoA calculations for lift and drag need better modeling
 %
 % Monte Script is not up to date with main.
 
