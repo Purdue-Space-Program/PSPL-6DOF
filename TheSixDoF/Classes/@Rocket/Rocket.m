@@ -4,6 +4,8 @@ classdef Rocket < handle
         Name (1,1) string
         TotalLength % Vehicle Length [m]
         OuterDiameter % Vehicle OD [m]
+        NoseLength % Nose Cone Length [m]
+        NoseGeometry % Nose Cone Type
         ComponentList dictionary % Component Dictionary
         AeroData % RASAero data
         CoMOverride % Manual CoM Override
