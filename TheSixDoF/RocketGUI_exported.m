@@ -63,13 +63,16 @@ classdef RocketGUI_exported < matlab.apps.AppBase
     properties (Access = private)
         lineColor % line color for plots
         ThreeDPlot=0; % flag to turn 3d plotting on and off
-        ComponentList = "" % a list of the components on the rocket
+        %ComponentList = "" % a list of the components on the rocket
         ComponentDetails
         rocket Rocket
         PropertyEditFields
         PropertyEditLabels
         autoRefresh = 0;
         rootNode;
+        env Environment;
+        Settings IntegratorSettings;
+        Date datetime
     end
 
     methods (Access = private)
@@ -223,7 +226,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             delete(findall(app.PropertyGrid, 'Type', 'axes'))
             % Create an axes for the plot (this will take the last row)
             plotAxes = axes(app.PropertyGrid);
-            plotAxes.Layout.Row = nFields + 1;  % Put plot in the last row (nFields + 1)
+            plotAxes.Layout.Row = nFields+1;  % Put plot in the last row (nFields + 1)
             plotAxes.Layout.Column = [1, 2];    % Span across both columns
 
             % plot the fins:
@@ -623,7 +626,18 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RevertButton.Enable = 'off';
 
             % set up the filepath [TODO]:
-            path
+            % first, the user must cd into the correct folder (PSPL-6DOF)
+            try
+            addpath("TheSixDoF\Classes\");
+            addpath("TheSixDoF\Classes\Components\");
+            addpath("TheSixDoF\Classes\Environment\");
+            addpath("TheSixDof\Classes\Sim\");
+            catch
+                uialert(app.uifigure, "You must have PSPL-6DOF as the current " + ...
+                    "directory to run the GUI.", "Folder Error!")
+
+                return
+            end
 
         end
 
@@ -786,7 +800,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Button pushed function: SimulateLaunchButton
         function SimulateLaunchClicked(app, event)
-            Main();
+            if isempty(app.rocket) || isempty(app.env)
+                uialert(app.UIFigure, "The rocket or environment is empty!", "Setup error!")
+            end
+
+            app.Settings = IntegratorSettings("apogee", 0.1, "medium");
+            
+            Main(app.rocket, app.env, app.Settings);
         end
 
         % Drop down opening function: ComponentSelectionDropDown
@@ -852,8 +872,11 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 filepath = fullfile(path, file);
                 app.rocket = load(filepath, "rocketObj").rocketObj;
 
-                app.AeroDataButton.Text = app.rocket.name + "_aero.csv";
-                app.RocketNameEditField.Value = app.rocket.name;
+                % set the properties in the rocket, components are auto
+                % added
+
+                app.AeroDataButton.Text = app.rocket.Name + "_aero.csv";
+                app.RocketNameEditField.Value = app.rocket.Name;
 
                 if ~isempty(app.rocket.TotalLength)
                     app.RocketLengthEditField.Value = app.rocket.TotalLength;
@@ -862,6 +885,31 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 if ~isempty(app.rocket.OuterDiameter)
                     app.RocketDiameterEditField.Value = app.rocket.OuterDiameter;
                 end
+
+                app.NoseConeLengthmEditField.Value = app.rocket.NoseLength;
+                app.NoseConeGeometryDropDown.Value = app.rocket.NoseGeometry;
+
+                app.autoRefresh = 1;
+
+                % create the root node:
+                rootNode = uitreenode(app.Tree, 'Text', app.rocket.Name);
+                expand(rootNode);
+
+                app.rootNode = rootNode;
+
+                % create the nodes for each of the components:
+                numVals = numEntries(app.rocket.ComponentList)
+
+                if numVals ~= 0
+                    names = app.rocket.ComponentList.keys;
+    
+                    for idx = 1:numVals
+                        uitreenode(app.rootNode, 'Text', names(idx));
+                    end
+                    expand(app.rootNode)
+                end
+
+                app.RocketPlotter();
             end
 
 
@@ -877,6 +925,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.rocket.TotalLength = app.RocketLengthEditField.Value;
             app.rocket.OuterDiameter = app.RocketDiameterEditField.Value;
             app.rocket.AeroData = name;
+            app.rocket.NoseLength = app.NoseConeLengthmEditField.Value;
+            app.rocket.NoseGeometry = app.NoseConeGeometryDropDown.Value;
 
             rocketObj = app.rocket;
 
@@ -893,6 +943,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % after creating a rocket object, auto refresh the plot with
             % changes:
             app.autoRefresh = 1;
+
+            app.RocketPlotter();
         end
 
         % Value changed function: RocketNameEditField
@@ -996,11 +1048,21 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         function getWeather(app, event)
             % get the weather if the appropriate fields are filled out:
 
-            date = app.DateSelectionDatePicker.Value;
-
-            if isempty(date)
+            if isempty(app.Date)
                 uialert(app.UIFigure, "Date field is empty!", "Input Error")
             end
+
+            if isempty(app.LatitudedegEditField.Value) || isempty(app.LongitudedegEditField.Value)
+                uialert(app.UIFigure, "Location Field is empty!", "Input Error")
+            end
+
+            lat = app.LatitudedegEditField.Value;
+            lon = app.LongitudedegEditField.Value;
+
+            app.env = Environment(lat,lon,app.Date);
+
+            % get the weather for that environment
+            app.env = getLocalWeather(app.env);
 
         end
 
@@ -1026,6 +1088,16 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             return
 
+        end
+
+        % Value changed function: DateSelectionDatePicker
+        function dateSelected(app, event)
+            value = app.DateSelectionDatePicker.Value;
+
+            % illusion of free will, set the date to now:
+
+            app.Date = datetime("now", "TimeZone","UTC");
+            
         end
     end
 
@@ -1353,6 +1425,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create DateSelectionDatePicker
             app.DateSelectionDatePicker = uidatepicker(app.GridLayout2);
             app.DateSelectionDatePicker.Limits = [datetime([1940 1 1]) datetime([9999 12 31])];
+            app.DateSelectionDatePicker.ValueChangedFcn = createCallbackFcn(app, @dateSelected, true);
             app.DateSelectionDatePicker.Layout.Row = 1;
             app.DateSelectionDatePicker.Layout.Column = 2;
 
