@@ -6,8 +6,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         TabGroup                       matlab.ui.container.TabGroup
         RocketDesignTab                matlab.ui.container.Tab
         GridLayout9                    matlab.ui.container.GridLayout
+        PropGrid2                      matlab.ui.container.GridLayout
         Tree                           matlab.ui.container.Tree
-        UITable                        matlab.ui.control.Table
         ListBox                        matlab.ui.control.ListBox
         Switchto3D                     matlab.ui.control.Button
         UpdatePlotButton               matlab.ui.control.Button
@@ -193,7 +193,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
                 % define the standard limits for the plot
                 hold(app.UIAxes, 'off')
-                xlim(app.UIAxes, [-0.02*leng,leng*1.02])
+                xlim(app.UIAxes, [-0.02*leng,leng*1.15])
                 axis(app.UIAxes, "equal")
 
             end
@@ -559,6 +559,42 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                                 plot(app.UIAxes, xPos, yPos, '.', MarkerSize = 30, Color = color);
                             end
 
+                        elseif isa(values{idx}, 'PropulsionSystem')
+
+                            propSys = values{idx};
+
+                            dist = propSys.Position(1);
+                            dia = 2*sqrt(propSys.ExitArea / pi);
+                            color = propSys.Color;
+
+                            % create the contour:
+
+                            xProp = linspace(0,3*dia);
+
+                            yProp = .2/.25 * (dia-0.3*dia*sin(1.5*pi*(xProp-.06)/(3*dia)));
+
+                            xProp = xProp + dist;
+
+                            endcapX = [xProp(end), xProp(end)];
+                            endcapY = [yProp(end), -yProp(end)];
+
+                            if app.ThreeDPlot
+                                [Z, Y, X] = cylinder(yProp, 100);
+                                
+                                X = X + dist;
+
+                                plot3(app.UIAxes, X, Y, Z, 'LineStyle','-', 'Color', color)
+
+                            else
+                                plot(app.UIAxes, xProp,yProp, "Color", app.lineColor)
+                                plot(app.UIAxes, xProp, -yProp, "Color", app.lineColor)
+                                plot(app.UIAxes, endcapX, endcapY, app.lineColor)
+                            end
+
+                            
+
+
+
                         end
                     end
                 end
@@ -920,6 +956,22 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             name = string(app.RocketNameEditField.Value);
             path = "TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + name + ".mat";
 
+            if isempty(app.rootNode)
+                rootNode = uitreenode(app.Tree, 'Text', name);
+                expand(rootNode);
+    
+                app.rootNode = rootNode;
+
+                uiconfirm(app.UIFigure, "Rocket saved.", "Congratulations!")
+            else
+                uiconfirm(app.UIFigure, "Rocket Object already exists." + ...
+                    " Components have been saved.", "Rocket Saved")
+
+                rocketObj = app.rocket;
+                save(path, "rocketObj")
+                return
+            end
+
             app.rocket = Rocket(name);
 
             app.rocket.TotalLength = app.RocketLengthEditField.Value;
@@ -933,12 +985,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             save(path, "rocketObj")
 
             % update the tree node with the rocket object:
-            rootNode = uitreenode(app.Tree, 'Text', name);
-            expand(rootNode);
 
-            app.rootNode = rootNode;
 
-            uiconfirm(app.UIFigure, "Rocket saved.", "Congratulations!")
+
+            
 
             % after creating a rocket object, auto refresh the plot with
             % changes:
@@ -1079,14 +1129,19 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         function NodeClicked(app, event)
             node = event.InteractionInformation.Node;
 
-            % parse which node was clicked. This will have the same name as
-            % the dictionary item:
-
-            compList = app.rocket.ComponentList;
-
-            compListNames = compList.keys;
-
-            return
+            if ~isempty(node)
+                selected = node.Text;
+    
+                % parse which node was clicked. This will have the same name as
+                % the dictionary item:
+    
+                compList = app.rocket.ComponentList;
+    
+                % return the cell array with the correct values:
+                componentCell = compList(selected);
+    
+                comp = componentCell{1};
+            end
 
         end
 
@@ -1097,6 +1152,43 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % illusion of free will, set the date to now:
 
             app.Date = datetime("now", "TimeZone","UTC");
+            
+        end
+
+        % Double-clicked callback: Tree
+        function NodeDoubleClick(app, event)
+            node = event.InteractionInformation.Node;
+
+            if ~isempty(node)
+                selected = node.Text;
+    
+                compList = app.rocket.ComponentList;
+    
+                % return the cell array with the correct values:
+                componentCell = compList(selected);
+    
+                % confirm that you want to delete this component:
+                selection = uiconfirm(app.UIFigure, "Are you sure you want to delete this component?" ...
+                    , "Deletion Confirmation");
+    
+                if selection == 'OK'
+                    % remove that component from the rocket
+                    app.rocket.removeComponent(selected);
+        
+                    % remove it from the tree:
+                    node.delete;
+                end
+    
+                % save the file with the components removed:
+                name = string(app.RocketNameEditField.Value);
+                path = "TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + name + ".mat";
+    
+                rocketObj = app.rocket;
+                save(path, "rocketObj")
+    
+                app.RocketPlotter();
+            end
+            
             
         end
     end
@@ -1389,18 +1481,19 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.ListBox.Layout.Column = 2;
             app.ListBox.Value = {};
 
-            % Create UITable
-            app.UITable = uitable(app.GridLayout9);
-            app.UITable.ColumnName = {'Property'; 'Value'};
-            app.UITable.RowName = {'Property1, Property2, Property3'};
-            app.UITable.Layout.Row = 3;
-            app.UITable.Layout.Column = 3;
-
             % Create Tree
             app.Tree = uitree(app.GridLayout9);
             app.Tree.Layout.Row = 3;
             app.Tree.Layout.Column = 2;
             app.Tree.ClickedFcn = createCallbackFcn(app, @NodeClicked, true);
+            app.Tree.DoubleClickedFcn = createCallbackFcn(app, @NodeDoubleClick, true);
+
+            % Create PropGrid2
+            app.PropGrid2 = uigridlayout(app.GridLayout9);
+            app.PropGrid2.ColumnWidth = {'1x', '2x'};
+            app.PropGrid2.RowHeight = {'1x', '1x', '1x'};
+            app.PropGrid2.Layout.Row = 3;
+            app.PropGrid2.Layout.Column = 3;
 
             % Create SimulationTab
             app.SimulationTab = uitab(app.TabGroup);

@@ -7,6 +7,7 @@ classdef PropulsionSystem < RocketComponent
         OxMassFlow (1,1) double % Ox mass flow rate [kg/s]
         ExitArea (1,1) double % Exit Area [m²]
         ExitPressure (1,1) double % Exit Pressure [Pa]
+        Color % Color
     end
 
     methods

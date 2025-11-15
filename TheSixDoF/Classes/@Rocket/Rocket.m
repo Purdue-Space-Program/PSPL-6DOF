@@ -45,7 +45,7 @@ classdef Rocket < handle
 
 
         function removeComponent(rocketObj, componentName)
-            if iskey(rocketObj.ComponentList, componentName)
+            if isKey(rocketObj.ComponentList, componentName)
 
                 rocketObj.ComponentList = remove(rocketObj.ComponentList, componentName);
             else
