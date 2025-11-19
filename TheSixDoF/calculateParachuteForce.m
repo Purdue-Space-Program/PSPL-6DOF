@@ -28,10 +28,10 @@ deformVal = 0.70;                       % Deformation value of inflated chute ar
 
 % Parachute parameters
 drogueCd = 0.97;                        % cD for the drogue chute
-drogueDia = (25/6) * constant.ft2m;     % drogue  diameter [m]
+drogueDia = (25/6) * constant.FT_TO_M;  % drogue  diameter [m]
 
 mainCd = 2.2;                           % cD for the main parachute
-mainDia = (97/6) * constant.ft2m;       % main chute diameter [m]
+mainDia = (97/6) * constant.FT_TO_M;    % main chute diameter [m]
 mainDeployAlt = 304.8 + env.Elevation;  % main chute deployment altitude [m]
 
 % define paraLength as a function of time:

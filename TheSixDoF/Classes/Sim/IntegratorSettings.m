@@ -13,8 +13,8 @@ classdef IntegratorSettings
         Timestep (1,1) double = 0.1
         Fidelity (1,1) string {mustBeMember(Fidelity,["low","medium","high"])} = "medium"
         RotationVis (1,1) logical
-        Outputs (1,1) logical
-        Wind (1,1) logical
+        Outputs (1,1) logical = 1
+        Wind (1,1) logical = 1
     end
 
     properties (SetAccess = private)

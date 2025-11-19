@@ -131,20 +131,10 @@ if settings.Outputs == true
     outputStruct.omega = omega;
     outputStruct.quat = quatArray;
 
-    % get the height measurement based on the sensor properties
-    heightMeasAltimeter = altimeter.AltitudeMeasurement(posArray(:,1),settings.Timestep, velArray(:,1));
-
-    [posMeasGps, velMeasGps] = gps.GNSSMeasurement(posArray,velArray,settings.Timestep);
-
-    angleVelMeasGyro = gyro.GyroscopeMeasurement(omega,settings.Timestep);
-
     % convert to lat and long for plotting on map:
-
     E = wgs84Ellipsoid;
     [lats,longs, ~] = ned2geodetic(out(:,3),out(:,2),-out(:,1),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
 
-    % get the outputs from the magnetometer
-    xyzMag =  mag.MagnetometerMeasurement(env,[lats,longs,posArray(:,1)], settings.Timestep);
 
     uif = uifigure;
     g = geoglobe(uif);
@@ -169,22 +159,22 @@ if settings.Outputs == true
     [~, maxqMachIndex] = min(abs(machTable-maxqMach));
     maxqCD = cdTable(maxqMachIndex);
 
-    [~, railIndex] = min(abs(posArray(1:100,1)-env.railHeight));
-    railVel = out(railIndex,4);
-    railAccel = outputStruct.accel(railIndex,1);
-
-    railMach = outputStruct.mach(railIndex);
-    [~, railMachIndex] = min(abs(machTable-railMach));
-    railCD = cdTable(railMachIndex);
+    % [~, railIndex] = min(abs(posArray(1:100,1)-env.railHeight));
+    % railVel = out(railIndex,4);
+    % railAccel = outputStruct.accel(railIndex,1);
+    % 
+    % railMach = outputStruct.mach(railIndex);
+    % [~, railMachIndex] = min(abs(machTable-railMach));
+    % railCD = cdTable(railMachIndex);
 
     apogee = max(posArray(:,1));
 
-    fprintf("\nParameters at Max Q:\n")
-    fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",maxVel, maxqMach, maxqAccel, maxqCD);
-    fprintf("Off-Rail Parameters:\n")
-    fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",railVel, railMach, railAccel, railCD);
-    fprintf("Rocket Apogee (AMSL): %.2f m\n", apogee)
-    fprintf("Rocket Apogee (AGL): %.2f m\n", apogee - env.Elevation)
+    % fprintf("\nParameters at Max Q:\n")
+    % fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",maxVel, maxqMach, maxqAccel, maxqCD);
+    % fprintf("Off-Rail Parameters:\n")
+    % fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",railVel, railMach, railAccel, railCD);
+    % fprintf("Rocket Apogee (AMSL): %.2f m\n", apogee)
+    % fprintf("Rocket Apogee (AGL): %.2f m\n", apogee - env.Elevation)
 
     
 
@@ -235,16 +225,6 @@ if settings.Outputs == true
     ylabel("Euler Angles")
     legend('psi', 'theta', 'phi');
 
-    % Angular Velocity and Gyro Plot:
-    figure;
-    plot(timeArray, omega);
-    hold on
-    plot(timeArray, angleVelMeasGyro,'+')
-    xlim([0,endTime]);
-    title("Angular Velocity")
-    xlabel("Time (s)")
-    ylabel("Angular Velocity [rad/s]")
-    legend("\omega_x","\omega_y","\omega_z","gyro x","gyro y", "gyro z",location="best")
 
     % Angle of Attack:
     figure;
@@ -266,17 +246,6 @@ if settings.Outputs == true
     zlabel('Height (m)');
     axis equal;
     grid minor;
-
-    % Measurements Plot:
-    figure;
-    plot(timeArray,posArray(:,1),'-')
-    hold on
-    plot(timeArray,heightMeasAltimeter,'+')
-    % fix the errors in this
-    plot(timeArray,posMeasGps(:,1), '+')
-    xlabel('Time [s]');
-    ylabel('Height [m]');
-    legend('Simulation', 'Altimeter Measurement', 'Gps Measurement')
 
     % moment plot
     figure;

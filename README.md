@@ -9,17 +9,11 @@ This document will not dive deeply into the methodology and mathematics behind t
 - [Volume II](https://www.overleaf.com/project/67c9db5f55304a0119638f83)
 - [Volume III](https://www.overleaf.com/read/ttdvwvvznjgb#da02d8)
 
-## Code Structure
-
-The PSPL 6-DoF takes an Object-Oriented Programming (OOP) approach. As a result, each of the primary components of the simulation are called through a class structure in MATLAB. To access this class structure, the folder `TheSixDoF` must be on the MATLAB file path. 
-
-The OOP approach helps us to maintain a clean code base and store related objects within a single MATLAB object. As our codebase expands, this class structure becomes increasingly important. However, most MATLAB users are unfamilar with its class structure. A desciption of the MATLAB class structure may be found in the final chapter of Volume I.
-
 ## Getting Started
 
-An example script ```MainRK4``` is included in the repo as an example of a simulation. Simply running this simulation will output the results of the simulation. This model defaults to a run with the CMS rocket. Various settings in the model may be adjusted to the liking of the user.
+The main user interaction with the 6-DoF in the MATLAB app. This can be accessed via the `RocketGUI.mlapp` file within MATLAB. The GUI is designed for operation with MATLAB 2025a or 2025b. Compatibility with other versions of MATLAB is not gauranteed.
 
-Simulation can start off very simple and complexity can be added thanks to the class structure design. Every simulation will require a `Rocket` object, as well as some basic `Sim` parameters to be set.
+To run this script, you **must** have `TheSixDoF` and all subfolders on your MATLAB path. The current directly should be the top level folder, `PSPL-6DOF`. 
 
 ### Creating a custom simulation
 

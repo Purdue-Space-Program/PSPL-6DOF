@@ -39,16 +39,18 @@ quat = [input(10); input(11); input(12); input(13)];
 components = values(rocket.ComponentList);
 
 for idx = 1:length(components)
-    if isa(components(idx), 'PropulsionSystem')
-        motor = components(idx);
+    if isa(components{idx}, 'PropulsionSystem')
+        motor = components{idx};
     end
 end
+
 radius = rocket.OuterDiameter / 2;    % radius of rocket [m]
 A = pi*radius^2;                % reference area (m^2), as defined by RasAero (cross-sectional area)
-thrustMag = motor.thrust;   % thrust of rocket in N.
+thrustMag = motor.Thrust;   % thrust of rocket in N.
 bodyVector = [1;0;0];       % vector in the body axis running through the nose.
-ExitA = motor.exitArea;     % exit area of the nozzle [m^2]
-ExitP = motor.exitPressure;      % exit pressure of the nozzle [Pa]
+ExitA = motor.ExitArea;     % exit area of the nozzle [m^2]
+ExitP = motor.ExitPressure;      % exit pressure of the nozzle [Pa]
+burnTime = motor.BurnTime;
 
 
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
@@ -56,45 +58,13 @@ bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial
 %---------------- Get atmospheric Conditions (prefer Open-Meteo via env) ---
 height = real(pos(1));  % AGL [m]
 
-gamma_air = 1.4;
-R_air     = 287.05;
 
-% Preferred: env.MeteoProfile = [alt_m, temp_K, pressure_Pa] (set by GetWeatherConditions)
-if (isstruct(env) && isfield(env,'MeteoProfile')) || (isobject(env) && isprop(env,'MeteoProfile'))
-    met = env.MeteoProfile;             % Nx3: [alt, T(K), P(Pa)]
-    [~, ia] = min(abs(met(:,1) - height));
-    T = met(ia,2);
-    P = met(ia,3);
-    a   = sqrt(gamma_air * R_air * T);
-    rho = P / (R_air * T);
+% get the atmosphere data (update to get the environment:
 
-% Fallback: env.Atmosphere already in [a, rho, P] form
-elseif (isstruct(env) && isfield(env,'Atmosphere')) || (isobject(env) && isprop(env,'Atmosphere'))
-    atm = env.Atmosphere;               % Nx3: [a, rho, P] at integer altitudes
-    ia = min(max(round(height,0)+1, 1), size(atm,1));
-    a   = atm(ia,1);
-    rho = atm(ia,2);
-    P   = atm(ia,3);
-
-% Last resort: use the 'atmosphere' input (legacy) or the CSV cache
-else
-    if ~isempty(atmosphere)
-        ia = min(max(round(height,0)+1, 1), size(atmosphere,1));
-        a   = atmosphere(ia,1);
-        rho = atmosphere(ia,2);
-        P   = atmosphere(ia,3);
-    else
-        persistent ATM_CACHE
-        if isempty(ATM_CACHE)
-            ATM_CACHE = readmatrix("Inputs" + filesep + "AtmosphereModel.csv");
-        end
-        ia = min(max(round(height,0)+1, 1), size(ATM_CACHE,1));
-        a   = ATM_CACHE(ia,1);
-        rho = ATM_CACHE(ia,2);
-        P   = ATM_CACHE(ia,3);
-    end
-end
-
+rho = 0.7;
+a = 300;
+T = 270;
+P = 1e4;
 
 %---------------- Wind -----------------------------------------------------
 
@@ -147,7 +117,7 @@ AoA = real(AoA);
 mach = norm(vel) / a;
 
 % read the coefficient of drag from RasAero data:
-rasData = rocket.aeroData;
+rasData = rocket.AeroData;
 machTable = rasData(1:300,1); % mach values from 0.01 to 3
 cDTable = rasData(1:300,3); % coefficient of drag
 
@@ -167,7 +137,7 @@ cD = cDTable(machIndex);
 
 presThrust = thrustMag + (ExitP - P) * ExitA;
 
-if time <= constant.burnTime
+if time <= burnTime
     thrustForceBody = presThrust * bodyVector;
     thrustForceEarth = RotationMatrix(thrustForceBody, quat, 1);
 else
