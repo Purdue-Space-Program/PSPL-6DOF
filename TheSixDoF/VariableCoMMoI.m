@@ -20,18 +20,21 @@ function [CoM, MoI] = VariableCoMMoI(rocket)
 
 % Future Updates:
 % Actually test (my CMS file isn't downloading properly)
-% Include structural CoM (need overall object update)
+% Improve structural CoM update to include individual nosecone, struts,
+% etc.
 % Write MoI calcs
-% Finish some smaller components
+% Finish some smaller components (Avi, etc.) w/point mass inclusion
 
 %---Initializations--------------------------------------------------------
 compList = rocket.ComponentList;        % Write component list
 numComponents = numEntries(compList);   % Total number of components
+rocketMass = rocket.TotalMass;          % Total mass of the rocket [kg]
+rocketMass = rocketMass .* ones(numelTime,1);
 lengthTot = rocket.Length;              % Total length of rocket [m]
 radiusTot = rocket.OuterDiameter/2;     % Total radius of rocket [m]
 
-%---Individual CoM/MoI-----------------------------------------------------
-% Recover individual CoM/MoI values of components
+%---CoM/MoI----------------------------------------------------------------
+% Recover Propulsion Characteristics
 if numComponents > 0
     values = compList.values;
 
@@ -149,6 +152,9 @@ if numComponents > 0
             tipChord = finObj.TipChord;
             mass = finObj.Mass;
 
+            finMass = mass.*ones(numelTime,1);
+            countedMass = countedMass + finMass;
+
             % 
 
 
@@ -167,4 +173,24 @@ if numComponents > 0
 
         end
     end
+
+    % Calculate Structural CoM/MoI
+    % Note: currently assuming completely uniform mass distribution accross a
+    % cylinder. Will change this in the future to improve accuracy by modeling
+    % nosecone, individual struts, etc.
+
+    % Structure CoM
+    structureMass = rocketMass - countedMass;
+    CoMStructX = (lengthTot/2).*(ones(numelTime,1));
+    CoMStructY = 0;
+    CoMStructZ = 0;
+
+    % Total CoM Update
+    CoMX = (CoM(:,1).*countedMass+CoMStructX.*structureMass)/(rocketMass);
+    CoMY = (CoM(:,2).*countedMass+CoMStructY.*structureMass)/(rocketMass);
+    CoMZ = (CoM(:,3).*countedMass+CoMStructZ.*structureMass)/(rocketMass);
+    CoM = [CoMX, CoMY, CoMZ];
+
+end
+
 end
