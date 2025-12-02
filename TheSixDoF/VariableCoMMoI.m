@@ -137,9 +137,9 @@ if numComponents > 0
             CoMMotorZ = position(3).*ones(numelTime,1);
 
             % Total CoM Update
-            CoMX = (CoM(:,1).*countedMass+CoMMotorX.*propellantMass)/(countedMass+propellantMass);
-            CoMY = (CoM(:,2).*countedMass+CoMMotorY.*propellantMass)/(countedMass+propellantMass);
-            CoMZ = (CoM(:,3).*countedMass+CoMMotorZ.*propellantMass)/(countedMass+propellantMass);
+            CoMX = (CoM(:,1).*countedMass+CoMMotorX.*propellantMass)./(countedMass+propellantMass);
+            CoMY = (CoM(:,2).*countedMass+CoMMotorY.*propellantMass)./(countedMass+propellantMass);
+            CoMZ = (CoM(:,3).*countedMass+CoMMotorZ.*propellantMass)./(countedMass+propellantMass);
             CoM = [CoMX, CoMY, CoMZ];
             countedMass = countedMass + propellantMass;
 
