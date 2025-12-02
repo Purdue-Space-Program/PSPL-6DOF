@@ -56,15 +56,19 @@ burnTime = motor.BurnTime;
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
 
 %---------------- Get atmospheric Conditions (prefer Open-Meteo via env) ---
-height = real(pos(1));  % AGL [m]
+geoalt = real(pos(1));  % AGL [m]
 
 
-% get the atmosphere data (update to get the environment:
+% get the atmosphere data (update to get the environment):
 
-rho = 0.7;
-a = 300;
-T = 270;
-P = 1e4;
+% atmosphere (height, temp, a, pres, rho)
+
+[~, atmosIdx] = min(abs(env.Atmosphere(:,1) - geoalt));
+
+rho = env.Atmosphere(atmosIdx,5)
+a = env.Atmosphere(atmosIdx,3);
+T = env.Atmosphere(atmosIdx,2);
+P = env.Atmosphere(atmosIdx,4);
 
 %---------------- Wind -----------------------------------------------------
 
@@ -72,11 +76,14 @@ windAlt = windData(:,1);
 windMagList = windData(:,2);
 windDirList = windData(:,3);
 
-[~, heightIndex] = min(abs(windAlt-height));
+[~, heightIndex] = min(abs(windAlt-geoalt));
 
 windDir = windDirList(heightIndex);
 windMag = windMagList(heightIndex);
 windVector = windMag * [0;sin(windDir);cos(windDir)];
+
+% set the wind vector to zero for testing
+windVector = 0;
 
 if settings.Wind == true
     freestreamVel = vel - windVector;
@@ -103,7 +110,7 @@ CoM = CoMTable(timeIndexCoM);
 if strcmpi(settings.Fidelity, "low")
     g = 9.8;
 elseif strcmpi(settings.Fidelity,"medium") || strcmpi(settings.Fidelity,"high")
-g = gravitywgs84(env.Elevation + height, env.LatLong(1), env.LatLong(2), 'Exact');
+g = gravitywgs84(geoalt, env.LatLong(1), env.LatLong(2), 'Exact');
 end
 
 gravForce = mass * g * [-1;0;0];
@@ -244,7 +251,7 @@ accel = forceVector / mass;
 %---------------- Stability Caliber ----------------------------------------
 
 % difference between CoM and cP divided by diameter of the rocket
-%fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / 0.168275);
+fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / rocket.OuterDiameter);
 
 %---------------- Moments --------------------------------------------------
 
@@ -256,7 +263,7 @@ Izz = InertMatrix(timeIndexMass,3,3);
 
 I = [Ixx, 0, 0;
      0, Iyy, 0;
-     0, 0, Izz];
+     0, 0, Izz]
 
 AeroMomentArm = (CoM - cP) * bodyVector; % define the length of the moment arm in the body frame
 %ParaMomentArm = CoM * bodyVector'; % define the length of the moment arm of the parachute in the body frame

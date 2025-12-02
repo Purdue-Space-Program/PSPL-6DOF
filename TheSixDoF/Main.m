@@ -263,9 +263,9 @@ if settings.Outputs == true
 
         %% csv outputs:
 
-        output = horzcat(timeArray, outputStruct.mach);
+        %output = horzcat(timeArray, outputStruct.mach);
 
-        writematrix(output, 'Outputs/MachTime.csv')
+        %writematrix(output, 'Outputs/MachTime.csv')
     end
 end
 

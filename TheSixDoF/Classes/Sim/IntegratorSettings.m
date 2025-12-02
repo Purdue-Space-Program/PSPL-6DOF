@@ -12,7 +12,7 @@ classdef IntegratorSettings
         EndCondition (1,1) string {mustBeMember(EndCondition,["apogee","full","burnout"])} = "apogee"
         Timestep (1,1) double = 0.1
         Fidelity (1,1) string {mustBeMember(Fidelity,["low","medium","high"])} = "medium"
-        RotationVis (1,1) logical
+        RotationVis (1,1) logical = 1
         Outputs (1,1) logical = 1
         Wind (1,1) logical = 1
     end
