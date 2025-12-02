@@ -29,8 +29,7 @@ function [CoM, MoI] = VariableCoMMoI(rocket)
 compList = rocket.ComponentList;        % Write component list
 numComponents = numEntries(compList);   % Total number of components
 rocketMass = rocket.TotalMass;          % Total mass of the rocket [kg]
-rocketMass = rocketMass .* ones(numelTime,1);
-lengthTot = rocket.Length;              % Total length of rocket [m]
+lengthTot = rocket.TotalLength;              % Total length of rocket [m]
 radiusTot = rocket.OuterDiameter/2;     % Total radius of rocket [m]
 
 %---CoM/MoI----------------------------------------------------------------
@@ -57,11 +56,12 @@ if numComponents > 0
     end
 
     timeSpan = linspace(0,burnTime,burnTime*100)'; % Array for burn time
-    numelTime = length(timeSpan);     % Number of elements of time array
+    numelTime = burnTime*100;     % Number of elements of time array
     CoMX = zeros(numelTime,1);
     CoMY = CoMX;
     CoMZ = CoMX;
     CoM = [CoMX, CoMY, CoMZ, timeSpan];    % [x|y|z|t] CoM position|time
+    rocketMass = rocketMass .* ones(numelTime,1);
     countedMass = zeros(numelTime,1);      % Counted mass wrt time
 
     % Will likely want precalc for just structural CoM
@@ -180,15 +180,15 @@ if numComponents > 0
     % nosecone, individual struts, etc.
 
     % Structure CoM
-    structureMass = rocketMass - countedMass;
+    structureMass = rocketMass - countedMass(1);
     CoMStructX = (lengthTot/2).*(ones(numelTime,1));
     CoMStructY = 0;
     CoMStructZ = 0;
 
     % Total CoM Update
-    CoMX = (CoM(:,1).*countedMass+CoMStructX.*structureMass)/(rocketMass);
-    CoMY = (CoM(:,2).*countedMass+CoMStructY.*structureMass)/(rocketMass);
-    CoMZ = (CoM(:,3).*countedMass+CoMStructZ.*structureMass)/(rocketMass);
+    CoMX = (CoM(:,1).*countedMass+CoMStructX.*structureMass)./(structureMass+countedMass);
+    CoMY = (CoM(:,2).*countedMass+CoMStructY.*structureMass)./(structureMass+countedMass);
+    CoMZ = (CoM(:,3).*countedMass+CoMStructZ.*structureMass)./(structureMass+countedMass);
     CoM = [CoMX, CoMY, CoMZ];
 
 end
