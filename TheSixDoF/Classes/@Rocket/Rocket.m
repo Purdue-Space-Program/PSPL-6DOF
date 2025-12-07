@@ -67,13 +67,12 @@ classdef Rocket < handle
         end
 
 
-        function set.AeroData(rocketObj, filename)
+        function set.AeroData(rocketObj, filepath)
             arguments
                 rocketObj Rocket
-                filename (1,1) string
+                filepath (1,1) string
             end
-
-            filepath = "TheSixDoF" + filesep + "Inputs" + filesep + "RASAero" + filesep + filename + ".csv";
+            
             rawData = readmatrix(filepath);
 
             if (size(rawData) == [7500, 15])
