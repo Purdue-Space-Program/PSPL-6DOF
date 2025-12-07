@@ -6,6 +6,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         TabGroup                       matlab.ui.container.TabGroup
         RocketDesignTab                matlab.ui.container.Tab
         GridLayout9                    matlab.ui.container.GridLayout
+        GUIHelpButton                  matlab.ui.control.Button
+        SetBasePathButton              matlab.ui.control.Button
         PropGrid2                      matlab.ui.container.GridLayout
         Tree                           matlab.ui.container.Tree
         ListBox                        matlab.ui.control.ListBox
@@ -17,12 +19,12 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         TabGroup2                      matlab.ui.container.TabGroup
         RocketTab                      matlab.ui.container.Tab
         RocketGrid                     matlab.ui.container.GridLayout
+        TotalMasskgEditField           matlab.ui.control.NumericEditField
+        TotalMasskgEditFieldLabel      matlab.ui.control.Label
         RocketColor                    matlab.ui.control.ColorPicker
         ColorColorPickerLabel          matlab.ui.control.Label
         ButtonPanel                    matlab.ui.container.Panel
         ButtonGrid                     matlab.ui.container.GridLayout
-        RevertButton                   matlab.ui.control.Button
-        CreateNewRocketButton          matlab.ui.control.Button
         SaveRocketButton               matlab.ui.control.Button
         LoadRocketButton               matlab.ui.control.Button
         RASAeroDataLabel               matlab.ui.control.Label
@@ -65,13 +67,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         ThreeDPlot=0; % flag to turn 3d plotting on and off
         %ComponentList = "" % a list of the components on the rocket
         ComponentDetails
-        rocket Rocket
+        rocket
         PropertyEditFields
         PropertyEditLabels
         autoRefresh = 0;
         rootNode;
-        env Environment;
-        Settings IntegratorSettings;
+        env
+        Settings
         Date datetime
     end
 
@@ -581,7 +583,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                             if app.ThreeDPlot
                                 [Z, Y, X] = cylinder(yProp, 100);
                                 
-                                X = X + dist;
+                                X = X*3*dia + dist;
 
                                 plot3(app.UIAxes, X, Y, Z, 'LineStyle','-', 'Color', color)
 
@@ -659,27 +661,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 app.lineColor = 'k';
             end
 
-            app.RevertButton.Enable = 'off';
-
-            % set up the filepath [TODO]:
-            % first, the user must cd into the correct folder (PSPL-6DOF)
-            try
-            addpath("TheSixDoF\Classes\");
-            addpath("TheSixDoF\Classes\Components\");
-            addpath("TheSixDoF\Classes\Environment\");
-            addpath("TheSixDof\Classes\Sim\");
-            catch
-                uialert(app.uifigure, "You must have PSPL-6DOF as the current " + ...
-                    "directory to run the GUI.", "Folder Error!")
-
-                return
-            end
-
         end
 
         % Value changed function: RocketLengthEditField
         function RocketLengthChanged(app, event)
-            app.RevertButton.Enable = 'on';
 
             rocketLeng = app.RocketLengthEditField.Value;
 
@@ -705,7 +690,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Value changed function: RocketDiameterEditField
         function RocketDiaChanged(app, event)
-            app.RevertButton.Enable = 'on';
 
             if app.autoRefresh
                 app.RocketPlotter();
@@ -715,7 +699,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Value changed function: NoseConeLengthmEditField
         function NoseCoseLengthChanged(app, event)
-            app.RevertButton.Enable = 'on';
 
             noseLeng = app.NoseConeLengthmEditField.Value;
 
@@ -733,7 +716,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Value changed function: NoseConeGeometryDropDown
         function NoseConeTypeChanged(app, event)
-            app.RevertButton.Enable = 'on';
 
             if app.autoRefresh
                 app.RocketPlotter();
@@ -847,7 +829,9 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Drop down opening function: ComponentSelectionDropDown
         function ComponentSelectionDropDownOpening(app, event)
-            fileStruct = dir("TheSixDoF\Classes\Components");
+            pathy = ['Classes' filesep 'Components'];
+            
+            fileStruct = dir(pathy);
 
             % Convert to string array
             for idx = 3:length(fileStruct)
@@ -901,7 +885,11 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Button pushed function: LoadRocketButton
         function LoadRocketButtonPushed(app, event)
-            [file, path] = uigetfile('*.mat', 'Select a Stored Rocket File');
+            subpath = [filesep 'Inputs' filesep 'Saved Rockets'];
+            
+            pathy = fullfile(pwd,subpath);
+            
+            [file, path] = uigetfile('*.mat', 'Select a Stored Rocket File', pathy);
 
             if file ~= 0
 
@@ -934,7 +922,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 app.rootNode = rootNode;
 
                 % create the nodes for each of the components:
-                numVals = numEntries(app.rocket.ComponentList)
+                numVals = numEntries(app.rocket.ComponentList);
 
                 if numVals ~= 0
                     names = app.rocket.ComponentList.keys;
@@ -979,6 +967,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.rocket.AeroData = name;
             app.rocket.NoseLength = app.NoseConeLengthmEditField.Value;
             app.rocket.NoseGeometry = app.NoseConeGeometryDropDown.Value;
+            app.rocket.TotalMass = app.TotalMasskgEditField.Value;
 
             rocketObj = app.rocket;
 
@@ -999,7 +988,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Value changed function: RocketNameEditField
         function RocketNameChanged(app, event)
-            app.RevertButton.Enable = 'on';
             value = app.RocketNameEditField.Value;
 
             app.UIAxes.Title.String = [value, ' Layout'];
@@ -1079,21 +1067,6 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             end
         end
 
-        % Button pushed function: RevertButton
-        function RevertButtonPushed(app, event)
-            app.RocketNameEditField.Value = app.rocket.name;
-            app.AeroDataButton.Text = app.rocket.name + "_aero.csv";
-            app.RocketNameEditField.Value = app.rocket.name;
-
-            if ~isempty(app.rocket.TotalLength)
-                app.RocketLengthEditField.Value = app.rocket.TotalLength;
-            end
-
-            if ~isempty(app.rocket.OuterDiameter)
-                app.RocketDiameterEditField.Value = app.rocket.OuterDiameter;
-            end
-        end
-
         % Button pushed function: GetWeatherConditionsButton
         function getWeather(app, event)
             % get the weather if the appropriate fields are filled out:
@@ -1113,6 +1086,9 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % get the weather for that environment
             app.env = getLocalWeather(app.env);
+
+            uialert(app.UIFigure, "Weather Succesfully Downloaded!", "Success");
+
 
         end
 
@@ -1191,6 +1167,48 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             
             
         end
+
+        % Value changed function: TotalMasskgEditField
+        function TotalMassChanged(app, event)
+            value = app.TotalMasskgEditField.Value;
+
+            app.rocket.TotalMass = value;
+
+            if app.autoRefresh
+                app.RocketPlotter();
+            end
+            
+        end
+
+        % Button pushed function: SetBasePathButton
+        function setBasePath(app, event)
+            % set the base             
+            selpath = uigetdir(pwd,"Set the root directory to your local 'PSPL-6DOF\TheSixDoF' folder");
+
+            % make sure that this path includes the 'TheSixDoF folder'
+
+            if ~contains(selpath, 'TheSixDoF')
+
+                uialert(app.UIFigure, "The path does not contain the correct folder!", "Path selection error")
+
+                return
+            end
+
+
+            % with the correct selection, change to the correct folder and
+            % change and add the correct subfolders:
+            cd(selpath)
+
+            addpath(genpath('Classes'))
+
+            % enable the main user input now that this has been done:
+            app.Panel.Enable = "on";
+        end
+
+        % Button pushed function: GUIHelpButton
+        function OpenHelp(app, event)
+            
+        end
     end
 
     % Component initialization
@@ -1214,8 +1232,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create GridLayout9
             app.GridLayout9 = uigridlayout(app.RocketDesignTab);
-            app.GridLayout9.ColumnWidth = {350, '2x', '2x'};
-            app.GridLayout9.RowHeight = {'1.3x', 22, '1x'};
+            app.GridLayout9.ColumnWidth = {175, 175, '2x', '2x'};
+            app.GridLayout9.RowHeight = {25, '1.3x', 22, '1x'};
             app.GridLayout9.ColumnSpacing = 5.04001007080078;
             app.GridLayout9.RowSpacing = 5.07499361038208;
             app.GridLayout9.Padding = [5.04001007080078 5.07499361038208 5.04001007080078 5.07499361038208];
@@ -1226,13 +1244,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             xlabel(app.UIAxes, 'X', 'Interpreter', 'latex')
             ylabel(app.UIAxes, 'Y', 'Interpreter', 'latex')
             zlabel(app.UIAxes, 'Z', 'Interpreter', 'latex')
-            app.UIAxes.Layout.Row = 1;
-            app.UIAxes.Layout.Column = [2 3];
+            app.UIAxes.Layout.Row = [1 2];
+            app.UIAxes.Layout.Column = [3 4];
 
             % Create Panel
             app.Panel = uipanel(app.GridLayout9);
-            app.Panel.Layout.Row = [1 3];
-            app.Panel.Layout.Column = 1;
+            app.Panel.Enable = 'off';
+            app.Panel.Layout.Row = [2 4];
+            app.Panel.Layout.Column = [1 2];
 
             % Create GridLayout
             app.GridLayout = uigridlayout(app.Panel);
@@ -1252,7 +1271,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create RocketGrid
             app.RocketGrid = uigridlayout(app.RocketTab);
             app.RocketGrid.ColumnWidth = {'1x', '2x'};
-            app.RocketGrid.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
+            app.RocketGrid.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
 
             % Create TotalLengthmLabel
             app.TotalLengthmLabel = uilabel(app.RocketGrid);
@@ -1357,7 +1376,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create ButtonPanel
             app.ButtonPanel = uipanel(app.RocketGrid);
             app.ButtonPanel.BorderType = 'none';
-            app.ButtonPanel.Layout.Row = [8 9];
+            app.ButtonPanel.Layout.Row = [9 10];
             app.ButtonPanel.Layout.Column = [1 2];
 
             % Create ButtonGrid
@@ -1367,28 +1386,15 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.LoadRocketButton = uibutton(app.ButtonGrid, 'push');
             app.LoadRocketButton.ButtonPushedFcn = createCallbackFcn(app, @LoadRocketButtonPushed, true);
             app.LoadRocketButton.Layout.Row = 1;
-            app.LoadRocketButton.Layout.Column = 1;
-            app.LoadRocketButton.Text = 'Load';
+            app.LoadRocketButton.Layout.Column = [1 2];
+            app.LoadRocketButton.Text = 'Load Rocket';
 
             % Create SaveRocketButton
             app.SaveRocketButton = uibutton(app.ButtonGrid, 'push');
             app.SaveRocketButton.ButtonPushedFcn = createCallbackFcn(app, @SaveRocketButtonPushed, true);
             app.SaveRocketButton.Layout.Row = 2;
-            app.SaveRocketButton.Layout.Column = 1;
-            app.SaveRocketButton.Text = 'Save';
-
-            % Create CreateNewRocketButton
-            app.CreateNewRocketButton = uibutton(app.ButtonGrid, 'push');
-            app.CreateNewRocketButton.Layout.Row = 2;
-            app.CreateNewRocketButton.Layout.Column = 2;
-            app.CreateNewRocketButton.Text = 'Create New';
-
-            % Create RevertButton
-            app.RevertButton = uibutton(app.ButtonGrid, 'push');
-            app.RevertButton.ButtonPushedFcn = createCallbackFcn(app, @RevertButtonPushed, true);
-            app.RevertButton.Layout.Row = 1;
-            app.RevertButton.Layout.Column = 2;
-            app.RevertButton.Text = 'Revert';
+            app.SaveRocketButton.Layout.Column = [1 2];
+            app.SaveRocketButton.Text = 'Save Rocket';
 
             % Create ColorColorPickerLabel
             app.ColorColorPickerLabel = uilabel(app.RocketGrid);
@@ -1403,6 +1409,19 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketColor.ValueChangedFcn = createCallbackFcn(app, @BaseColorChanged, true);
             app.RocketColor.Layout.Row = 7;
             app.RocketColor.Layout.Column = 2;
+
+            % Create TotalMasskgEditFieldLabel
+            app.TotalMasskgEditFieldLabel = uilabel(app.RocketGrid);
+            app.TotalMasskgEditFieldLabel.HorizontalAlignment = 'center';
+            app.TotalMasskgEditFieldLabel.Layout.Row = 8;
+            app.TotalMasskgEditFieldLabel.Layout.Column = 1;
+            app.TotalMasskgEditFieldLabel.Text = 'Total Mass [kg]';
+
+            % Create TotalMasskgEditField
+            app.TotalMasskgEditField = uieditfield(app.RocketGrid, 'numeric');
+            app.TotalMasskgEditField.ValueChangedFcn = createCallbackFcn(app, @TotalMassChanged, true);
+            app.TotalMasskgEditField.Layout.Row = 8;
+            app.TotalMasskgEditField.Layout.Column = 2;
 
             % Create ComponentsTab
             app.ComponentsTab = uitab(app.TabGroup2);
@@ -1454,22 +1473,22 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.Switchto2D.ButtonPushedFcn = createCallbackFcn(app, @SwitchToTwoD, true);
             app.Switchto2D.Enable = 'off';
             app.Switchto2D.Visible = 'off';
-            app.Switchto2D.Layout.Row = 2;
-            app.Switchto2D.Layout.Column = 3;
+            app.Switchto2D.Layout.Row = 3;
+            app.Switchto2D.Layout.Column = 4;
             app.Switchto2D.Text = '2D View';
 
             % Create UpdatePlotButton
             app.UpdatePlotButton = uibutton(app.GridLayout9, 'push');
             app.UpdatePlotButton.ButtonPushedFcn = createCallbackFcn(app, @UpdatePlotButtonPushed, true);
-            app.UpdatePlotButton.Layout.Row = 2;
-            app.UpdatePlotButton.Layout.Column = 2;
+            app.UpdatePlotButton.Layout.Row = 3;
+            app.UpdatePlotButton.Layout.Column = 3;
             app.UpdatePlotButton.Text = 'Update Plot';
 
             % Create Switchto3D
             app.Switchto3D = uibutton(app.GridLayout9, 'push');
             app.Switchto3D.ButtonPushedFcn = createCallbackFcn(app, @ConvertToThreeD, true);
-            app.Switchto3D.Layout.Row = 2;
-            app.Switchto3D.Layout.Column = 3;
+            app.Switchto3D.Layout.Row = 3;
+            app.Switchto3D.Layout.Column = 4;
             app.Switchto3D.Text = '3D View';
 
             % Create ListBox
@@ -1477,14 +1496,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.ListBox.Items = {};
             app.ListBox.Enable = 'off';
             app.ListBox.Visible = 'off';
-            app.ListBox.Layout.Row = 3;
-            app.ListBox.Layout.Column = 2;
+            app.ListBox.Layout.Row = 4;
+            app.ListBox.Layout.Column = 3;
             app.ListBox.Value = {};
 
             % Create Tree
             app.Tree = uitree(app.GridLayout9);
-            app.Tree.Layout.Row = 3;
-            app.Tree.Layout.Column = 2;
+            app.Tree.Layout.Row = 4;
+            app.Tree.Layout.Column = 3;
             app.Tree.ClickedFcn = createCallbackFcn(app, @NodeClicked, true);
             app.Tree.DoubleClickedFcn = createCallbackFcn(app, @NodeDoubleClick, true);
 
@@ -1492,8 +1511,25 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.PropGrid2 = uigridlayout(app.GridLayout9);
             app.PropGrid2.ColumnWidth = {'1x', '2x'};
             app.PropGrid2.RowHeight = {'1x', '1x', '1x'};
-            app.PropGrid2.Layout.Row = 3;
-            app.PropGrid2.Layout.Column = 3;
+            app.PropGrid2.Layout.Row = 4;
+            app.PropGrid2.Layout.Column = 4;
+
+            % Create SetBasePathButton
+            app.SetBasePathButton = uibutton(app.GridLayout9, 'push');
+            app.SetBasePathButton.ButtonPushedFcn = createCallbackFcn(app, @setBasePath, true);
+            app.SetBasePathButton.Layout.Row = 1;
+            app.SetBasePathButton.Layout.Column = 1;
+            app.SetBasePathButton.Text = 'Set Base Path';
+
+            % Create GUIHelpButton
+            app.GUIHelpButton = uibutton(app.GridLayout9, 'push');
+            app.GUIHelpButton.ButtonPushedFcn = createCallbackFcn(app, @OpenHelp, true);
+            app.GUIHelpButton.BackgroundColor = [0.0667 0.4431 0.7451];
+            app.GUIHelpButton.FontWeight = 'bold';
+            app.GUIHelpButton.FontColor = [1 1 1];
+            app.GUIHelpButton.Layout.Row = 1;
+            app.GUIHelpButton.Layout.Column = 2;
+            app.GUIHelpButton.Text = 'GUI Help';
 
             % Create SimulationTab
             app.SimulationTab = uitab(app.TabGroup);
