@@ -31,11 +31,11 @@ lengthTot = rocket.TotalLength;              % Total length of rocket [m]
 radiusTot = rocket.OuterDiameter/2;     % Total radius of rocket [m]
 
 %---CoM/MoI----------------------------------------------------------------
-% Recover Propulsion Characteristics
+% Calculations for rockets with components
 if numComponents > 0
     values = compList.values;
 
-    % Propulsion Properties
+    % Propulsion properties - burn time
     for i = 1:numComponents
         if isa(values{i},'PropulsionSystem')
             propType = 'Liquid';
@@ -179,6 +179,23 @@ if numComponents > 0
     CoMZ = (CoM(:,3).*countedMass+CoMStructZ.*structureMass)./(structureMass+countedMass);
     CoM = [CoMX, CoMY, CoMZ, timeSpan];
 
-end
+% Calculations for rocket without components
+elseif numComponents == 0
+    
+    % Use CoM, MoI of a cylinder with uniform density
+    % CoM Calcs
+    CoMX = lengthTot/2;
+    CoMY = 0;
+    CoMZ = 0;
+    CoM = [CoMX, CoMY, CoMZ];
 
+    % MoI Calcs
+    MoIX = (1/2)*rocketMass*radiusTot^2;
+    MoIY = (1/12)*rocketMass*(3*radiusTot^2+lengthTot^2);
+    MoIZ = (1/12)*rocketMass*(3*radiusTot^2+lengthTot^2);
+    MoI = [MoIX, 0, 0;
+           0, MoIY, 0;
+           0, 0, MoIZ];
+
+end
 end
