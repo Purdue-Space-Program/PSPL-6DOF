@@ -19,9 +19,7 @@ function [CoM, MoI] = VariableCoMMoI(rocket)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Future Updates:
-% Actually test (my CMS file isn't downloading properly)
-% Improve structural CoM update to include individual nosecone, struts,
-% etc.
+% Improve structural CoM update to include nosecone, struts, etc.
 % Write MoI calcs
 % Finish some smaller components (Avi, etc.) w/point mass inclusion
 
@@ -43,14 +41,11 @@ if numComponents > 0
             propType = 'Liquid';
             propSysObj = values{i};
             burnTime = propSysObj.BurnTime;
-            fuelFlow = propSysObj.FuelMassFlow;
-            oxFlow = propSysObj.OxMassFlow;
 
         elseif isa(values{i},'SolidMotor')
             propType = 'Solid';
             propSysObj = values{i};
             burnTime = propSysObj.BurnTime;
-            massFlow = propSysObj.MassFlow;
 
         end
     end
@@ -63,8 +58,6 @@ if numComponents > 0
     CoM = [CoMX, CoMY, CoMZ, timeSpan];    % [x|y|z|t] CoM position|time
     rocketMass = rocketMass .* ones(numelTime,1);
     countedMass = zeros(numelTime,1);      % Counted mass wrt time
-
-    % Will likely want precalc for just structural CoM
 
     % Component-wise mass/inertia updates
     for idx = 1:numComponents
@@ -113,12 +106,12 @@ if numComponents > 0
             CoM = [CoMX, CoMY, CoMZ];
             countedMass = countedMass + liquidMass + mass;
 
+        % Solid motor
         elseif isa(values{idx},'SolidMotor')
             
             % Object Values
             motorObj = values{i};
             burnTime = motorObj.BurnTime;
-            massFlow = motorObj.MassFlow;
             mass = motorObj.Mass;
             position = motorObj.Position;
             length = motorObj.Length;
@@ -155,9 +148,6 @@ if numComponents > 0
             finMass = mass.*ones(numelTime,1);
             countedMass = countedMass + finMass;
 
-            % 
-
-
         %         Count (1,1) int8 {mustBeMember(Count, [3, 4])} = 3 % Fin Count
         % 
         % % add the properties for the airfoil later with mustBeMeber
@@ -168,8 +158,6 @@ if numComponents > 0
         % TipChord (1,1) double % Tip Chord Length [m]
         % Sweep (1,1) double % Sweep [m]
         % Thickness (1,1) double % Thickness [m]
-         
-        % Solid Motor
 
         end
     end
@@ -189,7 +177,7 @@ if numComponents > 0
     CoMX = (CoM(:,1).*countedMass+CoMStructX.*structureMass)./(structureMass+countedMass);
     CoMY = (CoM(:,2).*countedMass+CoMStructY.*structureMass)./(structureMass+countedMass);
     CoMZ = (CoM(:,3).*countedMass+CoMStructZ.*structureMass)./(structureMass+countedMass);
-    CoM = [CoMX, CoMY, CoMZ];
+    CoM = [CoMX, CoMY, CoMZ, timeSpan];
 
 end
 
