@@ -50,6 +50,7 @@ if numComponents > 0
         end
     end
 
+    % Specific initializations
     timeSpan = linspace(0,burnTime,burnTime*100)'; % Array for burn time
     numelTime = burnTime*100;     % Number of elements of time array
     CoMX = zeros(numelTime,1);
@@ -103,7 +104,7 @@ if numComponents > 0
             CoMX = (CoM(:,1).*countedMass+tankTotX.*(liquidMass+mass))./(countedMass+mass+liquidMass);
             CoMY = (CoM(:,2).*countedMass+tankTotY.*(liquidMass+mass))./(countedMass+mass+liquidMass);
             CoMZ = (CoM(:,3).*countedMass+tankTotZ.*(liquidMass+mass))./(countedMass+mass+liquidMass);
-            CoM = [CoMX, CoMY, CoMZ];
+            CoM = [CoMX, CoMY, CoMZ, timeSpan];
             countedMass = countedMass + liquidMass + mass;
 
         % Solid motor
@@ -133,7 +134,7 @@ if numComponents > 0
             CoMX = (CoM(:,1).*countedMass+CoMMotorX.*propellantMass)./(countedMass+propellantMass);
             CoMY = (CoM(:,2).*countedMass+CoMMotorY.*propellantMass)./(countedMass+propellantMass);
             CoMZ = (CoM(:,3).*countedMass+CoMMotorZ.*propellantMass)./(countedMass+propellantMass);
-            CoM = [CoMX, CoMY, CoMZ];
+            CoM = [CoMX, CoMY, CoMZ, timeSpan];
             countedMass = countedMass + propellantMass;
 
         % Fins
