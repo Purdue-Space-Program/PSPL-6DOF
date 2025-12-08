@@ -1,4 +1,4 @@
-classdef Gyroscope < Sensor.Sensor
+classdef Gyroscope < Sensor
     % The Gyroscope class is a subclass of Sensor and inherits from the
     % sensor properties. See Sensor for input clarification
 
@@ -12,7 +12,7 @@ classdef Gyroscope < Sensor.Sensor
                 Bias (1,1) double = 0
                 ScaleFactor (1,1) double = 0
             end
-            alt@Sensor.Sensor(Name,SamplingRate,Variance,Resolution,Bias,ScaleFactor)
+            alt@Sensor(Name,SamplingRate,Variance,Resolution,Bias,ScaleFactor)
         end
 
         function [xyzAngVel] = GyroscopeMeasurement(sensor,angVel, dt)

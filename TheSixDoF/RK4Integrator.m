@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, rasData, atmosphere, totCoM, totMass, InertMatrix, wind, windOnOff, rocket, sim)
+function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, windData, rocket, settings, env)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator
@@ -20,7 +20,6 @@ function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, 
 % totMass - Array of total mass values at different time steps [s|kg]
 % J - Moment of Inertia of the rocket [m^4]
 % wind - Array of data with wind information
-% windOnOff - string to turn the wind on and off
 % params - extraneous parameters to be passed into function
 %
 % Outputs:
@@ -37,44 +36,54 @@ omega = [input(7); input(8); input(9)];
 
 quat = [input(10); input(11); input(12); input(13)];
 
-if strcmpi(rocket.name, 'CMS') == 1
-    A = rocket.refArea;          % reference area (m^2), as defined by RasAero (cross-sectional area)
-    thrustMag = rocket.thrust;  % thrust of rocket in N.
-    bodyVector = [1;0;0]; % vector in the body axis running through the nose.
-    ExitA = rocket.exitArea;    % exit area of the nozzle [m^2]
-    ExitP = rocket.exitPressure;      % exit pressure of the nozzle [Pa]
-    radius = rocket.radius;    % radius of rocket [m]
+components = values(rocket.ComponentList);
+
+for idx = 1:length(components)
+    if isa(components{idx}, 'PropulsionSystem')
+        motor = components{idx};
+    end
 end
+
+radius = rocket.OuterDiameter / 2;    % radius of rocket [m]
+A = pi*radius^2;                % reference area (m^2), as defined by RasAero (cross-sectional area)
+thrustMag = motor.Thrust;   % thrust of rocket in N.
+bodyVector = [1;0;0];       % vector in the body axis running through the nose.
+ExitA = motor.ExitArea;     % exit area of the nozzle [m^2]
+ExitP = motor.ExitPressure;      % exit pressure of the nozzle [Pa]
+burnTime = motor.BurnTime;
+
 
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
 
-%---------------- Get atmospheric Conditions -------------------------------
+%---------------- Get atmospheric Conditions (prefer Open-Meteo via env) ---
+geoalt = real(pos(1));  % AGL [m]
 
-%% atmospheric conditions:
-height = pos(1);
 
-% long monte carlo can result in complex numbers here, take real component
-height = real(height);
+% get the atmosphere data (update to get the environment):
 
-% get atmospheric parameters
-atmosIndex = min(max(round(height,0)+1, 1),length(atmosphere));
-a = atmosphere(atmosIndex, 1);
-rho = atmosphere(atmosIndex,2);
-P = atmosphere(atmosIndex, 3);
+% atmosphere (height, temp, a, pres, rho)
+
+[~, atmosIdx] = min(abs(env.Atmosphere(:,1) - geoalt));
+
+rho = env.Atmosphere(atmosIdx,5);
+a = env.Atmosphere(atmosIdx,3);
+T = env.Atmosphere(atmosIdx,2);
+P = env.Atmosphere(atmosIdx,4);
 
 %---------------- Wind -----------------------------------------------------
 
-windAlt = wind(:,1);
-windMagList = wind(:,2);
-windDirList = wind(:,3);
+windAlt = windData(:,1);
+windMagList = windData(:,2);
+windDirList = windData(:,3);
 
-[~, heightIndex] = min(abs(windAlt-height));
+[~, heightIndex] = min(abs(windAlt-geoalt));
 
 windDir = windDirList(heightIndex);
 windMag = windMagList(heightIndex);
 windVector = windMag * [0;sin(windDir);cos(windDir)];
 
-if strcmpi('on', windOnOff) == 1
+
+if settings.Wind == true
     freestreamVel = vel - windVector;
 else
     freestreamVel = vel;
@@ -96,12 +105,10 @@ CoM = CoMTable(timeIndexCoM);
 
 %---------------- Gravity force --------------------------------------------
 
-env = Env.Environment;
-
-if strcmpi(sim.Fidelity, "low")
+if strcmpi(settings.Fidelity, "low")
     g = 9.8;
-elseif strcmpi(sim.Fidelity,"medium") || strcmpi(sim.Fidelity,"high")
-g = gravitywgs84(env.Elevation + height, env.LatLong(1), env.LatLong(2), 'Exact');
+elseif strcmpi(settings.Fidelity,"medium") || strcmpi(settings.Fidelity,"high")
+g = gravitywgs84(geoalt, env.LatLong(1), env.LatLong(2), 'Exact');
 end
 
 gravForce = mass * g * [-1;0;0];
@@ -115,6 +122,7 @@ AoA = real(AoA);
 mach = norm(vel) / a;
 
 % read the coefficient of drag from RasAero data:
+rasData = rocket.AeroData;
 machTable = rasData(1:300,1); % mach values from 0.01 to 3
 cDTable = rasData(1:300,3); % coefficient of drag
 
@@ -134,7 +142,7 @@ cD = cDTable(machIndex);
 
 presThrust = thrustMag + (ExitP - P) * ExitA;
 
-if time <= constant.burnTime
+if time <= burnTime
     thrustForceBody = presThrust * bodyVector;
     thrustForceEarth = RotationMatrix(thrustForceBody, quat, 1);
 else
@@ -241,7 +249,7 @@ accel = forceVector / mass;
 %---------------- Stability Caliber ----------------------------------------
 
 % difference between CoM and cP divided by diameter of the rocket
-%fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / 0.168275);
+fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / rocket.OuterDiameter);
 
 %---------------- Moments --------------------------------------------------
 
@@ -253,7 +261,7 @@ Izz = InertMatrix(timeIndexMass,3,3);
 
 I = [Ixx, 0, 0;
      0, Iyy, 0;
-     0, 0, Izz];
+     0, 0, Izz]
 
 AeroMomentArm = (CoM - cP) * bodyVector; % define the length of the moment arm in the body frame
 %ParaMomentArm = CoM * bodyVector'; % define the length of the moment arm of the parachute in the body frame
