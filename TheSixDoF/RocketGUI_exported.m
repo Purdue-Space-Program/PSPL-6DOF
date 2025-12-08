@@ -90,6 +90,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % if the plot is in 3d
             if app.ThreeDPlot
 
+
                 view(app.UIAxes, 3) %set view to 3D
                 cla(app.UIAxes) %reset axis
                 cameratoolbar("show");
@@ -1202,6 +1203,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % enable the main user input now that this has been done:
             app.Panel.Enable = "on";
+            app.UpdatePlotButton.Enable = "on";
+            app.Switchto3D.Enable = "on";
         end
 
         % Button pushed function: GUIHelpButton
@@ -1479,6 +1482,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create UpdatePlotButton
             app.UpdatePlotButton = uibutton(app.GridLayout9, 'push');
             app.UpdatePlotButton.ButtonPushedFcn = createCallbackFcn(app, @UpdatePlotButtonPushed, true);
+            app.UpdatePlotButton.Enable = 'off';
             app.UpdatePlotButton.Layout.Row = 3;
             app.UpdatePlotButton.Layout.Column = 3;
             app.UpdatePlotButton.Text = 'Update Plot';
@@ -1486,6 +1490,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Create Switchto3D
             app.Switchto3D = uibutton(app.GridLayout9, 'push');
             app.Switchto3D.ButtonPushedFcn = createCallbackFcn(app, @ConvertToThreeD, true);
+            app.Switchto3D.Enable = 'off';
             app.Switchto3D.Layout.Row = 3;
             app.Switchto3D.Layout.Column = 4;
             app.Switchto3D.Text = '3D View';
