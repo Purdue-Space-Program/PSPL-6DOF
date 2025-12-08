@@ -191,12 +191,12 @@ elseif numComponents == 0
     CoM = [CoMX, CoMY, CoMZ];
 
     % MoI Calcs
-    MoIX = (1/2)*rocketMass*radiusTot^2;
-    MoIY = (1/12)*rocketMass*(3*radiusTot^2+lengthTot^2);
-    MoIZ = (1/12)*rocketMass*(3*radiusTot^2+lengthTot^2);
-    MoI = [MoIX, 0, 0;
-           0, MoIY, 0;
-           0, 0, MoIZ];
+    MoIXX = (1/2)*rocketMass*radiusTot^2;
+    MoIYY = (1/12)*rocketMass*(3*radiusTot^2+lengthTot^2);
+    MoIZZ = (1/12)*rocketMass*(3*radiusTot^2+lengthTot^2);
+    MoI = [MoIXX, 0, 0;
+           0, MoIYY, 0;
+           0, 0, MoIZZ];
 
 end
 end
