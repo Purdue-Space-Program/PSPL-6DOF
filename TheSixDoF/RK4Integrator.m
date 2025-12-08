@@ -65,7 +65,7 @@ geoalt = real(pos(1));  % AGL [m]
 
 [~, atmosIdx] = min(abs(env.Atmosphere(:,1) - geoalt));
 
-rho = env.Atmosphere(atmosIdx,5)
+rho = env.Atmosphere(atmosIdx,5);
 a = env.Atmosphere(atmosIdx,3);
 T = env.Atmosphere(atmosIdx,2);
 P = env.Atmosphere(atmosIdx,4);
@@ -82,8 +82,6 @@ windDir = windDirList(heightIndex);
 windMag = windMagList(heightIndex);
 windVector = windMag * [0;sin(windDir);cos(windDir)];
 
-% set the wind vector to zero for testing
-windVector = 0;
 
 if settings.Wind == true
     freestreamVel = vel - windVector;

@@ -34,7 +34,7 @@ qf = quaternion([-45,0,0],'eulerd','ZYX','frame');
 ps = [0 0 0];
 pf = [10 0 0];
 
-patch = poseplot(qs,ps,'ENU', MeshFileName="TheSixDoF/Inputs/CMSRocketModel.stl", ScaleFactor= .1);
+patch = poseplot(qs,ps,'ENU', MeshFileName="Inputs/CMSRocketModel.stl", ScaleFactor= .1);
 %xlim([0,1000]);
 %ylim([0,max(posArray(2,:))]);
 %zlim([0,max(posArray(1,:))]);

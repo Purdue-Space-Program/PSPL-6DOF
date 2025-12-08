@@ -19,8 +19,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         TabGroup2                      matlab.ui.container.TabGroup
         RocketTab                      matlab.ui.container.Tab
         RocketGrid                     matlab.ui.container.GridLayout
-        TotalMasskgEditField           matlab.ui.control.NumericEditField
-        TotalMasskgEditFieldLabel      matlab.ui.control.Label
+        WetMasskgEditField             matlab.ui.control.NumericEditField
+        WetMasskgEditFieldLabel        matlab.ui.control.Label
         RocketColor                    matlab.ui.control.ColorPicker
         ColorColorPickerLabel          matlab.ui.control.Label
         ButtonPanel                    matlab.ui.container.Panel
@@ -75,6 +75,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         env
         Settings
         Date datetime
+        AeroLoc
     end
 
     methods (Access = private)
@@ -582,7 +583,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
                             if app.ThreeDPlot
                                 [Z, Y, X] = cylinder(yProp, 100);
-                                
+
                                 X = X*3*dia + dist;
 
                                 plot3(app.UIAxes, X, Y, Z, 'LineStyle','-', 'Color', color)
@@ -593,7 +594,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                                 plot(app.UIAxes, endcapX, endcapY, app.lineColor)
                             end
 
-                            
+
 
 
 
@@ -660,6 +661,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             else
                 app.lineColor = 'k';
             end
+
+            app.Geoplotter();
 
         end
 
@@ -796,10 +799,12 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
                 % save the file with the new components:
                 name = string(app.RocketNameEditField.Value);
-                path = "TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + name + ".mat";
+                subpath = filesep + "Inputs" + filesep + "Saved Rockets" + filesep + name + ".mat";
+
+                fullpath = fullfile(pwd, subpath);
 
                 rocketObj = app.rocket;
-                save(path, "rocketObj")
+                save(fullpath, "rocketObj")
 
                 % add the component to the tree:
                 uitreenode(app.rootNode, 'Text', component.Name);
@@ -823,14 +828,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             end
 
             app.Settings = IntegratorSettings("apogee", 0.1, "medium");
-            
+
             Main(app.rocket, app.env, app.Settings);
         end
 
         % Drop down opening function: ComponentSelectionDropDown
         function ComponentSelectionDropDownOpening(app, event)
             pathy = ['Classes' filesep 'Components'];
-            
+
             fileStruct = dir(pathy);
 
             % Convert to string array
@@ -853,42 +858,34 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Button pushed function: AeroDataButton
         function AeroDataButtonPushed(app, event)
-            [file, path] = uigetfile('*.csv', 'Select a RASAero csv File');
-
+            [file, inPath] = uigetfile('*.csv', 'Select a RASAero csv File');
             if file == 0
                 uialert(app.UIFigure, 'No File Selected!', 'File Selection Error')
                 return
-            else
-                name = app.RocketNameEditField.Value;
-                file = string(file);
-                path = string(path);
-                if isempty(name)
-                    error('Please enter the Rocket Name first')
-                else
-                    name = string(name);
-                    filename = name + "_aero.csv";
-                    filepath = fullfile(path, file);
-                    savepath = "TheSixDoF" + filesep + "Inputs" + filesep + "RASAero" + filesep + name + ".csv";
-                    path = pwd;
-                    savepath = fullfile(path, savepath);
-
-                    if savepath ~= filepath
-                        % maybe change this
-                        movefile(filepath, savepath);
-                    end
-
-                    app.AeroDataButton.Text = filename;
-                end
-
+            end
+            name = string(app.RocketNameEditField.Value);
+            if isempty(name) || name == "" || name == "Rocket Name"
+                uialert(app.UIFigure, ...
+                    "Please enter the Rocket Name first.", ...
+                    "Input Error");
+                return
+            end
+            src = [inPath, file];
+            app.AeroLoc = src;
+            % Update UI text
+            app.AeroDataButton.Text = file;
+            % Update rocket if it exists
+            if ~isempty(app.rocket)
+                app.rocket.AeroData = src;
             end
         end
 
         % Button pushed function: LoadRocketButton
         function LoadRocketButtonPushed(app, event)
             subpath = [filesep 'Inputs' filesep 'Saved Rockets'];
-            
+
             pathy = fullfile(pwd,subpath);
-            
+
             [file, path] = uigetfile('*.mat', 'Select a Stored Rocket File', pathy);
 
             if file ~= 0
@@ -912,6 +909,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
                 app.NoseConeLengthmEditField.Value = app.rocket.NoseLength;
                 app.NoseConeGeometryDropDown.Value = app.rocket.NoseGeometry;
+                app.WetMasskgEditField.Value = app.rocket.TotalMass;
 
                 app.autoRefresh = 1;
 
@@ -926,7 +924,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
                 if numVals ~= 0
                     names = app.rocket.ComponentList.keys;
-    
+
                     for idx = 1:numVals
                         uitreenode(app.rootNode, 'Text', names(idx));
                     end
@@ -942,47 +940,46 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         % Button pushed function: SaveRocketButton
         function SaveRocketButtonPushed(app, event)
             name = string(app.RocketNameEditField.Value);
-            path = "TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + name + ".mat";
-
+            matfilePath = "Inputs" + filesep + "Saved Rockets" + filesep + name + ".mat";
+            filepath = "Inputs" + filesep + "RASAero" + filesep + name + ".csv";
             if isempty(app.rootNode)
                 rootNode = uitreenode(app.Tree, 'Text', name);
                 expand(rootNode);
-    
                 app.rootNode = rootNode;
-
-                uiconfirm(app.UIFigure, "Rocket saved.", "Congratulations!")
+                uialert(app.UIFigure, "Rocket saved.", "Congratulations!", "Icon","success")
             else
-                uiconfirm(app.UIFigure, "Rocket Object already exists." + ...
-                    " Components have been saved.", "Rocket Saved")
-
-                rocketObj = app.rocket;
-                save(path, "rocketObj")
-                return
+                uialert(app.UIFigure, "Rocket Object already exists." + ...
+                    " Components have been saved.", "Rocket Saved",Icon="success")
             end
 
-            app.rocket = Rocket(name);
+            % only create a new object if it is empty
+            if isempty(app.rocket)
+                app.rocket = Rocket(name);
+            end
 
             app.rocket.TotalLength = app.RocketLengthEditField.Value;
             app.rocket.OuterDiameter = app.RocketDiameterEditField.Value;
-            app.rocket.AeroData = name;
+
+            % only add the aero data the first time, otherwise don't need
+            % it
+
+            if isempty(app.rocket.AeroData)
+                if ~strcmp(app.AeroDataButton.Text, "Select File")
+                    app.rocket.AeroData = setAeroData(app.rocket, app.AeroLoc);
+                end
+
+            else
+                app.rocket.AeroData = app.rocket.AeroData;
+            end
             app.rocket.NoseLength = app.NoseConeLengthmEditField.Value;
             app.rocket.NoseGeometry = app.NoseConeGeometryDropDown.Value;
-            app.rocket.TotalMass = app.TotalMasskgEditField.Value;
-
+            app.rocket.TotalMass = app.WetMasskgEditField.Value;
             rocketObj = app.rocket;
-
-            save(path, "rocketObj")
-
+            save(fullfile(pwd, matfilePath), "rocketObj")
             % update the tree node with the rocket object:
-
-
-
-            
-
             % after creating a rocket object, auto refresh the plot with
             % changes:
             app.autoRefresh = 1;
-
             app.RocketPlotter();
         end
 
@@ -1087,7 +1084,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % get the weather for that environment
             app.env = getLocalWeather(app.env);
 
-            uialert(app.UIFigure, "Weather Succesfully Downloaded!", "Success");
+            uialert(app.UIFigure, "Weather Succesfully Downloaded!", "Success", "Icon","success");
 
 
         end
@@ -1107,15 +1104,15 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             if ~isempty(node)
                 selected = node.Text;
-    
+
                 % parse which node was clicked. This will have the same name as
                 % the dictionary item:
-    
+
                 compList = app.rocket.ComponentList;
-    
+
                 % return the cell array with the correct values:
                 componentCell = compList(selected);
-    
+
                 comp = componentCell{1};
             end
 
@@ -1128,7 +1125,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % illusion of free will, set the date to now:
 
             app.Date = datetime("now", "TimeZone","UTC");
-            
+
         end
 
         % Double-clicked callback: Tree
@@ -1137,52 +1134,54 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             if ~isempty(node)
                 selected = node.Text;
-    
+
                 compList = app.rocket.ComponentList;
-    
+
                 % return the cell array with the correct values:
                 componentCell = compList(selected);
-    
+
                 % confirm that you want to delete this component:
                 selection = uiconfirm(app.UIFigure, "Are you sure you want to delete this component?" ...
                     , "Deletion Confirmation");
-    
+
                 if selection == 'OK'
                     % remove that component from the rocket
                     app.rocket.removeComponent(selected);
-        
+
                     % remove it from the tree:
                     node.delete;
                 end
-    
+
                 % save the file with the components removed:
                 name = string(app.RocketNameEditField.Value);
-                path = "TheSixDoF" + filesep + "Inputs" + filesep + "Saved Rockets" + filesep + name + ".mat";
-    
+                path = filesep + "Inputs" + filesep + "Saved Rockets" + filesep + name + ".mat";
+
+                fullpath = fullfile(pwd, path);
+
                 rocketObj = app.rocket;
-                save(path, "rocketObj")
-    
+                save(fullpath, "rocketObj")
+
                 app.RocketPlotter();
             end
-            
-            
+
+
         end
 
-        % Value changed function: TotalMasskgEditField
+        % Value changed function: WetMasskgEditField
         function TotalMassChanged(app, event)
-            value = app.TotalMasskgEditField.Value;
+            value = app.WetMasskgEditField.Value;
 
             app.rocket.TotalMass = value;
 
             if app.autoRefresh
                 app.RocketPlotter();
             end
-            
+
         end
 
         % Button pushed function: SetBasePathButton
         function setBasePath(app, event)
-            % set the base             
+            % set the base
             selpath = uigetdir(pwd,"Set the root directory to your local 'PSPL-6DOF\TheSixDoF' folder");
 
             % make sure that this path includes the 'TheSixDoF folder'
@@ -1207,7 +1206,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Button pushed function: GUIHelpButton
         function OpenHelp(app, event)
-            
+
         end
     end
 
@@ -1410,18 +1409,18 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketColor.Layout.Row = 7;
             app.RocketColor.Layout.Column = 2;
 
-            % Create TotalMasskgEditFieldLabel
-            app.TotalMasskgEditFieldLabel = uilabel(app.RocketGrid);
-            app.TotalMasskgEditFieldLabel.HorizontalAlignment = 'center';
-            app.TotalMasskgEditFieldLabel.Layout.Row = 8;
-            app.TotalMasskgEditFieldLabel.Layout.Column = 1;
-            app.TotalMasskgEditFieldLabel.Text = 'Total Mass [kg]';
+            % Create WetMasskgEditFieldLabel
+            app.WetMasskgEditFieldLabel = uilabel(app.RocketGrid);
+            app.WetMasskgEditFieldLabel.HorizontalAlignment = 'center';
+            app.WetMasskgEditFieldLabel.Layout.Row = 8;
+            app.WetMasskgEditFieldLabel.Layout.Column = 1;
+            app.WetMasskgEditFieldLabel.Text = 'Wet Mass [kg]';
 
-            % Create TotalMasskgEditField
-            app.TotalMasskgEditField = uieditfield(app.RocketGrid, 'numeric');
-            app.TotalMasskgEditField.ValueChangedFcn = createCallbackFcn(app, @TotalMassChanged, true);
-            app.TotalMasskgEditField.Layout.Row = 8;
-            app.TotalMasskgEditField.Layout.Column = 2;
+            % Create WetMasskgEditField
+            app.WetMasskgEditField = uieditfield(app.RocketGrid, 'numeric');
+            app.WetMasskgEditField.ValueChangedFcn = createCallbackFcn(app, @TotalMassChanged, true);
+            app.WetMasskgEditField.Layout.Row = 8;
+            app.WetMasskgEditField.Layout.Column = 2;
 
             % Create ComponentsTab
             app.ComponentsTab = uitab(app.TabGroup2);

@@ -67,25 +67,20 @@ classdef Rocket < handle
         end
 
 
-        function set.AeroData(rocketObj, filename)
+        function aeroData = setAeroData(rocketObj, filepath)
             arguments
                 rocketObj Rocket
-                filename (1,1) string
+                filepath (1,1) string
             end
-
-            filepath = "TheSixDoF" + filesep + "Inputs" + filesep + "RASAero" + filesep + filename + ".csv";
             rawData = readmatrix(filepath);
-
-            if (size(rawData) == [7500, 15])
-                data = [[rawData(1:300,1:5) rawData(1:300,8) rawData(1:300,13:15)]; 
-                        [rawData(2501:2800,1:5) rawData(2501:2800,8) rawData(2501:2801,13:15)];
-                        [rawData(5001:5300,1:5) rawData(5001:5300,8) rawData(5001:5301,13:15)]];
+            if all(size(rawData) == [7499, 15])
+                data = [rawData(1:300,1:5) rawData(1:300,8) rawData(1:300,13:15);
+                    rawData(2501:2800,1:5) rawData(2501:2800,8) rawData(2501:2800,13:15);
+                    rawData(5001:5300,1:5) rawData(5001:5300,8) rawData(5001:5300,13:15)];
             else
                 data = rawData;
             end
-
-            rocketObj.AeroData = data;
-
+            aeroData = data;
         end
 
         function saveRocket(rocketObj)
