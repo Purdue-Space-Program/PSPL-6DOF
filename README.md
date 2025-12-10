@@ -2,7 +2,7 @@
 
 This document details the use and the implementation of the 6-DoF model for PSP Liquids. This code is meant to be versatile and to be able to model a variety of rockets, from small scale solids to large scale liquid systems. The primary use case of the code is to run the modeling for the PSP Liquids launch vehicles, but is more generally capable. This represents over 4000 lines of code and several years of combined effort.
 
-This code is intended to be dynamic and model a variety of different rocket characteristics in a general way. This code is also intended to model sensors and other characteristics neccesary for GNC of the rocket.
+This code is intended to be dynamic and model a variety of different rocket characteristics in a general way. This code is also intended to model sensors and other characteristics necessary for GNC of the rocket.
 
 This document will not dive deeply into the methodology and mathematics behind the model. For that, please refer to our 'Flight Dynamics Bible' book series, which covers these topics in great depth:
 - [Volume I](https://www.overleaf.com/read/cgjkwxwwzxmc#1818cf)
@@ -25,8 +25,7 @@ To get started with this tool, please clone this repository to your local machin
 The required packages may be installed with:
 
 ```
-pip install openmeteo-requests
-pip install requests-cache retry-requests numpy pandas
+pip install -r requirements.txt
 ```
 
 More information about the install and use of the OpenMeteo packages can be found at [OpenMeteo](https://open-meteo.com/en/docs).
@@ -49,7 +48,7 @@ The main user interaction with the 6-DoF in the MATLAB app. This can be accessed
  The plot inside the GUI is specially designed for operation with rocket objects. For this reason, the standard zoom and pan tools in the toolbar should not be used. Simply click the plot to drag it around. In 3D, use the top toolbar to adjust the orientation and size of the model.
 
  ### Adding Components
- Adding components to the rocket is a straighforward process. In the components tab, any number of components can be added. Each component has specific properties which must be input. For a component, *every* property must have an input for the component to be generated. All inputs are in standard SI units (showing units is WIP).
+ Adding components to the rocket is a straightforward process. In the components tab, any number of components can be added. Each component has specific properties which must be input. For a component, *every* property must have an input for the component to be generated. All inputs are in standard SI units (showing units is WIP).
 
  For the tanks component, the selection of 'Fuel' or 'Ox' must be input exactly as 'Fuel' or 'Ox'. Changing this to a drop down is a work in progress.
 
