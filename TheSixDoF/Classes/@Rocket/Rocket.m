@@ -17,6 +17,7 @@ classdef Rocket < handle
         function obj = Rocket(name)
             obj.Name = name;
             obj.ComponentList = dictionary();
+            %obj.CoMOverride = 1.5;
         end
 
 
@@ -73,6 +74,7 @@ classdef Rocket < handle
                 filepath (1,1) string
             end
             rawData = readmatrix(filepath);
+            %fprintf("rawData size: %d x %d\n", size(rawData, 1), size(rawData, 2));
             if all(size(rawData) == [7499, 15])
                 data = [rawData(1:300,1:5) rawData(1:300,8) rawData(1:300,13:15);
                     rawData(2501:2800,1:5) rawData(2501:2800,8) rawData(2501:2800,13:15);

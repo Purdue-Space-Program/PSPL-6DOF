@@ -878,6 +878,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % Update rocket if it exists
             if ~isempty(app.rocket)
                 app.rocket.AeroData = src;
+                app.rocket.AeroData = setAeroData(app.rocket, app.rocket.AeroData);
             end
         end
 

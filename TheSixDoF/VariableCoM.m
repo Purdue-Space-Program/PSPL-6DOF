@@ -45,43 +45,43 @@ densImp2Met = 27679.9;                  % Imperial to metric density units
 %% Initializations
 
 % Propellant initializations
-massDry = 49.877;                       % Initial dry mass [kg]
-massWetInit = 19.252;                   % Initial wet mass [kg]
+massDry = 35.85782075197;                       % Initial dry mass [kg]
+massWetInit = 39.94015208391423;                   % Initial wet mass [kg]
 ullageFactor = 0.95;                    % Tank fill factor 
-loxVol = 1201.10 * ullageFactor;        % Initial lox vol [in^3]
-fuelVol = 1299.95 * ullageFactor;       % Initial fuel vol [in^3]
+loxVol = 118.3861 * ullageFactor;        % Initial lox vol [in^3]
+fuelVol = 155.6105 * ullageFactor;       % Initial fuel vol [in^3]
 loxDens = 0.03922015;                   % Density of lox [kg/m^3]
 fuelDens = 0.01450439;                  % Density of fuel [kg/m^3]
 
 % Flow rate initializations
-loxFlow = 2.916 * LBM2KG;               % Flow rate of lox [kg/s]
-fuelFlow = 1.188 * LBM2KG;              % Flow rate of fuel [kg/s]
-rocketHeight = 16.81 * FT2M;            % Total height of rocket [m]
-tankResidual = 0.07;                    % Amount leftover 
+loxFlow = 1.91 * LBM2KG;               % Flow rate of lox [kg/s]
+fuelFlow = 1.91 * LBM2KG;              % Flow rate of fuel [kg/s]
+rocketHeight = 8.26 * FT2M;            % Total height of rocket [m]
+tankResidual = 0.1;                    % Amount leftover 
 
 % Tank size initializations
-tankOD = 6.625 * IN2M;                  % Outer diameter of tank [m]
-wallThick = 0.134 * IN2M;               % Wall thickness [m]
+tankOD = 6 * IN2M;                  % Outer diameter of tank [m]
+wallThick = 0.125 * IN2M;               % Wall thickness [m]
 tankID = tankOD - 2 * wallThick;        % Inner diameter of tank [m]
 tankIArea = pi * (tankID/2)^2;          % Inner tank area [m^2]
 
 % Mass initializations
-noseMass = 11 * LBM2KG;                 % Nose mass [kg]
-heTMass = 18 * LBM2KG;                  % He tank mass [kg]
-midAFMass = 23 * LBM2KG;                % Inner stage mass [kg]
-empLoxTMass = 9.05 * LBM2KG;            % Empty lox tank mass [kg]
-empFuelTMass = 9.91 * LBM2KG;           % Empty fuel tank mass [kg]
-finCanMass = 28 * LBM2KG;               % Fin can mass [kg]
-engineMass = 11 * LBM2KG;               % Engine mass [kg]
+noseMass = 1.53;                 % Nose mass [kg]
+heTMass = 6;                  % He tank mass [kg]
+midAFMass = 0.5;                % Inner stage mass [kg]
+empLoxTMass = 2.545;            % Empty lox tank mass [kg]
+empFuelTMass = 2.695;           % Empty fuel tank mass [kg]
+finCanMass = 9;               % Fin can mass [kg]
+engineMass = 6;               % Engine mass [kg]
 
 % Height initializations
-noseHeight = 33 * IN2M;                 % Height of the nose [m]
-heHeight = 43 * IN2M;                   % He tank height [m]
-midAFHeight = 16 * IN2M;                % Inner stage height [m]
-loxTHeight = 35.6 * IN2M;               % Lox tank height [m]
-fuelTHeight = 39 * IN2M;                % Fuel tank height [m]
-finCanHeight = 22 * IN2M;               % Fin can height [m]
-engineHeight = 11.77 * IN2M;            % Engine height [m]
+noseHeight = 15 * IN2M;                 % Height of the nose [m]
+heHeight = 18 * IN2M;                   % He tank height [m]
+midAFHeight = 5 * IN2M;                % Inner stage height [m]
+loxTHeight = 7 * IN2M;               % Lox tank height [m]
+fuelTHeight = 8.44 * IN2M;                % Fuel tank height [m]
+finCanHeight = 12 * IN2M;               % Fin can height [m]
+engineHeight = 10.65 * IN2M;            % Engine height [m]
 totHeight = noseHeight + heHeight ...
     + midAFHeight + loxTHeight + ...
     fuelTHeight + finCanHeight + ...

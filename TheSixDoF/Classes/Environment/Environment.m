@@ -7,7 +7,7 @@ classdef Environment
         Date (1,1) datetime = datetime("now", "TimeZone", "UTC");
         Elevation (1,1) double = 627.91;
         LatLong (1,2) double = [35.347444074690735, -117.8090720168799]
-        railHeight (1,1) double = 18.29; % FAR rail height [m]
+        railHeight (1,1) double = 6.096; % FAR rail height [m]
         Atmosphere (:,5) double
         Wind (:,3) double
         LaunchWeather struct = struct();   % ADDED: full Open-Meteo forecast w/ ensemble stats & times

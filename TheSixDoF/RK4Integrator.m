@@ -102,6 +102,7 @@ CoMTable = totCoM(:,2);
 
 [~, timeIndexCoM] = min(abs(timeTableCoM-time));
 CoM = CoMTable(timeIndexCoM);
+CoM = 1.5;
 
 %---------------- Gravity force --------------------------------------------
 
@@ -123,6 +124,7 @@ mach = norm(vel) / a;
 
 % read the coefficient of drag from RasAero data:
 rasData = rocket.AeroData;
+%rasData = setAeroData(rocket, rocket.AeroData);
 machTable = rasData(1:300,1); % mach values from 0.01 to 3
 cDTable = rasData(1:300,3); % coefficient of drag
 
@@ -249,7 +251,8 @@ accel = forceVector / mass;
 %---------------- Stability Caliber ----------------------------------------
 
 % difference between CoM and cP divided by diameter of the rocket
-fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / rocket.OuterDiameter);
+fprintf("\nCoM: %.3f, cP: %.3f", CoM, cP)
+fprintf("\nStability caliber: %.3f\n", (cP - CoM) / rocket.OuterDiameter);
 
 %---------------- Moments --------------------------------------------------
 
@@ -261,7 +264,7 @@ Izz = InertMatrix(timeIndexMass,3,3);
 
 I = [Ixx, 0, 0;
      0, Iyy, 0;
-     0, 0, Izz]
+     0, 0, Izz];
 
 AeroMomentArm = (CoM - cP) * bodyVector; % define the length of the moment arm in the body frame
 %ParaMomentArm = CoM * bodyVector'; % define the length of the moment arm of the parachute in the body frame
