@@ -15,7 +15,13 @@ This document will not dive deeply into the methodology and mathematics behind t
 
 To get started with this tool, please clone this repository to your local machine to get access to the tool.
 
- The GUI is designed for operation with MATLAB 2025a or 2025b. Compatibility with other versions of MATLAB is not guaranteed. Python 3.13 with the following packages is also required:
+ The GUI is designed for operation with MATLAB 2025a or 2025b. Compatibility with other versions of MATLAB is not guaranteed. The following MATLAB toolboxes must also be installed:
+ - Aerospace Toolbox
+ - Antenna Toolbox
+ - Mapping Toolbox
+ - Navigation Toolbox
+ 
+  Python 3.13 with the following packages is also required:
 - openmeteo_requests
 - pandas
 - requests_cache
