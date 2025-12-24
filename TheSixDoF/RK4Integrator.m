@@ -124,7 +124,7 @@ mach = norm(vel) / a;
 
 % read the coefficient of drag from RasAero data:
 rasData = rocket.AeroData;
-%rasData = setAeroData(rocket, rocket.AeroData);
+rasData = setAeroData(rocket, rocket.AeroData);
 machTable = rasData(1:300,1); % mach values from 0.01 to 3
 cDTable = rasData(1:300,3); % coefficient of drag
 

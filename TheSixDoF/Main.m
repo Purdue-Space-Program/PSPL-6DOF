@@ -75,6 +75,7 @@ Init = [pos;vel;omega;quatVector];
 
 % import aerodynamics data
 rasData = rocket.AeroData;
+rasData = setAeroData(rocket, rocket.AeroData);
 
 % import wind data (prefer Open-Meteo via env, fallback to parser)
 if (isstruct(env) && isfield(env,'WindData')) || (isobject(env) && isprop(env,'Wind'))
