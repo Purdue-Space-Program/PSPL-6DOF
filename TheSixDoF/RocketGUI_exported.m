@@ -1081,7 +1081,20 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             lat = app.LatitudedegEditField.Value;
             lon = app.LongitudedegEditField.Value;
 
-            app.env = Environment(lat,lon,app.Date);
+
+            % launch_site_name = "Launch Trailer";
+            launch_site_name = "FAR";
+            fprintf("Launch site location: %s\n", launch_site_name);
+            
+            if (launch_site_name == "FAR")
+                rail_height = 18.29; % FAR rail height [m]
+            elseif (launch_site_name == "Launch Trailer")
+                rail_height = 6.096; % Launch trailer rail height [m]
+            else
+                error("what")
+            end
+
+            app.env = Environment(lat, lon, app.Date, rail_height);
 
             % get the weather for that environment
             app.env = getLocalWeather(app.env);
