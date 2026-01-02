@@ -160,22 +160,22 @@ if settings.Outputs == true
     [~, maxqMachIndex] = min(abs(machTable-maxqMach));
     maxqCD = cdTable(maxqMachIndex);
 
-    % [~, railIndex] = min(abs(posArray(1:100,1)-env.railHeight));
-    % railVel = out(railIndex,4);
-    % railAccel = outputStruct.accel(railIndex,1);
-    % 
-    % railMach = outputStruct.mach(railIndex);
-    % [~, railMachIndex] = min(abs(machTable-railMach));
-    % railCD = cdTable(railMachIndex);
+    [~, railIndex] = min(abs(posArray(1:100,1)-env.railHeight));
+    railVel = out(railIndex,4);
+    railAccel = outputStruct.accel(railIndex,1);
+
+    railMach = outputStruct.mach(railIndex);
+    [~, railMachIndex] = min(abs(machTable-railMach));
+    railCD = cdTable(railMachIndex);
 
     apogee = max(posArray(:,1));
 
-    % fprintf("\nParameters at Max Q:\n")
-    % fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",maxVel, maxqMach, maxqAccel, maxqCD);
-    % fprintf("Off-Rail Parameters:\n")
-    % fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",railVel, railMach, railAccel, railCD);
-    % fprintf("Rocket Apogee (AMSL): %.2f m\n", apogee)
-    % fprintf("Rocket Apogee (AGL): %.2f m\n", apogee - env.Elevation)
+    fprintf("\nParameters at Max Q:\n")
+    fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",maxVel, maxqMach, maxqAccel, maxqCD);
+    fprintf("Off-Rail Parameters:\n")
+    fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",railVel, railMach, railAccel, railCD);
+    fprintf("Rocket Apogee (AMSL): %.2f m\n", apogee)
+    fprintf("Rocket Apogee (AGL): %.2f m\n", apogee - env.Elevation)
 
     
 

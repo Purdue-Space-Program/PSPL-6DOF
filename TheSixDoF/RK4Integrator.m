@@ -102,7 +102,7 @@ CoMTable = totCoM(:,2);
 
 [~, timeIndexCoM] = min(abs(timeTableCoM-time));
 CoM = CoMTable(timeIndexCoM);
-CoM = 1.5;
+% CoM = 1.5;
 
 %---------------- Gravity force --------------------------------------------
 
