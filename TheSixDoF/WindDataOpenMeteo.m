@@ -4,7 +4,7 @@ end
 
 % import the python file which contains all of the scripts:
 mod = py.importlib.import_module('OpenMeteoWeatherRequest');
-py.importlib.reload(mod)
+py.importlib.reload(mod);
 
 latlong = env.LatLong;
 

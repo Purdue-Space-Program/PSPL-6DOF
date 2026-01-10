@@ -96,3 +96,5 @@ Wind/StationData
 # End of https://www.toptal.com/developers/gitignore/api/matlab,macos,windows
 TheSixDoF/__pycache__/OpenMeteoWeatherRequest.cpython-313.pyc
 TheSixDoF/.cache.sqlite
+*.sqlite
+*.pyc

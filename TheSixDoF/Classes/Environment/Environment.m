@@ -15,7 +15,7 @@ classdef Environment
     end
 
     methods
-        function env = Environment(lat, long, date)
+        function env = Environment(lat, long, date, rail_height)
             % Environment creates a new launch site given an input
             % environment and the position in latitude and longitude. The
             % function automatically generates the elevation of the
@@ -24,6 +24,8 @@ classdef Environment
                 lat (1,1) double = 35.347444074690735
                 long (1,1) double = -117.8090720168799
                 date (1,1) datetime = datetime("now", "TimeZone", "UTC")
+                rail_height (1, 1) double = -999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 % help - david
+                % aqui
             end
             env.LatLong = [lat,long];
             env.Elevation = getElevation(env);
@@ -79,7 +81,7 @@ classdef Environment
 
             % import the python file which contains all of the scripts:
             mod = py.importlib.import_module('OpenMeteoWeatherRequest');
-            py.importlib.reload(mod)
+            py.importlib.reload(mod);
 
             hourlyWeatherData = mod.getHourlyWeather(lat,lon);
 

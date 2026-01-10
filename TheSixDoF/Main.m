@@ -1,4 +1,4 @@
-function Main(rocket, env, settings)
+function Main(rocket, env, settings, rocket_name)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: MainRK4
@@ -75,7 +75,7 @@ Init = [pos;vel;omega;quatVector];
 
 % import aerodynamics data
 rasData = rocket.AeroData;
-rasData = setAeroData(rocket, rocket.AeroData);
+% rasData = setAeroData(rocket, rocket.AeroData);
 
 % import wind data (prefer Open-Meteo via env, fallback to parser)
 if (isstruct(env) && isfield(env,'WindData')) || (isobject(env) && isprop(env,'Wind'))
@@ -90,13 +90,19 @@ atmosphere = env.Atmosphere;
 
 % create an array of the center of mass, mass, and moment of inertia of the
 % rocket
-[totCoM, totMass, MoI] = VariableCoM(settings.Timestep, tspan, 0, rocket);
+
+plot_CoM_graph = 1; % 1 is true, 0 is false
+[totCoM, totMass, MoI] = VariableCoM(settings.Timestep, tspan, plot_CoM_graph, rocket, rocket_name);
 
 % additional options for RK4 (stop after reaching final condition)
 opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, settings.EndCondition), ...
     'RelTol', settings.relTol, 'AbsTol', settings.absTol);
 
 %---------------- Run the RK4 Integration ----------------------------------
+
+% this is just for measuring the time it takes to run this, none of the actual simulation happens here - david
+% wait i might be wrong - david
+% what the fuck is going on here - david
 tic;
 [timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,atmosphere, ...
     totCoM,totMass,MoI,windData, rocket, settings, env), tspan, Init, opt);

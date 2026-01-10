@@ -30,6 +30,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         RASAeroDataLabel               matlab.ui.control.Label
         AeroDataButton                 matlab.ui.control.Button
         RocketNameEditField            matlab.ui.control.EditField
+        rocket_real_name               matlab.ui.control.EditField % idk if i did ts right - david
+        launch_site_name               matlab.ui.control.EditField % idk if i did ts right - david
         NameEditField_2Label           matlab.ui.control.Label
         NoseConeLengthmEditField       matlab.ui.control.NumericEditField
         NoseConeLengthmEditFieldLabel  matlab.ui.control.Label
@@ -779,7 +781,9 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     end
 
                     if isempty(value)
+                        uialert(app.UIFigure, sprintf("Component not added, missing property: %s", property), "Error");
                         return
+
                     elseif property == 'Position'
                         component.(property) = str2num(app.PropertyEditFields(idx).Value);
                     else
@@ -824,13 +828,18 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Button pushed function: SimulateLaunchButton
         function SimulateLaunchClicked(app, event)
-            if isempty(app.rocket) || isempty(app.env)
-                uialert(app.UIFigure, "The rocket or environment is empty!", "Setup error!")
+            if isempty(app.rocket)
+                uialert(app.UIFigure, "The rocket is empty!", "Setup error!")
             end
+
+            if isempty(app.env)
+                uialert(app.UIFigure, "The environment is empty!", "Setup error!")
+            end
+
 
             app.Settings = IntegratorSettings("apogee", 0.1, "medium");
 
-            Main(app.rocket, app.env, app.Settings);
+            Main(app.rocket, app.env, app.Settings, app.rocket_real_name.Value);
         end
 
         % Drop down opening function: ComponentSelectionDropDown
@@ -1082,16 +1091,13 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             lon = app.LongitudedegEditField.Value;
 
 
-            % launch_site_name = "Launch Trailer";
-            launch_site_name = "FAR";
-            fprintf("Launch site location: %s\n", launch_site_name);
-            
-            if (launch_site_name == "FAR")
-                rail_height = 18.29; % FAR rail height [m]
-            elseif (launch_site_name == "Launch Trailer")
-                rail_height = 6.096; % Launch trailer rail height [m]
-            else
-                error("what")
+            switch app.launch_site_name.Value
+                case "FAR"
+                    rail_height = 18.29; % Rail at FAR [m]
+                case "Launch Trailer"
+                    rail_height = 6.096; % Rail on the Launch Trailer [m]
+                otherwise
+                    error("Invalid Launch Site Name!")
             end
 
             app.env = Environment(lat, lon, app.Date, rail_height);
@@ -1116,8 +1122,12 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         % Clicked callback: Tree
         function NodeClicked(app, event)
             node = event.InteractionInformation.Node;
-
+            
+            
             if ~isempty(node)
+            % if ~isempty(node) || node
+                print(node)
+
                 selected = node.Text;
 
                 % parse which node was clicked. This will have the same name as
@@ -1126,6 +1136,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 compList = app.rocket.ComponentList;
 
                 % return the cell array with the correct values:
+                fprintf("selected: %s\n", selected)
                 componentCell = compList(selected);
 
                 comp = componentCell{1};
@@ -1143,10 +1154,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         end
 
+
         % Double-clicked callback: Tree
         function NodeDoubleClick(app, event)
             node = event.InteractionInformation.Node;
-
             if ~isempty(node)
                 selected = node.Text;
 
@@ -1233,6 +1244,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
         % Create UIFigure and components
         function createComponents(app)
 
+            % disp("SEXSEXSEXSEXSEX")
+
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
             app.UIFigure.Position = [100 100 640 481];
@@ -1247,8 +1260,9 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketDesignTab.Title = 'Rocket Design';
 
             % Create GridLayout9
+            % I think this is the rocket design grid? - david
             app.GridLayout9 = uigridlayout(app.RocketDesignTab);
-            app.GridLayout9.ColumnWidth = {175, 175, '2x', '2x'};
+            app.GridLayout9.ColumnWidth = {175, 275, '2x', '2x'};
             app.GridLayout9.RowHeight = {25, '1.3x', 22, '1x'};
             app.GridLayout9.ColumnSpacing = 5.04001007080078;
             app.GridLayout9.RowSpacing = 5.07499361038208;
@@ -1289,6 +1303,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketGrid.ColumnWidth = {'1x', '2x'};
             app.RocketGrid.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
 
+            % the name of the variable should be the same as the name in
+            % the GUI but im not fixing allat - david
             % Create TotalLengthmLabel
             app.TotalLengthmLabel = uilabel(app.RocketGrid);
             app.TotalLengthmLabel.HorizontalAlignment = 'center';
@@ -1373,6 +1389,35 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.RocketNameEditField.Layout.Row = 1;
             app.RocketNameEditField.Layout.Column = 2;
             app.RocketNameEditField.Value = 'Rocket Name';
+
+
+            % fuck this - david
+
+            rocket_real_name = "Rocket A";
+            % rocket_real_name  = "CMS";
+            % rocket_real_name  = "Copperhead";
+
+            switch rocket_real_name
+                case "Rocket A"
+                    launch_site_name = "Launch Trailer";
+                case {"CMS", "Copperhead"}
+                    launch_site_name = "FAR";
+                otherwise
+                    error("Invalid Rocket Name!")
+            end
+
+            fprintf("--------- Rocket Name: %s ---------\n", rocket_real_name);
+            fprintf("--------- Launch Site Name: %s ---------\n", launch_site_name);
+
+
+            % what the fuck am i doing - david
+            app.rocket_real_name = uieditfield(app.RocketGrid);
+            app.rocket_real_name.Value = rocket_real_name;
+
+            app.launch_site_name = uieditfield(app.RocketGrid);
+            app.launch_site_name.Value = launch_site_name;
+
+
 
             % Create AeroDataButton
             app.AeroDataButton = uibutton(app.RocketGrid, 'push');
@@ -1559,7 +1604,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % Create GridLayout2
             app.GridLayout2 = uigridlayout(app.Panel_2);
-            app.GridLayout2.ColumnWidth = {114, 115};
+            app.GridLayout2.ColumnWidth = {114, 200, "1x"};
             app.GridLayout2.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
 
             % Create DateSelectionDatePickerLabel
@@ -1575,6 +1620,27 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.DateSelectionDatePicker.ValueChangedFcn = createCallbackFcn(app, @dateSelected, true);
             app.DateSelectionDatePicker.Layout.Row = 1;
             app.DateSelectionDatePicker.Layout.Column = 2;
+            app.LongitudedegEditField.Value 
+
+  
+            FAR_latitude = 35.3474; % [degrees]
+            FAR_longitude = -117.8091; % [degrees]
+
+
+            dairy_farm_latitude = 40.509936707682144; % [degrees]
+            dairy_farm_longitude = -87.02196060569756; % [degrees]
+            
+            switch app.rocket_real_name.Value
+                case "Rocket A"
+                    default_latitude_value = dairy_farm_latitude;
+                    default_longitude_value = dairy_farm_longitude;
+                case {"CMS", "Copperhead"}
+                    default_latitude_value = FAR_latitude;
+                    default_longitude_value = FAR_longitude;
+                otherwise
+                    error("Invalid Rocket Name!")
+            end
+
 
             % Create LatitudedegEditFieldLabel
             app.LatitudedegEditFieldLabel = uilabel(app.GridLayout2);
@@ -1582,14 +1648,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.LatitudedegEditFieldLabel.Layout.Row = 2;
             app.LatitudedegEditFieldLabel.Layout.Column = 1;
             app.LatitudedegEditFieldLabel.Text = 'Latitude (deg)';
-
+            
             % Create LatitudedegEditField
             app.LatitudedegEditField = uieditfield(app.GridLayout2, 'numeric');
             app.LatitudedegEditField.Limits = [-90 90];
             app.LatitudedegEditField.ValueChangedFcn = createCallbackFcn(app, @LatitudeChanged, true);
             app.LatitudedegEditField.Layout.Row = 2;
             app.LatitudedegEditField.Layout.Column = 2;
-            app.LatitudedegEditField.Value = 35.3474;
+            app.LatitudedegEditField.Value = default_latitude_value;
 
             % Create LongitudedegEditFieldLabel
             app.LongitudedegEditFieldLabel = uilabel(app.GridLayout2);
@@ -1598,13 +1664,14 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.LongitudedegEditFieldLabel.Layout.Column = 1;
             app.LongitudedegEditFieldLabel.Text = 'Longitude (deg)';
 
+
             % Create LongitudedegEditField
             app.LongitudedegEditField = uieditfield(app.GridLayout2, 'numeric');
             app.LongitudedegEditField.Limits = [-180 180];
             app.LongitudedegEditField.ValueChangedFcn = createCallbackFcn(app, @longitudeChanged, true);
             app.LongitudedegEditField.Layout.Row = 3;
             app.LongitudedegEditField.Layout.Column = 2;
-            app.LongitudedegEditField.Value = -117.8091;
+            app.LongitudedegEditField.Value = default_longitude_value;
 
             % Create SimulateLaunchButton
             app.SimulateLaunchButton = uibutton(app.GridLayout2, 'push');
