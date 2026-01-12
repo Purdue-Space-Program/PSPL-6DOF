@@ -47,90 +47,94 @@ densImp2Met = 27679.9;                  % Imperial to metric density units
 switch rocket_name
     case "Rocket A"
         
+        % General
+        rocket_diameter = 6 * IN2M; % OD of the rocket [in]
+        rocket_height = 8.26 * FT2M;            % Total height of rocket [ft]
+
+
         % Propellant initializations
         mass_dry = 24.31;                        % Initial dry mass [kg]
         mass_wet_init = 27.93;        % Initial wet mass [kg]
-        ullageFactor = 0.95;                    % Tank fill factor 
-        loxVol = 118.3861 * ullageFactor;       % Initial lox vol [in^3]
-        fuelVol = 155.6105 * ullageFactor;      % Initial fuel vol [in^3]
-        loxDens = 0.03922015;                   % Density of lox [kg/m^3]
-        fuelDens = 0.01450439;                  % Density of fuel [kg/m^3]
+        ullage_factor = 0.95;                    % Tank fill factor 
+        lox_vol = 118.3861 * ullage_factor;       % Initial lox vol [in^3]
+        fuel_vol = 155.6105 * ullage_factor;      % Initial fuel vol [in^3]
+        LOx_density = 0.03922015;                   % Density of lox [kg/m^3]
+        fuel_density = 0.01450439;                  % Density of fuel [kg/m^3]
         
         % Flow rate initializations
-        loxFlow = 1.91 * LBM2KG;               % Flow rate of lox [kg/s]
-        fuelFlow = 1.91 * LBM2KG;              % Flow rate of fuel [kg/s]
-        rocketHeight = 8.26 * FT2M;            % Total height of rocket [m]
-        tankResidual = 0.1;                    % Amount leftover 
+        lox_mass_flow_rate = 1.91 * LBM2KG;               % Flow rate of lox [kg/s]
+        fuel_mass_flow_rate = 1.91 * LBM2KG;              % Flow rate of fuel [kg/s]
+        tank_residual = 0.1;                    % Amount leftover 
         
         % Tank size initializations
-        tankOD = 6 * IN2M;                  % Outer diameter of tank [m]
-        wallThick = 0.125 * IN2M;           % Wall thickness [m]
-        tankID = tankOD - 2 * wallThick;    % Inner diameter of tank [m]
-        tankIArea = pi * (tankID/2)^2;      % Inner tank area [m^2]
+        tank_OD = 6 * IN2M;                  % Outer diameter of tank [m]
+        tank_wall_thickness = 0.125 * IN2M;           % Wall thickness [m]
+        tank_ID = tank_OD - 2 * tank_wall_thickness;    % Inner diameter of tank [m]
+        tank_inner_area = pi * (tank_ID/2)^2;      % Inner tank area [m^2]
         
         % Mass initializations
-        noseMass = 1.53;                 % Nose mass [kg]
+        nose_mass = 1.53;                 % Nose mass [kg]
         pressurant_tank_mass = 6;        % Pressurant tank mass [kg]
-        midAFMass = 0.5;                 % Inner stage mass [kg]
-        empLoxTMass = 2.545;             % Empty lox tank mass [kg]
-        empFuelTMass = 2.695;            % Empty fuel tank mass [kg]
-        finCanMass = 9;                  % Fin can mass [kg]
-        engineMass = 6;                  % Engine mass [kg]
+        mid_mass = 0.5;                 % Inner stage mass [kg]
+        empty_LOx_tank_mass = 2.545;             % Empty lox tank mass [kg]
+        empty_fuel_tank_mass = 2.695;            % Empty fuel tank mass [kg]
+        fin_can_mass = 9;                  % Fin can mass [kg]
+        engine_mass = 6;                  % Engine mass [kg]
         
         % Height initializations
-        noseHeight = 15 * IN2M;                 % Height of the nose [m]
+        nose_height = 15 * IN2M;                 % Height of the nose [m]
         pressurant_tank_height = 18 * IN2M;     % Pressurant tank height [m]
-        midAFHeight = 5 * IN2M;                 % Inner stage height [m]
+        mid_height = 5 * IN2M;                 % Inner stage height [m]
         lox_tank_height = 7 * IN2M;                  % Lox tank height [m]
         fuel_tank_height = 8.44 * IN2M;              % Fuel tank height [m]
         fin_can_height = 12 * IN2M;               % Fin can height [m]
         engine_height = 10.65 * IN2M;            % Engine height [m]
     
-        total_height = rocketHeight;
+        total_height = rocket_height;
     
     case "CMS"
         
         % Propellant initializations
         mass_dry = 49.877;                       % Initial dry mass [kg]
-        mass_wet_init = 19.252;                   % Initial wet mass [kg]
-        ullageFactor = 0.95;                    % Tank fill factor 
-        loxVol = 1201.10 * ullageFactor;        % Initial lox vol [in^3]
-        fuelVol = 1299.95 * ullageFactor;       % Initial fuel vol [in^3]
-        loxDens = 0.03922015;                   % Density of lox [kg/m^3]
-        fuelDens = 0.01450439;                  % Density of fuel [kg/m^3]
+        mass_wet_init = 9999999999999;                   % Initial wet mass [kg]
+        ullage_factor = 0.95;                    % Tank fill factor 
+        lox_vol = 1201.10 * ullage_factor;        % Initial lox vol [in^3]
+        fuel_vol = 1299.95 * ullage_factor;       % Initial fuel vol [in^3]
+        LOx_density = 0.03922015;                   % Density of lox [kg/m^3]
+        fuel_density = 0.01450439;                  % Density of fuel [kg/m^3]
         
         % Flow rate initializations
-        loxFlow = 2.916 * LBM2KG;               % Flow rate of lox [kg/s]
-        fuelFlow = 1.188 * LBM2KG;              % Flow rate of fuel [kg/s]
-        rocketHeight = 16.81 * FT2M;            % Total height of rocket [m]
-        tankResidual = 0.07;                    % Amount leftover 
+        lox_mass_flow_rate = 2.916 * LBM2KG;               % Flow rate of lox [kg/s]
+        fuel_mass_flow_rate = 1.188 * LBM2KG;              % Flow rate of fuel [kg/s]
+        rocket_height = 16.81 * FT2M;            % Total height of rocket [m]
+        tank_residual = 0.07;                    % Amount leftover 
         
         % Tank size initializations
-        tankOD = 6.625 * IN2M;                  % Outer diameter of tank [m]
-        wallThick = 0.134 * IN2M;               % Wall thickness [m]
-        tankID = tankOD - 2 * wallThick;        % Inner diameter of tank [m]
-        tankIArea = pi * (tankID/2)^2;          % Inner tank area [m^2]
+        tank_OD = 6.625 * IN2M;                  % Outer diameter of tank [m]
+        tank_wall_thickness = 0.134 * IN2M;               % Wall thickness [m]
+        tank_ID = tank_OD - 2 * tank_wall_thickness;        % Inner diameter of tank [m]
+        tank_inner_area = pi * (tank_ID/2)^2;          % Inner tank area [m^2]
         
         % Mass initializations
-        noseMass = 11 * LBM2KG;                 % Nose mass [kg]
+        nose_mass = 11 * LBM2KG;                 % Nose mass [kg]
         pressurant_tank_mass = 18 * LBM2KG;     % Pressurant tank mass [kg]
-        midAFMass = 23 * LBM2KG;                % Inner stage mass [kg]
-        empLoxTMass = 9.05 * LBM2KG;            % Empty lox tank mass [kg]
-        empFuelTMass = 9.91 * LBM2KG;           % Empty fuel tank mass [kg]
-        finCanMass = 28 * LBM2KG;               % Fin can mass [kg]
-        engineMass = 11 * LBM2KG;               % Engine mass [kg]
+        mid_mass = 23 * LBM2KG;                % Inner stage mass [kg]
+        empty_LOx_tank_mass = 9.05 * LBM2KG;            % Empty lox tank mass [kg]
+        empty_fuel_tank_mass = 9.91 * LBM2KG;           % Empty fuel tank mass [kg]
+        fin_can_mass = 28 * LBM2KG;               % Fin can mass [kg]
+        engine_mass = 11 * LBM2KG;               % Engine mass [kg]
         
         % Height initializations
-        noseHeight = 33 * IN2M;                 % Height of the nose [m]
+        nose_height = 33 * IN2M;                 % Height of the nose [m]
         pressurant_tank_height = 43 * IN2M;     % Pressurant tank height [m]
-        midAFHeight = 16 * IN2M;                % Inner stage height [m]
+        mid_height = 16 * IN2M;                % Inner stage height [m]
         lox_tank_height = 35.6 * IN2M;               % Lox tank height [m]
         fuel_tank_height = 39 * IN2M;                % Fuel tank height [m]
         fin_can_height = 22 * IN2M;               % Fin can height [m]
         engine_height = 11.77 * IN2M;            % Engine height [m]
         
-        total_height = noseHeight + pressurant_tank_height ...
-            + midAFHeight + lox_tank_height + ...
+        total_height = nose_height + pressurant_tank_height ...
+            + mid_height + lox_tank_height + ...
             fuel_tank_height + fin_can_height + ...
             engine_height;                       % Total rocket height [m]
     
@@ -154,15 +158,15 @@ MoI = zeros(length(tspan),3,3);         % Moment of Inertia
 %% Initial Calculations
 
 % Initialized heights from nose
-noseHFore = noseHeight/2;
-heHFore = noseHeight + pressurant_tank_height/2;
-midAFHFore = noseHeight + pressurant_tank_height + midAFHeight/2;
-loxTHFore = noseHeight + pressurant_tank_height + midAFHeight + lox_tank_height/2;
-fuelTHFore = noseHeight + pressurant_tank_height + midAFHeight + lox_tank_height + ...
+noseHFore = nose_height/2;
+heHFore = nose_height + pressurant_tank_height/2;
+midAFHFore = nose_height + pressurant_tank_height + mid_height/2;
+loxTHFore = nose_height + pressurant_tank_height + mid_height + lox_tank_height/2;
+fuelTHFore = nose_height + pressurant_tank_height + mid_height + lox_tank_height + ...
     fuel_tank_height/2;
-finCanHFore = noseHeight + pressurant_tank_height + midAFHeight + lox_tank_height + ...
+finCanHFore = nose_height + pressurant_tank_height + mid_height + lox_tank_height + ...
     fuel_tank_height + fin_can_height/2;
-engineHFore = noseHeight + pressurant_tank_height + midAFHeight + lox_tank_height + ...
+engineHFore = nose_height + pressurant_tank_height + mid_height + lox_tank_height + ...
     fuel_tank_height + fin_can_height + engine_height/2;
         
 % Calculate empty CoM measured from nose
@@ -175,16 +179,16 @@ rocket_empty_CoM = 1.45; % [m]
 
 
 % Measure height to fuel and lox from nose
-heightToLox = noseHeight + pressurant_tank_height + midAFHeight;
+heightToLox = nose_height + pressurant_tank_height + mid_height;
 heightToFuel = heightToLox + lox_tank_height;
 
 % Measure propellant masses/CoM's from top of respective tank
-loxMass = loxVol * loxDens * LBM2KG;
-fuelMass = fuelVol * fuelDens * LBM2KG;
-loxInitCoM = lox_tank_height - (loxVol * ullageFactor * IN2M3 / tankIArea / 2);
-fuelInitCoM = fuel_tank_height - (fuelVol * ullageFactor * IN2M3 / tankIArea / 2);
-finalLoxMass = loxMass / ullageFactor * tankResidual;
-finalFuelMass = fuelMass / ullageFactor * tankResidual;
+loxMass = lox_vol * LOx_density * LBM2KG;
+fuelMass = fuel_vol * fuel_density * LBM2KG;
+loxInitCoM = lox_tank_height - (lox_vol * ullage_factor * IN2M3 / tank_inner_area / 2);
+fuelInitCoM = fuel_tank_height - (fuel_vol * ullage_factor * IN2M3 / tank_inner_area / 2);
+finalLoxMass = loxMass / ullage_factor * tank_residual;
+finalFuelMass = fuelMass / ullage_factor * tank_residual;
 
 %% Calculations
 
@@ -219,14 +223,14 @@ for i = 1:length(tspan)
     elseif loxMassArr(i-1)>finalLoxMass && fuelMassArr(i-1)>finalFuelMass
         
         % Update propellant masses
-        loxMassArr(i) = loxMassArr(i-1) - loxFlow * dt;
-        fuelMassArr(i) = fuelMassArr(i-1) - fuelFlow * dt;
+        loxMassArr(i) = loxMassArr(i-1) - lox_mass_flow_rate * dt;
+        fuelMassArr(i) = fuelMassArr(i-1) - fuel_mass_flow_rate * dt;
 
         % Update relative propellant CoMs
-        loxRelCoM(i) = lox_tank_height - (loxMassArr(i) / (loxDens * ...
-            densImp2Met) / tankIArea / 2);
-        fuelRelCoM(i) = fuel_tank_height - (fuelMassArr(i) / (fuelDens * ...
-            densImp2Met) / tankIArea / 2);
+        loxRelCoM(i) = lox_tank_height - (loxMassArr(i) / (LOx_density * ...
+            densImp2Met) / tank_inner_area / 2);
+        fuelRelCoM(i) = fuel_tank_height - (fuelMassArr(i) / (fuel_density * ...
+            densImp2Met) / tank_inner_area / 2);
 
         % Update propellant CoMs from nose
         loxCoM(i) = loxRelCoM(i) + heightToLox;
@@ -251,10 +255,10 @@ for i = 1:length(tspan)
         fuelMassArr(i) = finalFuelMass;
 
         % Update relative propellant CoMs 
-        loxRelCoM(i) = lox_tank_height - (loxMassArr(i) / (loxDens * ...
-            densImp2Met) / tankIArea / 2);
-        fuelRelCoM(i) = fuel_tank_height - (fuelMassArr(i) / (fuelDens * ...
-            densImp2Met) / tankIArea / 2);
+        loxRelCoM(i) = lox_tank_height - (loxMassArr(i) / (LOx_density * ...
+            densImp2Met) / tank_inner_area / 2);
+        fuelRelCoM(i) = fuel_tank_height - (fuelMassArr(i) / (fuel_density * ...
+            densImp2Met) / tank_inner_area / 2);
 
         % Update propellant CoMs from nose
         loxCoM(i) = loxRelCoM(i) + heightToLox;
@@ -272,16 +276,16 @@ for i = 1:length(tspan)
     end
     % Update inertia
     com = totCoM(i,2);
-    MoI(i,1,1) = 1/2 * totMass(i,2) * (tankOD/2)^2;
+    MoI(i,1,1) = 1/2 * totMass(i,2) * (tank_OD/2)^2;
     transverseMoI = 0;
-    transverseMoI = transverseMoI + loxMassArr(i) * (1/4*(tankOD/2)^2 + 1/12*lox_tank_height^2 + (loxCoM(i)-com)^2);
-    transverseMoI = transverseMoI + fuelMassArr(i) * (1/4*(tankOD/2)^2 + 1/12*fuel_tank_height^2 + (fuelCoM(i)-com)^2);
-    transverseMoI = transverseMoI + engineMass * (1/4*(tankOD/2)^2 + 1/3*engine_height^2 + (engineHFore-com)^2);
-    transverseMoI = transverseMoI + finCanMass * (1/4*(tankOD/2)^2 + 1/3*fin_can_height^2 + (finCanHFore-com)^2);
-    transverseMoI = transverseMoI + midAFMass * (1/4*(tankOD/2)^2 + 1/3*midAFHeight^2 + (midAFHFore-com)^2);
-    transverseMoI = transverseMoI + pressurant_tank_mass * (1/4*(tankOD/2)^2 + 1/3*pressurant_tank_height^2 + (heHFore-com)^2);
+    transverseMoI = transverseMoI + loxMassArr(i) * (1/4*(tank_OD/2)^2 + 1/12*lox_tank_height^2 + (loxCoM(i)-com)^2);
+    transverseMoI = transverseMoI + fuelMassArr(i) * (1/4*(tank_OD/2)^2 + 1/12*fuel_tank_height^2 + (fuelCoM(i)-com)^2);
+    transverseMoI = transverseMoI + engine_mass * (1/4*(tank_OD/2)^2 + 1/3*engine_height^2 + (engineHFore-com)^2);
+    transverseMoI = transverseMoI + fin_can_mass * (1/4*(tank_OD/2)^2 + 1/3*fin_can_height^2 + (finCanHFore-com)^2);
+    transverseMoI = transverseMoI + mid_mass * (1/4*(tank_OD/2)^2 + 1/3*mid_height^2 + (midAFHFore-com)^2);
+    transverseMoI = transverseMoI + pressurant_tank_mass * (1/4*(tank_OD/2)^2 + 1/3*pressurant_tank_height^2 + (heHFore-com)^2);
     %the nose is currently a cylinder
-    transverseMoI = transverseMoI + noseMass * (1/4*(tankOD/2)^2 + 1/3*noseHeight^2 + (noseHFore-com)^2);
+    transverseMoI = transverseMoI + nose_mass * (1/4*(tank_OD/2)^2 + 1/3*nose_height^2 + (noseHFore-com)^2);
     
     MoI(i,2,2) = transverseMoI;
     MoI(i,3,3) = transverseMoI;

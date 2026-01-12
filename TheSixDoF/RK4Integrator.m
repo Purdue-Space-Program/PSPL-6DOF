@@ -28,7 +28,7 @@ function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, 
 %---------------- Parse Function Inputs -------------------------------------
 
 
-pos = [input(1);input(2);input(3)];
+pos = [input(1);input(2);input(3)]; % x y z ? - david
 
 velocity = [input(4);input(5);input(6)];
 
@@ -40,20 +40,21 @@ components = values(rocket.ComponentList);
 
 for idx = 1:length(components)
     if isa(components{idx}, 'PropulsionSystem')
-        motor = components{idx};
+        motor_fuck = components{idx};
     end
 end
 
-radius = rocket.OuterDiameter / 2;    % radius of rocket [m]
-A = pi*radius^2;                % reference area (m^2), as defined by RasAero (cross-sectional area)
-thrust_magnitude = motor.Thrust;   % thrust of rocket in N.
-bodyVector = [1;0;0];       % vector in the body axis running through the nose.
-ExitA = motor.ExitArea;     % exit area of the nozzle [m^2]
-ExitP = motor.ExitPressure;      % exit pressure of the nozzle [Pa]
-burnTime = motor.BurnTime;
 
+rocket_radius = rocket.OuterDiameter / 2;    % radius of rocket [m]
+rocket_reference_area = pi*rocket_radius^2;                % reference area (m^2), as defined by RasAero (cross-sectional area)
+thrust_magnitude = motor_fuck.Thrust;   % thrust of rocket in N.
+body_vector = [1;0;0];       % vector in the body axis running through the nose.
+chamber_exit_area = motor_fuck.ExitArea;     % exit area of the nozzle [m^2]
+chamber_exit_pressure = motor_fuck.ExitPressure;      % exit pressure of the nozzle [Pa]
+burn_time = motor_fuck.BurnTime;    
+    
 
-bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
+bodyVectorEarth = RotationMatrix(body_vector, quat, 1); % Body vector in inertial frame
 
 %---------------- Get atmospheric Conditions (prefer Open-Meteo via env) ---
 geoalt = real(pos(1));  % AGL [m]
@@ -123,8 +124,7 @@ AoA = real(AoA);
 mach = norm(velocity) / a;
 
 % read the coefficient of drag from RasAero data:
-rasData = rocket.AeroData;
-% rasData = setAeroData(rocket, rocket.AeroData);
+rasData = setAeroData(rocket);
 machTable = rasData(1:300,1); % mach values from 0.01 to 3
 cDTable = rasData(1:300,3); % coefficient of drag
 
@@ -142,10 +142,10 @@ cD = cDTable(machIndex);
 % thrust lies along long axis of the rocket [1;0;0], which we then convert into
 % earth frame
 
-pressure_thrust = thrust_magnitude + (ExitP - P) * ExitA;
+pressure_thrust = thrust_magnitude + (chamber_exit_pressure - P) * chamber_exit_area;
 
-if time <= burnTime
-    thrustForceBody = pressure_thrust * bodyVector;
+if time <= burn_time
+    thrustForceBody = pressure_thrust * body_vector;
     thrustForceEarth = RotationMatrix(thrustForceBody, quat, 1);
 else
     thrustForceEarth = [0;0;0];
@@ -168,12 +168,12 @@ cL2 = cLAoA2(machIndex);
 cL4 = cLAoA4(machIndex);
 
 if AoA <= 2
-    cL = interp1([0,2],[cL0, cL2], AoA);
+    lift_coefficient = interp1([0,2],[cL0, cL2], AoA);
 elseif AoA > 2 && AoA <= 4
-    cL = interp1([2,4],[cL2, cL4], AoA);
+    lift_coefficient = interp1([2,4],[cL2, cL4], AoA);
 else
     slope = (cL4 - cL0) / 4;
-    cL = min(slope * AoA, 4);
+    lift_coefficient = min(slope * AoA, 4);
 end
 
 % these act around the center of pressure, which is given in RasAero:
@@ -185,7 +185,7 @@ cPTableMetric = cPTable / 39.37; %center of pressure in meters, defined from nos
 cP = cPTableMetric(machIndex2);
 
 %find the magnitude of lift
-lift = (0.5 * rho* norm(freestream_velocity)^2 * A * cL);
+lift = (0.5 * rho* norm(freestream_velocity)^2 * rocket_reference_area * lift_coefficient);
 
 % do some vector math to find the lift direction:
 liftDir = cross(cross(freestream_velocity, bodyVectorEarth), freestream_velocity) / norm(cross(cross(freestream_velocity,bodyVectorEarth),freestream_velocity));
@@ -200,14 +200,14 @@ liftForceBody = RotationMatrix(liftForce, quat, 0);
 % drag lies parellel and opposite to the velocity vector
 
 %determine the direction and magnitude of the drag force
-dragDir = -freestream_velocity / norm(freestream_velocity);
+drag_direction = -freestream_velocity / norm(freestream_velocity);
 % implement a simple drag polar model for drag increase with AoA:
-cD = cD + 0.1*(cL)^2;
+cD = cD + 0.1*(lift_coefficient)^2;
 
-dragMag = (0.5 * rho * norm(freestream_velocity)^2 * A * cD);
-dragForce = dragDir * dragMag;
-dragForce(isnan(dragForce)) = 0;
-dragForceBody = RotationMatrix(dragForce, quat, 0);
+drag_magnitude = (0.5 * rho * norm(freestream_velocity)^2 * rocket_reference_area * cD);
+drag_force = drag_direction * drag_magnitude;
+drag_force(isnan(drag_force)) = 0; % turn all NaN values to zero
+dragForceBody = RotationMatrix(drag_force, quat, 0);
 
 
 %---------------- Parachute ------------------------------------------------
@@ -244,7 +244,7 @@ paraDragForceBody = RotationMatrix(paraDragForce, quat, 0);
 
 %---------------- Total Forces ---------------------------------------------
 
-forceVector = gravForce + thrustForceEarth + dragForce + liftForce + paraDragForce;
+forceVector = gravForce + thrustForceEarth + drag_force + liftForce + paraDragForce;
 
 accel = forceVector / mass;
 
@@ -266,7 +266,7 @@ I = [Ixx, 0, 0;
      0, Iyy, 0;
      0, 0, Izz];
 
-AeroMomentArm = (CoM - cP) * bodyVector; % define the length of the moment arm in the body frame
+AeroMomentArm = (CoM - cP) * body_vector; % define the length of the moment arm in the body frame
 %ParaMomentArm = CoM * bodyVector'; % define the length of the moment arm of the parachute in the body frame
 
 liftMomentBody = cross(AeroMomentArm,liftForceBody);
@@ -287,7 +287,7 @@ missAlpha = 0.1; % [degrees]
 coefficientLift = 5e-6 * missAlpha * 0;
 
 forceRoll = 3 / 2 * coefficientLift * rho * norm(velocity)^2;
-rollMomentBody = (radius + finCpLocation) * forceRoll * bodyVector;
+rollMomentBody = (rocket_radius + finCpLocation) * forceRoll * body_vector;
 
 momentVector = liftMomentBody + dragMomentBody + rollMomentBody + paraMomentBody;
 

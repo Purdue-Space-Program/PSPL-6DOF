@@ -8,7 +8,8 @@ classdef Rocket < handle
         NoseGeometry % Nose Cone Type
         TotalMass % total mass [kg]
         ComponentList dictionary % Component Dictionary
-        AeroData % RASAero data
+        RASAero_data % RASAero data
+        RASAero_data_file_path % The file path of the RASAero data
         CoMOverride % Manual CoM Override
         CoPOverride % Manual CoP Override
     end
@@ -68,21 +69,24 @@ classdef Rocket < handle
         end
 
 
-        function aeroData = setAeroData(rocketObj, filepath)
+        function RASAero_data = setAeroData(rocket_object)
             arguments
-                rocketObj Rocket
-                filepath (1,1) string
+                rocket_object Rocket
             end
-            rawData = readmatrix(filepath);
+
+            raw_data = readmatrix(rocket_object.RASAero_data_file_path);
             %fprintf("rawData size: %d x %d\n", size(rawData, 1), size(rawData, 2));
-            if all(size(rawData) == [7499, 15])
-                data = [rawData(1:300,1:5) rawData(1:300,8) rawData(1:300,13:15);
-                    rawData(2501:2800,1:5) rawData(2501:2800,8) rawData(2501:2800,13:15);
-                    rawData(5001:5300,1:5) rawData(5001:5300,8) rawData(5001:5300,13:15)];
+            if all(size(raw_data) == [7499, 15])
+                RASAero_data = [raw_data(1:300,1:5) raw_data(1:300,8) raw_data(1:300,13:15);
+                    raw_data(2501:2800,1:5) raw_data(2501:2800,8) raw_data(2501:2800,13:15);
+                    raw_data(5001:5300,1:5) raw_data(5001:5300,8) raw_data(5001:5300,13:15)];
             else
-                data = rawData;
+                % data has already been truncated
+                RASAero_data = raw_data;
             end
-            aeroData = data;
+
+            output_file_path = sprintf("%s_converted_aero_data.csv", rocket_object.Name);
+            writematrix(RASAero_data, output_file_path);
         end
 
         function saveRocket(rocketObj)

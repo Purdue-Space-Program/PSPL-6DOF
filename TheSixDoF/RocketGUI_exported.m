@@ -776,7 +776,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     property = string(app.PropertyEditLabels(idx).Text);
                     value = app.PropertyEditFields(idx).Value;
 
-                    if property == 'Position'
+                    if property == "Position"
                         value = str2num(app.PropertyEditFields(idx).Value);
                     end
 
@@ -784,7 +784,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                         uialert(app.UIFigure, sprintf("Component not added, missing property: %s", property), "Error");
                         return
 
-                    elseif property == 'Position'
+                    elseif property == "Position"
                         component.(property) = str2num(app.PropertyEditFields(idx).Value);
                     else
                         component.(property) = app.PropertyEditFields(idx).Value;
@@ -873,6 +873,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 uialert(app.UIFigure, 'No File Selected!', 'File Selection Error')
                 return
             end
+
             name = string(app.RocketNameEditField.Value);
             if isempty(name) || name == "" || name == "Rocket Name"
                 uialert(app.UIFigure, ...
@@ -880,14 +881,15 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                     "Input Error");
                 return
             end
+
             src = [inPath, file];
-            app.AeroLoc = src;
+            app.rocket.RASAero_data_file_path = src;
+
             % Update UI text
             app.AeroDataButton.Text = file;
             % Update rocket if it exists
             if ~isempty(app.rocket)
-                app.rocket.AeroData = src;
-                app.rocket.AeroData = setAeroData(app.rocket, app.rocket.AeroData);
+                app.rocket.RASAero_data = setAeroData(app.rocket);
             end
         end
 
@@ -974,13 +976,10 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             % only add the aero data the first time, otherwise don't need
             % it
 
-            if isempty(app.rocket.AeroData)
+            if ~isprop(app.rocket, "RASAero_data") || isempty(app.rocket.RASAero_data)
                 if ~strcmp(app.AeroDataButton.Text, "Select File")
-                    app.rocket.AeroData = setAeroData(app.rocket, app.AeroLoc);
+                    app.rocket.RASAero_data = setAeroData(app.rocket);
                 end
-
-            else
-                app.rocket.AeroData = app.rocket.AeroData;
             end
             app.rocket.NoseLength = app.NoseConeLengthmEditField.Value;
             app.rocket.NoseGeometry = app.NoseConeGeometryDropDown.Value;

@@ -74,8 +74,7 @@ quatVector = eul2quat(angleVector.', "ZYX").';
 Init = [pos;vel;omega;quatVector];
 
 % import aerodynamics data
-rasData = rocket.AeroData;
-% rasData = setAeroData(rocket, rocket.AeroData);
+rasData = setAeroData(rocket);
 
 % import wind data (prefer Open-Meteo via env, fallback to parser)
 if (isstruct(env) && isfield(env,'WindData')) || (isobject(env) && isprop(env,'Wind'))
@@ -142,7 +141,6 @@ if settings.Outputs == true
     E = wgs84Ellipsoid;
     [lats,longs, ~] = ned2geodetic(out(:,3),out(:,2),-out(:,1),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
 
-
     uif = uifigure;
     g = geoglobe(uif);
     
@@ -151,7 +149,6 @@ if settings.Outputs == true
     campitch(g,-30)
     camheading(g,45)
     
-
     % find end conditions for graphs / animations
     endTime = length(outputStruct.AoA) * settings.Timestep;
 
@@ -251,13 +248,15 @@ if settings.Outputs == true
     xlabel('Dist North (m)');
     ylabel('Dist East (m)');
     zlabel('Height (m)');
+    title("Rocket Trajectory")
     axis equal;
     grid minor;
 
-    % moment plot
+    % Moment plot
     figure;
     plot(timeArray, moment)
     legend('x','y','z')
+    title("Rocket Moments")
     
 
     if settings.RotationVis == true
