@@ -46,7 +46,6 @@ rocket.RASAero_data_file_path = "Inputs\Saved Rockets\FUCK_MATLAB\fuck_you6_conv
 rocket.addComponent(engine)
 
 
-
 FAR_latitude = 35.3474; % [degrees]
 FAR_longitude = -117.8091; % [degrees]
 
@@ -85,6 +84,4 @@ settings = IntegratorSettings("apogee", 0.1, "medium");
 % selpath = uigetdir(pwd,"Set the root directory to your local 'PSPL-6DOF\TheSixDoF' folder");
 
 Main(rocket, environment, settings, rocket.Name);
-
-
-
+% 

@@ -53,7 +53,7 @@ switch rocket_name
 
 
         % Propellant initializations
-        mass_dry = 24.31;                        % Initial dry mass [kg]
+        mass_dry = rocket.TotalMass;             % Initial dry mass [kg]
         mass_wet_init = 27.93;        % Initial wet mass [kg]
         ullage_factor = 0.95;                    % Tank fill factor 
         lox_vol = 118.3861 * ullage_factor;       % Initial lox vol [in^3]

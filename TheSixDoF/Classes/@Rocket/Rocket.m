@@ -85,8 +85,8 @@ classdef Rocket < handle
                 RASAero_data = raw_data;
             end
 
-            output_file_path = sprintf("%s_converted_aero_data.csv", rocket_object.Name);
-            writematrix(RASAero_data, output_file_path);
+            % output_file_path = sprintf("%s_converted_aero_data.csv", rocket_object.Name);
+            % writematrix(RASAero_data, output_file_path);
         end
 
         function saveRocket(rocketObj)

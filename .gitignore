@@ -98,3 +98,4 @@ TheSixDoF/__pycache__/OpenMeteoWeatherRequest.cpython-313.pyc
 TheSixDoF/.cache.sqlite
 *.sqlite
 *.pyc
+TheSixDoF/.cache.sqlite
