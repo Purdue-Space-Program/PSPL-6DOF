@@ -90,7 +90,7 @@ atmosphere = env.Atmosphere;
 % create an array of the center of mass, mass, and moment of inertia of the
 % rocket
 
-plot_CoM_graph = 1; % 1 is true, 0 is false
+plot_CoM_graph = 0; % 1 is true, 0 is false
 [totCoM, totMass, MoI] = VariableCoM(settings.Timestep, tspan, plot_CoM_graph, rocket, rocket_name);
 
 % additional options for RK4 (stop after reaching final condition)
@@ -163,7 +163,7 @@ if settings.Outputs == true
     [~, maxqMachIndex] = min(abs(machTable-maxqMach));
     maxqCD = cdTable(maxqMachIndex);
 
-    [~, railIndex] = min(abs(posArray(1:100,1)-env.railHeight));
+    [~, railIndex] = min(abs(posArray(1:100,1)-env.railHeight-posArray(1,1)));
     railVel = out(railIndex,4);
     railAccel = outputStruct.accel(railIndex,1);
 
@@ -255,6 +255,8 @@ if settings.Outputs == true
     % Moment plot
     figure;
     plot(timeArray, moment)
+    xlabel('time (?)');
+    ylabel('moments (?)');
     legend('x','y','z')
     title("Rocket Moments")
     
