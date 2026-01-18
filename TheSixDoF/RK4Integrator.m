@@ -249,7 +249,7 @@ accel = forceVector / mass;
 %---------------- Stability Caliber ----------------------------------------
 
 % difference between CoM and cP divided by diameter of the rocket
-fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / rocket.OuterDiameter);
+%fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / rocket.OuterDiameter);
 
 %---------------- Moments --------------------------------------------------
 
