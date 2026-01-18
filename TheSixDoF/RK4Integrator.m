@@ -255,9 +255,9 @@ accel = forceVector / mass;
 
 % pull the moments from the CoM MoI data:
 
-Ixx = InertMatrix(timeIndexMass,1);
-Iyy = InertMatrix(timeIndexMass,2);
-Izz = InertMatrix(timeIndexMass,3);
+Ixx = InertMatrix(timeIndexMass,2);
+Iyy = InertMatrix(timeIndexMass,3);
+Izz = InertMatrix(timeIndexMass,4);
 
 I = [Ixx, 0, 0;
      0, Iyy, 0;
