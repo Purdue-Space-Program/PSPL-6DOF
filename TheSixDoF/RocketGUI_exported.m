@@ -190,9 +190,8 @@ classdef RocketGUI_exported < matlab.apps.AppBase
                 plot(app.UIAxes, [x(end),x(end)], [dia/2,-dia/2], app.lineColor)
 
 
-                % plot the fins of the rocket
+                % plot the components of the rocket
                 app.PlotFins()
-
                 app.PlotComponents();
 
                 % define the standard limits for the plot
@@ -440,172 +439,168 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
             % get the components from the rocket
 
-            if ~isempty(app.rocket)
-                compList = app.rocket.ComponentList;
+            compList = app.rocket.ComponentList;
 
-                % in the event that the rocket has components:
-                if numEntries(compList) > 0
-                    len = numEntries(compList);
-                    values = compList.values;
+            % in the event that the rocket has components:
+            if numEntries(compList) > 0
+                len = numEntries(compList);
+                values = compList.values;
 
-                    % go through each and check for fins
-                    for idx = 1:len
-                        % first case is a tank
-                        if isa(values{idx}, 'Tank')
+                % go through each and check for fins
+                for idx = 1:len
+                    % first case is a tank
+                    if isa(values{idx}, 'Tank')
 
-                            tankObj = values{idx};
+                        tankObj = values{idx};
 
-                            leng = tankObj.Length;
-                            rad = tankObj.TankDia/2;
-                            FuelOx = tankObj.FuelOx;
-                            dist = tankObj.Position(1);
-                            if strcmp(FuelOx, 'Fuel')
-                                color = 'r';
-                            else
-                                color = 'b';
-                            end
-
-                            if app.ThreeDPlot
-
-                                isSpherica = false;
-                                if isSpherica
-                                    [Z, Y, X] = cylinder(rad,100); %make unit cyliner along x axis
-                                    X_body = X*(leng-2*rad)+dist+rad;
-                                    surf(app.UIAxes, X_body,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
-
-                                    x_res_nose = 0:rad/50:rad;
-                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
-                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
-                                    X_nose = X*rad+dist;
-                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
-
-                                    x_res_nose = rad:rad/50:2*rad;
-                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
-                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
-                                    X_nose = X*rad+dist+leng-rad;
-                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
-                                else
-                                    l_a = sqrt(2)*rad;
-                                    [Z, Y, X] = cylinder(rad,100); %make unit cyliner along x axis
-                                    X_body = X*(leng-2*l_a)+dist+l_a;
-                                    surf(app.UIAxes, X_body,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
-
-                                    x_res_nose = 0:l_a/50:l_a;
-                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
-                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
-                                    X_nose = X*l_a+dist;
-                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
-
-                                    x_res_nose = l_a:l_a/50:2*l_a;
-                                    nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
-                                    [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
-                                    X_nose = X*l_a+dist+leng-l_a;
-                                    surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
-                                end
-
-                            else % 2d plot
-                                isSpehical = false;
-                                if isSpehical
-                                    xTank = [dist+l_a,  dist+leng-l_a];
-                                    yTank = [rad, rad];
-                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
-                                    xTank = [dist+l_a,  dist+leng-l_a];
-                                    yTank = [-rad, -rad];
-                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
-
-                                    x_res_nose = 0:rad/50:rad;
-                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
-                                    xTank = x_res_nose+dist;
-                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
-                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
-
-                                    x_res_nose = rad:rad/50:2*rad;
-                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
-                                    xTank = x_res_nose+dist+leng-2*rad;
-                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
-                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
-                                else
-                                    l_a = sqrt(2)*rad;
-                                    xTank = [dist+l_a,  dist+leng-l_a];
-                                    yTank = [rad, rad];
-                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
-                                    xTank = [dist+l_a,  dist+leng-l_a];
-                                    yTank = [-rad, -rad];
-                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
-
-                                    x_res_nose = 0:l_a/50:l_a;
-                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
-                                    xTank = x_res_nose+dist;
-                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
-                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
-
-                                    x_res_nose = l_a:l_a/50:2*l_a;
-                                    yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
-                                    xTank = x_res_nose+dist+leng-2*l_a;
-                                    plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
-                                    plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
-                                end
-                            end
-
-                        elseif isa(values{idx}, 'PointMass')
-
-                            ptObj = values{idx};
-
-                            xPos = ptObj.Position(1);
-                            yPos = ptObj.Position(2);
-                            zPos = ptObj.Position(3);
-                            color = ptObj.Color;
-
-
-                            if app.ThreeDPlot
-                                plot3(app.UIAxes, xPos, yPos, zPos, '.', 'MarkerSize', 30, 'Color', color)
-                            else
-                                plot(app.UIAxes, xPos, yPos, '.', MarkerSize = 30, Color = color);
-                            end
-
-                        elseif isa(values{idx}, 'PropulsionSystem')
-
-                            propSys = values{idx};
-
-                            dist = propSys.Position(1);
-                            dia = 2*sqrt(propSys.ExitArea / pi);
-                            color = propSys.Color;
-
-                            % create the contour:
-
-                            xProp = linspace(0,3*dia);
-
-                            yProp = .2/.25 * (dia-0.3*dia*sin(1.5*pi*(xProp-.06)/(3*dia)));
-
-                            xProp = xProp + dist;
-
-                            endcapX = [xProp(end), xProp(end)];
-                            endcapY = [yProp(end), -yProp(end)];
-
-                            if app.ThreeDPlot
-                                [Z, Y, X] = cylinder(yProp, 100);
-
-                                X = X*3*dia + dist;
-
-                                plot3(app.UIAxes, X, Y, Z, 'LineStyle','-', 'Color', color)
-
-                            else
-                                plot(app.UIAxes, xProp,yProp, "Color", app.lineColor)
-                                plot(app.UIAxes, xProp, -yProp, "Color", app.lineColor)
-                                plot(app.UIAxes, endcapX, endcapY, app.lineColor)
-                            end
-
-
-
-
-
+                        leng = tankObj.Length;
+                        rad = tankObj.TankDia/2;
+                        FuelOx = tankObj.FuelOx;
+                        dist = tankObj.Position(1);
+                        if strcmp(FuelOx, 'Fuel')
+                            color = 'r';
+                        else
+                            color = 'b';
                         end
+
+                        if app.ThreeDPlot
+
+                            isSpherica = false;
+                            if isSpherica
+                                [Z, Y, X] = cylinder(rad,100); %make unit cyliner along x axis
+                                X_body = X*(leng-2*rad)+dist+rad;
+                                surf(app.UIAxes, X_body,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+
+                                x_res_nose = 0:rad/50:rad;
+                                nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                X_nose = X*rad+dist;
+                                surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+
+                                x_res_nose = rad:rad/50:2*rad;
+                                nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                X_nose = X*rad+dist+leng-rad;
+                                surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                            else
+                                l_a = sqrt(2)*rad;
+                                [Z, Y, X] = cylinder(rad,100); %make unit cyliner along x axis
+                                X_body = X*(leng-2*l_a)+dist+l_a;
+                                surf(app.UIAxes, X_body,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+
+                                x_res_nose = 0:l_a/50:l_a;
+                                nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                X_nose = X*l_a+dist;
+                                surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+
+                                x_res_nose = l_a:l_a/50:2*l_a;
+                                nose_radius_func_ish = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                [Z, Y, X] = cylinder(nose_radius_func_ish, 100);
+                                X_nose = X*l_a+dist+leng-l_a;
+                                surf(app.UIAxes, X_nose,Y,Z, "FaceColor",color,'FaceAlpha', 0.7, 'EdgeAlpha',0);
+                            end
+
+                        else % 2d plot
+                            isSpehical = false;
+                            if isSpehical
+                                xTank = [dist+l_a,  dist+leng-l_a];
+                                yTank = [rad, rad];
+                                plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                xTank = [dist+l_a,  dist+leng-l_a];
+                                yTank = [-rad, -rad];
+                                plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+
+                                x_res_nose = 0:rad/50:rad;
+                                yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                xTank = x_res_nose+dist;
+                                plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+
+                                x_res_nose = rad:rad/50:2*rad;
+                                yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-rad).^2)./(rad^2));
+                                xTank = x_res_nose+dist+leng-2*rad;
+                                plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+                            else
+                                l_a = sqrt(2)*rad;
+                                xTank = [dist+l_a,  dist+leng-l_a];
+                                yTank = [rad, rad];
+                                plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                xTank = [dist+l_a,  dist+leng-l_a];
+                                yTank = [-rad, -rad];
+                                plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+
+                                x_res_nose = 0:l_a/50:l_a;
+                                yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                xTank = x_res_nose+dist;
+                                plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+
+                                x_res_nose = l_a:l_a/50:2*l_a;
+                                yTank = sqrt((rad^2) -(rad^2).*((x_res_nose-l_a).^2)./(l_a^2));
+                                xTank = x_res_nose+dist+leng-2*l_a;
+                                plot(app.UIAxes, xTank, yTank, 'LineStyle','-', 'Color', color)
+                                plot(app.UIAxes, xTank, -1*yTank, 'LineStyle','-', 'Color', color)
+                            end
+                        end
+
+                    elseif isa(values{idx}, 'PointMass')
+
+                        ptObj = values{idx};
+
+                        xPos = ptObj.Position(1);
+                        yPos = ptObj.Position(2);
+                        zPos = ptObj.Position(3);
+                        color = ptObj.Color;
+
+
+                        if app.ThreeDPlot
+                            plot3(app.UIAxes, xPos, yPos, zPos, '.', 'MarkerSize', 30, 'Color', color)
+                        else
+                            plot(app.UIAxes, xPos, yPos, '.', MarkerSize = 30, Color = color);
+                        end
+
+                    elseif isa(values{idx}, 'PropulsionSystem')
+
+                        propSys = values{idx};
+
+                        dist = propSys.Position(1);
+                        dia = 2*sqrt(propSys.ExitArea / pi);
+                        color = propSys.Color;
+
+                        % create the contour:
+
+                        xProp = linspace(0,3*dia);
+
+                        yProp = .2/.25 * (dia-0.3*dia*sin(1.5*pi*(xProp-.06)/(3*dia)));
+
+                        xProp = xProp + dist;
+
+                        endcapX = [xProp(end), xProp(end)];
+                        endcapY = [yProp(end), -yProp(end)];
+
+                        if app.ThreeDPlot
+                            [Z, Y, X] = cylinder(yProp, 100);
+
+                            X = X*3*dia + dist;
+
+                            plot3(app.UIAxes, X, Y, Z, 'LineStyle','-', 'Color', color)
+
+                        else
+                            plot(app.UIAxes, xProp,yProp, "Color", app.lineColor)
+                            plot(app.UIAxes, xProp, -yProp, "Color", app.lineColor)
+                            plot(app.UIAxes, endcapX, endcapY, app.lineColor)
+                        end
+
+
+
+
+
                     end
                 end
-
-            else
-                return
             end
+
 
             leng = numel(compList);
 
@@ -758,6 +753,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
 
         % Button pushed function: AddComponentButton
         function AddComponent(app, event)
+           
             if isempty(app.rocket)
                 uialert(app.UIFigure, 'No Rocket Object Found', 'Please create or load a rocket first!')
                 return
@@ -875,10 +871,9 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.AeroLoc = src;
             % Update UI text
             app.AeroDataButton.Text = file;
-            % Update rocket if it exists
-            if ~isempty(app.rocket)
-                app.rocket.AeroData = src;
-            end
+            % Update rocket with AeroData
+            app.rocket.AeroData = src;
+
         end
 
         % Button pushed function: LoadRocketButton
@@ -975,6 +970,7 @@ classdef RocketGUI_exported < matlab.apps.AppBase
             app.rocket.NoseLength = app.NoseConeLengthmEditField.Value;
             app.rocket.NoseGeometry = app.NoseConeGeometryDropDown.Value;
             app.rocket.TotalMass = app.WetMasskgEditField.Value;
+            app.rocket.ComponentList = dictionary();
             rocketObj = app.rocket;
             save(fullfile(pwd, matfilePath), "rocketObj")
             % update the tree node with the rocket object:
