@@ -89,7 +89,7 @@ atmosphere = env.Atmosphere;
 
 % create an array of the center of mass, mass, and moment of inertia of the
 % rocket
-[totCoM, totMass, MoI] = VariableCoM(settings.Timestep, tspan, 0, rocket);
+[totMass, totCoM, MoI] = VariableCoMMoI(rocket);
 
 % additional options for RK4 (stop after reaching final condition)
 opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, settings.EndCondition), ...

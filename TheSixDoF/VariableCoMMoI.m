@@ -1,4 +1,4 @@
-function [CoM, MoI, MoIDot] = VariableCoMMoI(rocket)
+function [totMass, CoM, MoI, MoIDot] = VariableCoMMoI(rocket)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
@@ -196,6 +196,7 @@ if numComponents > 0
     CoMZ = (CoM(:,3).*countedMass+CoMStructZ.*structureMass)./(structureMass+countedMass);
     CoM = [CoMX, CoMY, CoMZ, timeSpan];
 
+    totMass = structureMass + countedMass;
 
 %---MoI--------------------------------------------------------------------
 

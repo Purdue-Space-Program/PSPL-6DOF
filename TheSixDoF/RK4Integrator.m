@@ -255,13 +255,13 @@ fprintf("Stability caliber: %.3f\n", abs(CoM - cP) / rocket.OuterDiameter);
 
 % pull the moments from the CoM MoI data:
 
-Ixx = InertMatrix(timeIndexMass,1,1);
-Iyy = InertMatrix(timeIndexMass,2,2);
-Izz = InertMatrix(timeIndexMass,3,3);
+Ixx = InertMatrix(timeIndexMass,1);
+Iyy = InertMatrix(timeIndexMass,2);
+Izz = InertMatrix(timeIndexMass,3);
 
 I = [Ixx, 0, 0;
      0, Iyy, 0;
-     0, 0, Izz]
+     0, 0, Izz];
 
 AeroMomentArm = (CoM - cP) * bodyVector; % define the length of the moment arm in the body frame
 %ParaMomentArm = CoM * bodyVector'; % define the length of the moment arm of the parachute in the body frame
@@ -271,7 +271,6 @@ dragMomentBody = cross(AeroMomentArm,dragForceBody);
 
 % This parachute moment should come out of the nose of the rocket. Update
 % this to include this behavior and introduce stabilization in post-apogee.
-
 
 paraMomentArm = [CoM;0;0];
 
