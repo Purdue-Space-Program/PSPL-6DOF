@@ -318,9 +318,7 @@ elseif numComponents == 0
     MoIX = (1/2)*rocketMass*radiusTot^2;
     MoIY = (1/12)*rocketMass*(3*radiusTot^2+lengthTot^2);
     MoIZ = (1/12)*rocketMass*(3*radiusTot^2+lengthTot^2);
-    MoI = [MoIX, 0, 0;
-           0, MoIY, 0;
-           0, 0, MoIZ];
+    MoI = [MoIX, MoIY, MoIZ];
 
 end
 end
