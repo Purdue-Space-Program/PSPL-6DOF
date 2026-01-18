@@ -16,8 +16,8 @@ function [totMass, CoM, MoI, MoIDot] = VariableCoMMoI(rocket)
 % Outputs:
 % totMass = Total mass of the vehicle wrt time [t|m] [s|kg]
 % CoM = Center of mass of the vehicle as distance frome nose [t|x|y|z] [s|m]
-% MoI = Inertia tensor of the vehicle [t|x|y|z] [m^4]
-% MoIDot = Time derivative of inertia tensor [t|x|y|z] [m^4/s]
+% MoI = Inertia tensor of the vehicle [t|x|y|z] [s|m^4]
+% MoIDot = Time derivative of inertia tensor [t|x|y|z] [s|m^4/s]
 %
 % Notes: All column vectors. Assume PMOI system. Assume CoM lies along
 % lingitudinal axis of the rocket.
@@ -113,9 +113,9 @@ if numComponents > 0
             tankTotZ = (tankZ.*mass+liquidZ.*liquidMass)./(liquidMass+mass);
 
             % Update CoM totals
-            CoMX = (CoM(:,1).*countedMass+tankTotX.*(liquidMass+mass))./(countedMass+mass+liquidMass);
-            CoMY = (CoM(:,2).*countedMass+tankTotY.*(liquidMass+mass))./(countedMass+mass+liquidMass);
-            CoMZ = (CoM(:,3).*countedMass+tankTotZ.*(liquidMass+mass))./(countedMass+mass+liquidMass);
+            CoMX = (CoM(:,2).*countedMass+tankTotX.*(liquidMass+mass))./(countedMass+mass+liquidMass);
+            CoMY = (CoM(:,3).*countedMass+tankTotY.*(liquidMass+mass))./(countedMass+mass+liquidMass);
+            CoMZ = (CoM(:,4).*countedMass+tankTotZ.*(liquidMass+mass))./(countedMass+mass+liquidMass);
             CoM = [timeSpan, CoMX, CoMY, CoMZ];
             countedMass = countedMass + liquidMass + mass;
 
@@ -143,9 +143,9 @@ if numComponents > 0
             CoMMotorZ = position(3).*ones(numelTime,1);
 
             % Total CoM Update
-            CoMX = (CoM(:,1).*countedMass+CoMMotorX.*propellantMass)./(countedMass+propellantMass);
-            CoMY = (CoM(:,2).*countedMass+CoMMotorY.*propellantMass)./(countedMass+propellantMass);
-            CoMZ = (CoM(:,3).*countedMass+CoMMotorZ.*propellantMass)./(countedMass+propellantMass);
+            CoMX = (CoM(:,2).*countedMass+CoMMotorX.*propellantMass)./(countedMass+propellantMass);
+            CoMY = (CoM(:,3).*countedMass+CoMMotorY.*propellantMass)./(countedMass+propellantMass);
+            CoMZ = (CoM(:,4).*countedMass+CoMMotorZ.*propellantMass)./(countedMass+propellantMass);
             CoM = [timeSpan, CoMX, CoMY, CoMZ];
             countedMass = countedMass + propellantMass;
 
@@ -190,9 +190,9 @@ if numComponents > 0
     CoMStructZ = 0;
 
     % Final total CoM update
-    CoMX = (CoM(:,1).*countedMass+CoMStructX.*structureMass)./(structureMass+countedMass);
-    CoMY = (CoM(:,2).*countedMass+CoMStructY.*structureMass)./(structureMass+countedMass);
-    CoMZ = (CoM(:,3).*countedMass+CoMStructZ.*structureMass)./(structureMass+countedMass);
+    CoMX = (CoM(:,2).*countedMass+CoMStructX.*structureMass)./(structureMass+countedMass);
+    CoMY = (CoM(:,3).*countedMass+CoMStructY.*structureMass)./(structureMass+countedMass);
+    CoMZ = (CoM(:,4).*countedMass+CoMStructZ.*structureMass)./(structureMass+countedMass);
     CoM = [timeSpan, CoMX, CoMY, CoMZ];
 
     totMass = [timeSpan, structureMass + countedMass];
@@ -239,9 +239,9 @@ if numComponents > 0
             tankMoIZ = tankMoIY;
                                  
             % Dry tank parallel axis
-            MoIX = MoI(:,1) + (tankMoIX + mass.*(CoM(:,2).^2+CoM(:,3).^2));
-            MoIY = MoI(:,2) + (tankMoIY + mass.*(abs(tankX-CoM(:,1)).^2+CoM(:,3).^2));
-            MoIZ = MoI(:,3) + (tankMoIZ + mass.*(abs(tankX-CoM(:,1)).^2+CoM(:,2).^2));
+            MoIX = MoI(:,2) + (tankMoIX + mass.*(CoM(:,3).^2+CoM(:,4).^2));
+            MoIY = MoI(:,3) + (tankMoIY + mass.*(abs(tankX-CoM(:,2)).^2+CoM(:,4).^2));
+            MoIZ = MoI(:,4) + (tankMoIZ + mass.*(abs(tankX-CoM(:,2)).^2+CoM(:,3).^2));
             MoI = [timeSpan, MoIX, MoIY, MoIZ];
 
             % Liquid inertia
@@ -250,9 +250,9 @@ if numComponents > 0
             LiquidMoIZ = LiquidMoIY;
 
             % Liquid parallel axis
-            MoIX = MoI(:,1) + (LiquidMoIX + liquidMass.*(CoM(:,2).^2+CoM(:,3).^2));
-            MoIY = MoI(:,2) + (LiquidMoIY + liquidMass.*(abs(liquidX-CoM(:,1)).^2+CoM(:,3).^2));
-            MoIZ = MoI(:,3) + (LiquidMoIZ + liquidMass.*(abs(liquidX-CoM(:,1)).^2+CoM(:,2).^2));
+            MoIX = MoI(:,2) + (LiquidMoIX + liquidMass.*(CoM(:,3).^2+CoM(:,4).^2));
+            MoIY = MoI(:,3) + (LiquidMoIY + liquidMass.*(abs(liquidX-CoM(:,2)).^2+CoM(:,4).^2));
+            MoIZ = MoI(:,4) + (LiquidMoIZ + liquidMass.*(abs(liquidX-CoM(:,2)).^2+CoM(:,3).^2));
             MoI = [timeSpan, MoIX, MoIY, MoIZ];
 
         % Solid motor
@@ -285,9 +285,9 @@ if numComponents > 0
             MotorMoIZ = MotorMoIY;
 
             % Solid motor parallel axis
-            MoIX = MoI(:,1) + (MotorMoIX + propellantMass.*(CoM(:,2).^2+CoM(:,3).^2));
-            MoIY = MoI(:,2) + (MotorMoIY + propellantMass.*(abs(CoM(:,1)-propellantX).^2+CoM(:,3).^2));
-            MoIZ = MoI(:,3) + (MotorMoIZ + propellantMass.*(abs(CoM(:,1)-propellantX).^2+CoM(:,2).^2));
+            MoIX = MoI(:,2) + (MotorMoIX + propellantMass.*(CoM(:,3).^2+CoM(:,4).^2));
+            MoIY = MoI(:,3) + (MotorMoIY + propellantMass.*(abs(CoM(:,2)-propellantX).^2+CoM(:,4).^2));
+            MoIZ = MoI(:,4) + (MotorMoIZ + propellantMass.*(abs(CoM(:,2)-propellantX).^2+CoM(:,3).^2));
             MoI = [timeSpan, MoIX, MoIY, MoIZ];
 
         end
@@ -299,9 +299,9 @@ structMoIY = (1/12)*structureMass*(3*radiusTot^2+lengthTot^2);
 structMoIZ = structMoIY;
 
 % Parallel axis for structure/final MoI update
-MoIX = MoI(:,1) + (structMoIX + structureMass.*(CoM(:,2).^2+CoM(:,3).^2));
-MoIY = MoI(:,2) + (structMoIY + structureMass.*(abs(lengthTot/2-CoM(:,1)).^2+CoM(:,3).^2));
-MoIZ = MoI(:,3) + (structMoIZ + structureMass.*(abs(lengthTot/2-CoM(:,1)).^2+CoM(:,2).^2));
+MoIX = MoI(:,2) + (structMoIX + structureMass.*(CoM(:,3).^2+CoM(:,4).^2));
+MoIY = MoI(:,3) + (structMoIY + structureMass.*(abs(lengthTot/2-CoM(:,2)).^2+CoM(:,4).^2));
+MoIZ = MoI(:,4) + (structMoIZ + structureMass.*(abs(lengthTot/2-CoM(:,2)).^2+CoM(:,3).^2));
 MoI = [timeSpan, MoIX, MoIY, MoIZ];
 
 %---Inertia Time Derivative------------------------------------------------
@@ -327,4 +327,5 @@ elseif numComponents == 0
     MoI = [0, MoIX, MoIY, MoIZ];
 
 end
+
 end
