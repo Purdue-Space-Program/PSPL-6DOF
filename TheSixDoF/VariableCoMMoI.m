@@ -14,6 +14,7 @@ function [totMass, CoM, MoI, MoIDot] = VariableCoMMoI(rocket)
 % for
 %
 % Outputs:
+% totMass = Total mass of the vehicle wrt time [m|t] [kg|s]
 % CoM = Center of mass of the vehicle as distance frome nose [x|y|z|t] [m]
 % MoI = Inertia tensor of the vehicle [x|y|z|t] [m^4]
 % MoIDot = Time derivative of inertia tensor [x|y|z|t] [m^4/s]
@@ -196,7 +197,7 @@ if numComponents > 0
     CoMZ = (CoM(:,3).*countedMass+CoMStructZ.*structureMass)./(structureMass+countedMass);
     CoM = [CoMX, CoMY, CoMZ, timeSpan];
 
-    totMass = structureMass + countedMass;
+    totMass = [structureMass + countedMass, timeSpan];
 
 %---MoI--------------------------------------------------------------------
 
