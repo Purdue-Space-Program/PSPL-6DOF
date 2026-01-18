@@ -14,10 +14,10 @@ function [totMass, CoM, MoI, MoIDot] = VariableCoMMoI(rocket)
 % for
 %
 % Outputs:
-% totMass = Total mass of the vehicle wrt time [m|t] [kg|s]
-% CoM = Center of mass of the vehicle as distance frome nose [x|y|z|t] [m]
-% MoI = Inertia tensor of the vehicle [x|y|z|t] [m^4]
-% MoIDot = Time derivative of inertia tensor [x|y|z|t] [m^4/s]
+% totMass = Total mass of the vehicle wrt time [t|m] [s|kg]
+% CoM = Center of mass of the vehicle as distance frome nose [t|x|y|z] [s|m]
+% MoI = Inertia tensor of the vehicle [t|x|y|z] [m^4]
+% MoIDot = Time derivative of inertia tensor [t|x|y|z] [m^4/s]
 %
 % Notes: All column vectors. Assume PMOI system. Assume CoM lies along
 % lingitudinal axis of the rocket.
@@ -66,9 +66,9 @@ if numComponents > 0
     MoIXDot = zeros(numelTime,1);
     MoIYDot = MoIXDot;
     MoIZDot = MoIXDot;
-    CoM = [CoMX, CoMY, CoMZ, timeSpan];    % [x|y|z|t] CoM position|time
-    MoI = [MoIX, MoIY, MoIZ, timeSpan];    % [x|y|z|t] MoI value|time
-    MoIDot = [MoIXDot, MoIYDot, MoIZDot, timeSpan];
+    CoM = [timeSpan, CoMX, CoMY, CoMZ];    % [x|y|z|t] CoM position|time
+    MoI = [timeSpan, MoIX, MoIY, MoIZ];    % [x|y|z|t] MoI value|time
+    MoIDot = [timeSpan, MoIXDot, MoIYDot, MoIZDot];
     rocketMass = rocketMass .* ones(numelTime,1);
     countedMass = zeros(numelTime,1);      % Counted mass wrt time
 
@@ -116,7 +116,7 @@ if numComponents > 0
             CoMX = (CoM(:,1).*countedMass+tankTotX.*(liquidMass+mass))./(countedMass+mass+liquidMass);
             CoMY = (CoM(:,2).*countedMass+tankTotY.*(liquidMass+mass))./(countedMass+mass+liquidMass);
             CoMZ = (CoM(:,3).*countedMass+tankTotZ.*(liquidMass+mass))./(countedMass+mass+liquidMass);
-            CoM = [CoMX, CoMY, CoMZ, timeSpan];
+            CoM = [timeSpan, CoMX, CoMY, CoMZ];
             countedMass = countedMass + liquidMass + mass;
 
         % Solid motor
@@ -146,10 +146,8 @@ if numComponents > 0
             CoMX = (CoM(:,1).*countedMass+CoMMotorX.*propellantMass)./(countedMass+propellantMass);
             CoMY = (CoM(:,2).*countedMass+CoMMotorY.*propellantMass)./(countedMass+propellantMass);
             CoMZ = (CoM(:,3).*countedMass+CoMMotorZ.*propellantMass)./(countedMass+propellantMass);
-            CoM = [CoMX, CoMY, CoMZ, timeSpan];
+            CoM = [timeSpan, CoMX, CoMY, CoMZ];
             countedMass = countedMass + propellantMass;
-
-            % MoI Update
 
         % Fins
         elseif isa(values{idx},'Fins')
@@ -195,9 +193,9 @@ if numComponents > 0
     CoMX = (CoM(:,1).*countedMass+CoMStructX.*structureMass)./(structureMass+countedMass);
     CoMY = (CoM(:,2).*countedMass+CoMStructY.*structureMass)./(structureMass+countedMass);
     CoMZ = (CoM(:,3).*countedMass+CoMStructZ.*structureMass)./(structureMass+countedMass);
-    CoM = [CoMX, CoMY, CoMZ, timeSpan];
+    CoM = [timeSpan, CoMX, CoMY, CoMZ];
 
-    totMass = [structureMass + countedMass, timeSpan];
+    totMass = [timeSpan, structureMass + countedMass];
 
 %---MoI--------------------------------------------------------------------
 
@@ -244,7 +242,7 @@ if numComponents > 0
             MoIX = MoI(:,1) + (tankMoIX + mass.*(CoM(:,2).^2+CoM(:,3).^2));
             MoIY = MoI(:,2) + (tankMoIY + mass.*(abs(tankX-CoM(:,1)).^2+CoM(:,3).^2));
             MoIZ = MoI(:,3) + (tankMoIZ + mass.*(abs(tankX-CoM(:,1)).^2+CoM(:,2).^2));
-            MoI = [MoIX, MoIY, MoIZ, timeSpan];
+            MoI = [timeSpan, MoIX, MoIY, MoIZ];
 
             % Liquid inertia
             LiquidMoIX = 0.5.*liquidMass.*(radius-thick).^2;
@@ -255,7 +253,7 @@ if numComponents > 0
             MoIX = MoI(:,1) + (LiquidMoIX + liquidMass.*(CoM(:,2).^2+CoM(:,3).^2));
             MoIY = MoI(:,2) + (LiquidMoIY + liquidMass.*(abs(liquidX-CoM(:,1)).^2+CoM(:,3).^2));
             MoIZ = MoI(:,3) + (LiquidMoIZ + liquidMass.*(abs(liquidX-CoM(:,1)).^2+CoM(:,2).^2));
-            MoI = [MoIX, MoIY, MoIZ, timeSpan];
+            MoI = [timeSpan, MoIX, MoIY, MoIZ];
 
         % Solid motor
         elseif isa(values{idx},'SolidMotor')
@@ -290,7 +288,7 @@ if numComponents > 0
             MoIX = MoI(:,1) + (MotorMoIX + propellantMass.*(CoM(:,2).^2+CoM(:,3).^2));
             MoIY = MoI(:,2) + (MotorMoIY + propellantMass.*(abs(CoM(:,1)-propellantX).^2+CoM(:,3).^2));
             MoIZ = MoI(:,3) + (MotorMoIZ + propellantMass.*(abs(CoM(:,1)-propellantX).^2+CoM(:,2).^2));
-            MoI = [MoIX, MoIY, MoIZ, timeSpan];
+            MoI = [timeSpan, MoIX, MoIY, MoIZ];
 
         end
     end
@@ -304,23 +302,29 @@ structMoIZ = structMoIY;
 MoIX = MoI(:,1) + (structMoIX + structureMass.*(CoM(:,2).^2+CoM(:,3).^2));
 MoIY = MoI(:,2) + (structMoIY + structureMass.*(abs(lengthTot/2-CoM(:,1)).^2+CoM(:,3).^2));
 MoIZ = MoI(:,3) + (structMoIZ + structureMass.*(abs(lengthTot/2-CoM(:,1)).^2+CoM(:,2).^2));
-MoI = [MoIX, MoIY, MoIZ, timeSpan];
+MoI = [timeSpan, MoIX, MoIY, MoIZ];
+
+%---Inertia Time Derivative------------------------------------------------
+for idx=1:length()
+end
+
+
 
 % Calculations for rocket without components
 elseif numComponents == 0
-    
+
     % Use CoM, MoI of a cylinder with uniform density
     % CoM Calcs
     CoMX = lengthTot/2;
     CoMY = 0;
     CoMZ = 0;
-    CoM = [CoMX, CoMY, CoMZ];
+    CoM = [0, CoMX, CoMY, CoMZ];
 
     % MoI Calcs
     MoIX = (1/2)*rocketMass*radiusTot^2;
     MoIY = (1/12)*rocketMass*(3*radiusTot^2+lengthTot^2);
     MoIZ = (1/12)*rocketMass*(3*radiusTot^2+lengthTot^2);
-    MoI = [MoIX, MoIY, MoIZ];
+    MoI = [0, MoIX, MoIY, MoIZ];
 
 end
 end
