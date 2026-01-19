@@ -24,8 +24,8 @@ function [totMass, CoM, MoI, MoIDot] = VariableCoMMoI(rocket)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Future Updates:
-% Improve structural CoM update to include nosecone, struts, etc.
-% Validate MoI calcs
+% Finish MoIDot
+% Improve structural CoM/MoI update to include nosecone, struts, etc.
 % Finish some smaller components (Avi, etc.) w/point mass inclusion
 
 %---Initializations--------------------------------------------------------
@@ -307,8 +307,6 @@ MoI = [timeSpan, MoIX, MoIY, MoIZ];
 %---Inertia Time Derivative------------------------------------------------
 for idx=1:length()
 end
-
-
 
 % Calculations for rocket without components
 elseif numComponents == 0
