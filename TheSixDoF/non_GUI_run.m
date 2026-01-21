@@ -39,7 +39,7 @@ rocket.TotalMass = vehicle_parameters.dry_mass; % total mass [kg]
 rocket.ComponentList = dictionary(string.empty(0,1), cell.empty(0,1)); % Component Dictionary
 % rocket.RASAero_data % RASAero data
 rocket.RASAero_data_file_path = "Inputs\Saved Rockets\FUCK_MATLAB\fuck_you6_converted_aero_data.csv"; % The file path of the RASAero data
-% rocket.CoMOverride % Manual CoM Override
+rocket.CoMOverride = vehicle_parameters.dry_COM_location_from_top; % CoM Override (Dry CoM)
 % rocket.CoPOverride % Manual CoP Override
 
 
