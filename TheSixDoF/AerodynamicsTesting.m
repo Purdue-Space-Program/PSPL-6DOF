@@ -22,9 +22,9 @@ rocket = rocket.rocketObj;
 % input the rocket into the functions and calculate aerodynamic
 % characteristics:
 
-% drag = computeDrag(rocket);
-% lift = computeLift(rocket);
-% cp = computeCp(rocket);
+drag = computeDrag(rocket, mach, alpha);
+lift = computeLift(rocket, mach, alpha);
+% cp = computeCp(rocket, mach, alpha);
 
 
 % plot the drag as a function of mach number:
