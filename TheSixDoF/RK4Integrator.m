@@ -285,7 +285,7 @@ coefficientLift = 5e-6 * missAlpha * 0;
 forceRoll = 3 / 2 * coefficientLift * rho * norm(vel)^2;
 rollMomentBody = (radius + finCpLocation) * forceRoll * bodyVector;
 
-momentVector = liftMomentBody + dragMomentBody + rollMomentBody + paraMomentBody;
+momentVector = liftMomentBody + dragMomentBody + rollMomentBody; %+ paraMomentBody;
 
 % use euler equations to find the final moments:
 

@@ -37,7 +37,7 @@ function Main(rocket, env, settings)
 % % Make a magnetometer:
 % mag = Sensor.Magnetometer("Mag",0.01,0,0,0);
 % 
-% % Make a gyroscope:
+% Make a gyroscope:
 % gyro = Sensor.Gyroscope("Gyro",.25,1e-4,.005,.01,0);
 
 % create a time array to span the simulation time. Use 500s or more
@@ -49,7 +49,7 @@ if strcmpi('burnout', settings.EndCondition)
 elseif ~isnan(str2double(settings.EndCondition))
     time = round(str2double(settings.EndCondition),1);
 else
-    time = 70;
+    time = 400;
 end
 
 arrayLength = (time / settings.Timestep);
@@ -92,7 +92,7 @@ atmosphere = env.Atmosphere;
 [totMass, totCoM, MoI] = VariableCoMMoI(rocket);
 
 % additional options for RK4 (stop after reaching final condition)
-opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, settings.EndCondition), ...
+opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, settings.EndCondition, env), ...
     'RelTol', settings.relTol, 'AbsTol', settings.absTol);
 
 %---------------- Run the RK4 Integration ----------------------------------
