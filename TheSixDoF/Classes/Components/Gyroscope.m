@@ -9,7 +9,7 @@ classdef Gyroscope < RocketComponent
     end
 
     methods
-        function obj = GyroscopeSensor(name)
+        function obj = Gyroscope(name)
             arguments
                 name string
             end
@@ -17,7 +17,7 @@ classdef Gyroscope < RocketComponent
             obj.Name = name;
         end
 
-        function [xyzAngVel] = Gyroscope(obj, angVel, dt)
+        function [xyzAngVel] = GyroscopeMeasurement(obj, angVel, dt)
             arguments
                 obj
                 angVel (:, 3) double
@@ -27,28 +27,38 @@ classdef Gyroscope < RocketComponent
             sf = obj.ScaleFactor;
 
             Var = obj.Variance(1:3);
+            Var = reshape(Var, 1, 3);
 
-            len = numel(angVel(:, 1));
+            n = size(angVel, 1);
+            omega = zeros(n, 3);
 
-            omega = angVel(:, 1:3);
-
-            if (dt == 0)
-                AngVel = zeros(3, length(omega));
-                for k = 1:length(omega)
-                    AngVel(k) = omega(k) + bias + randn(3,1) .* sqrt(Var) + omega(k) .* sf;
-                end
-                xyzAngVel = AngVel;
+            if dt == 0
+                sampleIdx = 1:n;
             else
                 sampleSkip = obj.SamplingRate / dt;
-                sampleSkipArray = round(1:sampleSkip:len);
-            
-                AngVel = zeros(3, length(omega));
-
-                for k = sampleSkipArray
-                    AngVel(k) = omega(k) + bias + randn(3,1) .* sqrt(Var) + omega(k) .* sf;
-                end
-                xyzAngVel = AngVel;
+                sampleIdx = round(1:sampleSkip:n);
             end
+
+            for k = sampleIdx
+                noise = randn(1, 3) .* sqrt(Var);
+                omega(k, :) = angVel(k, :) + bias + noise .* sf;
+            end
+
+            xyzAngVel = omega;
+        end
+        
+        function plotMeasurementHistory(obj, timeArray, omegaTrue, omegaMeas)
+            % Omega:
+            figure;
+            hold on
+            plot(timeArray, omegaTrue);
+            plot(timeArray, omegaMeas, 'o', 'MarkerSize', 2);
+            legend('wx', 'wy', 'wz', 'wx gyro', 'wy gyro', 'wz gyro');
+            title("True and Measured Angular Velocities [rad/s] vs Time (s)")
+            xlabel("Time (s)")
+            ylabel("Angular Velocities [rad/s]")
+            grid on
+            hold off
         end
     end
 end

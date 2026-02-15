@@ -44,6 +44,8 @@ function Main(rocket, env, settings)
 % w/ recovery on.The code will self-terminate after reaching end
 % condition.
 
+components = values(rocket.ComponentList);
+
 if strcmpi('burnout', settings.EndCondition)
     time = rocket.BurnTime;
 elseif ~isnan(str2double(settings.EndCondition))
@@ -216,14 +218,31 @@ if settings.Outputs == true
     %print(hfig,fname,'-dpng','-r00')
 
     % Euler Angles:
-    eulerAngles = quat2eul(quatArray,"ZYX");
-    figure;
-    plot(timeArray, eulerAngles);
-    xlim([0,endTime]);
-    title("Euler Angles: 3-2-1")
-    xlabel("Time (s)")
-    ylabel("Euler Angles")
-    legend('psi', 'theta', 'phi');
+        eulerAngles = quat2eul(quatArray,"ZYX");
+        figure;
+        plot(timeArray, eulerAngles);
+        xlim([0,endTime]);
+        title("Euler Angles: 3-2-1")
+        xlabel("Time (s)")
+        ylabel("Euler Angles")
+        legend('psi', 'theta', 'phi');
+
+    gyroObj = [];
+    for i = 1:numel(components)
+        c = components{i};
+        if isa(c, 'Gyroscope')
+            gyroObj = c;
+            break
+        end
+    end
+
+
+    % Gyroscope plot
+    if ~isempty(gyroObj)
+        omegaTrue = outputStruct.omega;
+        omegaMeas = gyroObj.GyroscopeMeasurement(omegaTrue, settings.Timestep);
+        gyroObj.plotMeasurementHistory(timeArray, omegaTrue, omegaMeas);
+    end
 
 
     % Angle of Attack:
@@ -251,7 +270,25 @@ if settings.Outputs == true
     figure;
     plot(timeArray, moment)
     legend('x','y','z')
+
     
+    accelObj = [];
+    for i = 1:numel(components)
+        c = components{i};
+        if isa(c, 'Accelerometer')
+            accelObj = c;
+            break
+        end
+    end
+    % Accelerometer plot
+    if ~isempty(accelObj)
+        accelTrue = outputStruct.accel;
+        accelMeas = accelObj.AccelerometerMeasurement(accelTrue, settings.Timestep);
+        accelObj.plotMeasurementHistory(timeArray, accelTrue, accelMeas)
+    end
+
+    
+
 
     if settings.RotationVis == true
         % run the rotation visualizer script
