@@ -57,14 +57,14 @@ end
 arrayLength = (time / settings.Timestep);
 tspan = linspace(0,time,arrayLength+1);
 
-% set the initial position (x,y,z). Accoun ts for starting elevation.
-pos = [env.Elevation;0;0];
+% set the initial position in ENU frame(x,y,z). Accounts for starting elevation.
+pos = [0;0;env.Elevation];
 
-% set the initial velocity (xdot,ydot,zdot).
+% set the initial velocity in ENU frame (xdot,ydot,zdot).
 vel = [0;0;0];
 
 % initial angle (z angle, y angle, x angle) - following 3-2-1 sequence
-angleVector = [0;0.1;0];
+angleVector = [0;-pi/2;0];
 
 % initial rotation rate (x rate, y rate, z rate)
 omega = [0;0;0];
@@ -135,13 +135,13 @@ if settings.Outputs == true
 
     % convert to lat and long for plotting on map:
     E = wgs84Ellipsoid;
-    [lats,longs, ~] = ned2geodetic(out(:,3),out(:,2),-out(:,1),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
+    [lats,longs, ~] = enu2geodetic(out(:,1),out(:,2),out(:,3),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
 
 
     uif = uifigure;
     g = geoglobe(uif);
     
-    geoplot3(g, lats, longs, out(:,1), 'r-', LineWidth= 1)
+    geoplot3(g, lats, longs, out(:,3), 'r-', LineWidth= 1)
     campos(g,env.LatLong(1)-0.1,env.LatLong(2)-0.1,15000)
     campitch(g,-30)
     camheading(g,45)
@@ -255,7 +255,7 @@ if settings.Outputs == true
 
     % Rocket Trajectory Plot:
     figure;
-    plot3(posArray(1:int32(endTime / settings.Timestep),3), posArray(1:int32(endTime / settings.Timestep),2), posArray(1:int32(endTime / settings.Timestep),1))
+    plot3(posArray(1:int32(endTime / settings.Timestep),1), posArray(1:int32(endTime / settings.Timestep),2), posArray(1:int32(endTime / settings.Timestep),3))
     % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
     % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
     % plot3(zeros(endTime / dt), posArray(1:endTime / dt,2), posArray(1:endTime / dt,1), '--')
