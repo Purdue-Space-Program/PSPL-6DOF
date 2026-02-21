@@ -44,6 +44,22 @@ classdef Rocket < handle
             end
         end
 
+        function modifyComponent(rocketObj, componentObj)
+        
+            arguments
+                rocketObj Rocket
+                componentObj RocketComponent
+            end
+
+            % Replace existing component with same name, or add if not present
+            if isKey(rocketObj.ComponentList, componentObj.Name)
+                rocketObj.ComponentList(componentObj.Name) = {componentObj};
+            else
+                % If component does not exist, warning
+                error('No component of this name exists');
+            end
+        end
+
 
         function removeComponent(rocketObj, componentName)
             if isKey(rocketObj.ComponentList, componentName)

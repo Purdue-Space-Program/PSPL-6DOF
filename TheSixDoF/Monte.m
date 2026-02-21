@@ -1,10 +1,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
-% Title: MainRK4
+% Title: Monte
 % Author: Hudson Reynolds
 %
-% Description: Runs the 6DoF with variable thrust-to-weight-ratio to analyze stability
+% Description: Runs the 6DoF with monte carlo for landing location
 %
 % Inputs: N/A
 %
@@ -15,105 +15,158 @@
 clear
 clc
 close all
-TRIALS = 25;
+TRIALS = 50;
 
+% settings:
 
-pos = [0;0;0];
+% run Mojave:
+env = Environment();
+
+settings = IntegratorSettings("full", 0.1, "low");
+
+env = getLocalWeather(env);
+
+%% Run the sim:
+
+rocket = load('Inputs\Saved Rockets\CMS.mat');
+
+rocket = rocket.rocketObj;
+
+components = values(rocket.ComponentList);
+
+if strcmpi('burnout', settings.EndCondition)
+    time = rocket.BurnTime;
+elseif ~isnan(str2double(settings.EndCondition))
+    time = round(str2double(settings.EndCondition),1);
+else
+    time = 400;
+end
+
+arrayLength = (time / settings.Timestep);
+tspan = linspace(0,time,arrayLength+1);
+
+% set the initial position in ENU frame(x,y,z). Accounts for starting elevation.
+pos = [0;0;env.Elevation];
+
+% set the initial velocity in ENU frame (xdot,ydot,zdot).
 vel = [0;0;0];
+
+% initial angle (z angle, y angle, x angle) - following 3-2-1 sequence
+angleVector = [0;-pi/2;0];
+
+% initial rotation rate (x rate, y rate, z rate)
 omega = [0;0;0];
-DEG1 = 0.0174533; %[radians]
+
+% initalize the quaternion based on the euler angle input:
+quatVector = eul2quat(angleVector.', "ZYX").';
+
+% initial state vector
+Init = [pos;vel;omega;quatVector];
+
+% import aerodynamics data
+rasData = rocket.AeroData;
+
+% import wind data (prefer Open-Meteo via env, fallback to parser)
+if (isstruct(env) && isfield(env,'WindData')) || (isobject(env) && isprop(env,'Wind'))
+    windData = env.Wind;   % [alt_m, speed_mps, dir_rad]
+else
+    windData = wind.parseWind();
+end
 
 
+% import atmosphere;
+atmosphere = env.Atmosphere;
 
-%output lists
-Yf_list = [];
-Zf_list = [];
-T_list = [];
+% create an array of the center of mass, mass, and moment of inertia of the
+% rocket
+[totMass, totCoM, MoI] = VariableCoMMoI(rocket);
 
-tic;
+% additional options for RK4 (stop after reaching final condition)
+opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, settings.EndCondition, env), ...
+    'RelTol', settings.relTol, 'AbsTol', settings.absTol);
 
-for i = 1:10
+% nominal thrust
 
-    TWR(i) = 3.9 + 0.1 * i;
-    mInit = 74.69;
-    g = 9.81;
-    thrustMag = TWR(i) * mInit * g;
-    burnTime = 49400 / thrustMag;
+thrustNom = 3.7929e+03;
+burnNom = 13;
 
-    dt = 0.1;
-    time = burnTime;
-    arrayLength = (time / dt);
-    tspan = linspace(0,time,arrayLength+1);
 
-    %huge stuff
-    rasData = readmatrix("inputs\RasAeroData.CSV");
-    [totCoM, totMass] = VariableCoM(dt, tspan, 0);
-    
-    windData = readmatrix("WindData.xlsx");
+% do monte carlo, vary the launch angle and wind for number of trials
+for trial = 1:TRIALS
+    % randomize the angle vector by 
+    zAng = 2*pi*rand(1);
+    yAng = -pi/2 + 2*0.0175*randn(1);
+    xAng = 0;
 
-    for trial = 1:TRIALS
-    %random angle
-    angleVector = [0; randn*DEG1 ; randn*DEG1];
-    quatVector = eul2quat(angleVector.', "XYZ").';
+
+    launchAngle = [zAng; yAng; xAng];
+    quatVector = eul2quat(launchAngle.', "ZYX").';
     Init = [pos;vel;omega;quatVector];
+    % Run the simulation for the current trial
 
-    %random constants
-    randomThrust = 4270.29 + randn*500;
-    params = [thrustMag,burnTime];
+    % vary the thrust of the rocket
+    components = rocket.ComponentList.values;
 
-    %tic;
-        [timeArray, out] = ode45(@(time,input) RK4Integrator(time,input,rasData,totCoM,totMass, windData, params), tspan, Init);
-    %toc;
+    prop = components{5};
 
-    posArray = [out(:,1), out(:,2), out(:,3)];
-    %velArray = [out(:,4), out(:,5), out(:,6)];
-    %omega = [out(:,7), out(:,8), out(:,9)];
-    %quatArray = [out(:,10), out(:,11), out(:,12), out(:,13)];
+    thrustVar = 100*randn(1);
 
-    for k = 1:numel(timeArray)
-        [~, machArray(k,1), AoArray(k,1)] = RK4Integrator(timeArray(k), out(k,:), rasData, totCoM, totMass, windData, params);
-    end
+    prop.Thrust = thrustNom + thrustVar;
+    prop.BurnTime = prop.BurnTime - thrustVar/291.76;
 
-    maxAoA(i, trial) = max(AoArray(1:130))
+    % update the rocketObj
+    rocket.modifyComponent(prop)
+    
+    fieldName = sprintf('test%d', trial);
 
 
-    end
+    [timeArray, out.(fieldName)] = ode45(@(time,input) RK4Integrator(time,input,atmosphere, ...
+    totCoM,totMass,MoI,windData, rocket, settings, env), tspan, Init, opt);
+
+    disp(trial)
+end
+
+
+
+
+%% Outputs:
+
+wgs84 = wgs84Ellipsoid;
+
+for idx = 1:TRIALS
+
+    fieldName = sprintf('test%d', idx);
+
+    result = out.(fieldName);
+
+    % get the max apogee for that trial:
+     apogee(idx) = max(result(:,3));
+
+     % get the ending location east and north:
+     northLocation(idx) = result(end, 2);
+     eastLocation(idx) = result(end, 1);
+
+     % convert to location and geoplot the final landing spot
+
+     % uif = uifigure;
+     % g = geoplot(uif);
+
+
+     % use the starting coords and displacement for final coords:
+     [lat(idx), long(idx), h] = enu2geodetic(eastLocation(idx),northLocation(idx), env.Elevation, env.LatLong(1), env.LatLong(2), env.Elevation, wgs84);
 
 end
 
-maxAoA = transpose(maxAoA);
+     % plot the final lat long on a geoplot
 
-    stdev = std(maxAoA);
-    meanval = mean(maxAoA);
+     g = geoaxes();
+     set(g, 'Basemap', 'satellite')
+     geoplot(g, lat, long, 'rx')
+     hold on
+     geoplot(g, env.LatLong(1), env.LatLong(2), 'bo')
+     title('Monte Carlo with $T=\mathcal{N}(3792.9,100)$ and 1 deg launch angle randomization')
 
-toc;
+     % output the apogees:
+    disp(mean(apogee))
 
 
-figure(1)
-
-hfig = figure;  % save the figure handle in a variable
-hold on
-
-fname = 'MonteCarlo2';
-
-picturewidth = 20; % set this parameter and keep it forever
-hw_ratio = .7; % feel free to play with this ratio
-set(findall(hfig,'-property','FontSize'),'FontSize',16) % adjust fontsize to your document
-
-errorbar(TWR, meanval, stdev ,'o', 'Color', 'b')
-title('Maximum AoA during Engine Burn Monte Carlo')
-xlabel('Thrust to Weight Ratio [-]')
-ylabel('Maximum Angle of Attack [deg]')
-
-grid on
-
-xlim([2.9 6])
-
-set(findall(hfig,'-property','Box'),'Box','off') % optional
-set(findall(hfig,'-property','Interpreter'),'Interpreter','latex') 
-set(findall(hfig,'-property','TickLabelInterpreter'),'TickLabelInterpreter','latex')
-set(hfig,'Units','centimeters','Position',[3 3 picturewidth hw_ratio*picturewidth])
-pos = get(hfig,'Position');
-set(hfig,'PaperPositionMode','Auto','PaperUnits','centimeters','PaperSize',[pos(3), pos(4)])
-%print(hfig,fname,'-dpdf','-painters','-fillpage')
-print(hfig,fname,'-dpng','-r300')
