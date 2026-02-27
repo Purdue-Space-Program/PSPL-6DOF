@@ -15,7 +15,7 @@
 clear
 clc
 close all
-TRIALS = 50;
+TRIALS = 100;
 
 % settings:
 
@@ -87,7 +87,7 @@ opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, settings.En
 
 % nominal thrust
 
-thrustNom = 3.7929e+03;
+thrustNom = 4263.62;
 burnNom = 13;
 
 
@@ -95,7 +95,7 @@ burnNom = 13;
 for trial = 1:TRIALS
     % randomize the angle vector by 
     zAng = 2*pi*rand(1);
-    yAng = -pi/2 + 2*0.0175*randn(1);
+    yAng = -pi/2 + 0.0175*randn(1);
     xAng = 0;
 
 
@@ -112,7 +112,7 @@ for trial = 1:TRIALS
     thrustVar = 100*randn(1);
 
     prop.Thrust = thrustNom + thrustVar;
-    prop.BurnTime = prop.BurnTime - thrustVar/291.76;
+    prop.BurnTime = burnNom - thrustVar/291.76;
 
     % update the rocketObj
     rocket.modifyComponent(prop)
@@ -164,9 +164,10 @@ end
      geoplot(g, lat, long, 'rx')
      hold on
      geoplot(g, env.LatLong(1), env.LatLong(2), 'bo')
-     title('Monte Carlo with $T=\mathcal{N}(3792.9,100)$ and 1 deg launch angle randomization')
+     title('Monte Carlo with $T=\mathcal{N}(4263.6 N,100 N)$ and 1 deg launch angle randomization')
 
      % output the apogees:
+     disp('Mean Apogee:')
     disp(mean(apogee))
 
 
