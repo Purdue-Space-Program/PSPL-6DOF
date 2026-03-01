@@ -1,4 +1,4 @@
-function Main(rocket, env, settings, rocket_name)
+function main_output = Main(rocket, env, settings, rocket_name, make_plots)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: MainRK4
@@ -110,171 +110,193 @@ toc;
 %% Outputs:
 
 % create a struct which contains all of the output information:
-outputStruct = struct;
-outputStruct.time = timeArray;
+output_struct = struct;
+output_struct.time = timeArray;
 
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
-    [~, outputStruct.mach(k,1), outputStruct.AoA(k,1), outputStruct.accel(k,:), ...
-        outputStruct.cD(k,:), moment(k,:)] = RK4Integrator(timeArray(k), out(k,:), ...
-        atmosphere,totCoM, totMass, MoI, windData, rocket, settings, env);
+    [~, output_struct.mach(k,1), output_struct.AoA(k,1), output_struct.acceleration(k,:), ...
+        output_struct.cD(k,:), moment(k,:)] = RK4Integrator(timeArray(k), out(k,:), ...
+        atmosphere, totCoM, totMass, MoI, windData, rocket, settings, env);
 end
 
 
 if settings.Outputs == true
     % make the outputs real (long monte carlo runs can generate complex values)
     out = real(out);
-    outputStruct.AoA = real(outputStruct.AoA);
+    output_struct.AoA = real(output_struct.AoA);
 
     % parse rk4 outputs:
-    posArray = out(:,1:3);
-    velArray = out(:,4:6);
+    position_array = out(:,1:3);
+    velocity_array = out(:,4:6);
     omega = out(:,7:9);
-    quatArray = out(:,10:13);
+    quat_array = out(:,10:13);
 
-    outputStruct.pos = posArray;
-    outputStruct.vel = velArray;
-    outputStruct.omega = omega;
-    outputStruct.quat = quatArray;
-
-    % convert to lat and long for plotting on map:
-    E = wgs84Ellipsoid;
-    [lats,longs, ~] = ned2geodetic(out(:,3),out(:,2),-out(:,1),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
-
-    uif = uifigure;
-    g = geoglobe(uif);
+    output_struct.position = position_array;
+    output_struct.velocity = velocity_array;
+    output_struct.omega = omega;
+    output_struct.quat = quat_array;
     
-    geoplot3(g, lats, longs, out(:,1), 'r-', LineWidth= 1)
-    campos(g,env.LatLong(1)-0.1,env.LatLong(2)-0.1,15000)
-    campitch(g,-30)
-    camheading(g,45)
+    if make_plots == true
+        % convert to lat and long for plotting on map:
+        E = wgs84Ellipsoid;
+        [lats,longs, ~] = ned2geodetic(out(:,3),out(:,2),-out(:,1),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
     
-    % find end conditions for graphs / animations
-    endTime = length(outputStruct.AoA) * settings.Timestep;
+        uif = uifigure;
+        g = geoglobe(uif);
+        
+        geoplot3(g, lats, longs, out(:,1), 'r-', LineWidth= 1)
+        campos(g,env.LatLong(1)-0.1,env.LatLong(2)-0.1,15000)
+        campitch(g,-30)
+        camheading(g,45)
+        
+        % find end conditions for graphs / animations
+        endTime = length(output_struct.AoA) * settings.Timestep;
+    end
 
     % grab parameters at max Q and off the rail
-    [maxVel, maxIndex] = max(out(:,4));
-    maxqAccel = outputStruct.accel(maxIndex,1);
-    maxqpos = posArray(maxIndex,1);
+    [max_Q_vertical_velocity, max_Q_index] = max(out(:,4));
+    max_Q_index = max_Q_index - 5; % i love euler method!!!!!!!
+    max_Q_acceleration = output_struct.acceleration(max_Q_index,1);
+    max_Q_altitude = position_array(max_Q_index,1);
+    max_Q_horizontal_velocity = norm(output_struct.velocity(max_Q_index, 2:3));
 
     machTable = rasData(1:300,1);
     cdTable = rasData(1:300,3);
-    maxqMach = outputStruct.mach(maxIndex);
-    [~, maxqMachIndex] = min(abs(machTable-maxqMach));
-    maxqCD = cdTable(maxqMachIndex);
+    max_Q_Mach = output_struct.mach(max_Q_index);
+    [~, max_Q_Mach_index] = min(abs(machTable-max_Q_Mach));
+    max_Q_CD = cdTable(max_Q_Mach_index);
 
-    [~, railIndex] = min(abs(posArray(1:100,1)-env.railHeight-posArray(1,1)));
-    railVel = out(railIndex,4);
-    railAccel = outputStruct.accel(railIndex,1);
+    [~, off_the_rail_index] = min(abs(position_array(1:50,1) - env.railHeight - position_array(1,1)));
+    off_the_rail_velocity = out(off_the_rail_index,4);
+    off_the_rail_acceleration = output_struct.acceleration(off_the_rail_index,1);
 
-    railMach = outputStruct.mach(railIndex);
-    [~, railMachIndex] = min(abs(machTable-railMach));
-    railCD = cdTable(railMachIndex);
+    rail_Mach = output_struct.mach(off_the_rail_index);
+    [~, rail_Mach_index] = min(abs(machTable-rail_Mach));
+    railCD = cdTable(rail_Mach_index);
 
-    apogee = max(posArray(:,1));
+    [apogee_altitude, apogee_index] = max(position_array(:,1));
+
+    apogee_horizontal_velocity = norm(output_struct.velocity(apogee_index, 2:3));
+
+
+    main_output = struct();
+    main_output.max_Q_horizontal_velocity = max_Q_horizontal_velocity;
+    main_output.max_Q_vertical_velocity = max_Q_vertical_velocity;
+    main_output.max_Q_Mach = max_Q_Mach;
+    main_output.max_Q_acceleration = max_Q_acceleration;
+    main_output.max_Q_CD = max_Q_CD;
+    
+    main_output.apogee_horizontal_velocity = apogee_horizontal_velocity;
+    main_output.apogee_altitude = apogee_altitude - env.Elevation;
+
 
     fprintf("\nParameters at Max Q:\n")
-    fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",maxVel, maxqMach, maxqAccel, maxqCD);
+    fprintf("\tHorizontal Velocity: %.2f m/s\n", max_Q_horizontal_velocity);
+    fprintf("\tAltitude: %.2f m/s\n", max_Q_altitude);
+    fprintf("\tVelocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",max_Q_vertical_velocity, max_Q_Mach, max_Q_acceleration, max_Q_CD);
     fprintf("Off-Rail Parameters:\n")
-    fprintf(" Velocity: %.2f m/s\n Mach: %.4f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",railVel, railMach, railAccel, railCD);
-    fprintf("Rocket Apogee (AMSL): %.2f m\n", apogee)
-    fprintf("Rocket Apogee (AGL): %.2f m\n", apogee - env.Elevation)
+    fprintf("\tVelocity: %.2f m/s\n Mach: %.4f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",off_the_rail_velocity, rail_Mach, off_the_rail_acceleration, railCD);
+    fprintf("\nRocket Apogee (AMSL): %.2f m\n", apogee_altitude)
+    fprintf("Rocket Apogee (AGL): %.2f m\n", apogee_altitude - env.Elevation)
 
+    if make_plots == true
     
-
-    %% Plotting:
-
-    colorlist = ["#ff595e", "#ff924c", "#ffbe0b", "#8ac926", "#1982c4", "#6a4c93", "#06402B"];
-
-    % Earth Frame XYZ position:
-    figure;
-    fname = 'Cartesian Elements';
-
-    subplot(2,1,1)
-    hold on
-    plot(timeArray, posArray(:,1), 'Color', colorlist(1));
-    plot(timeArray, posArray(:,2), 'Color', colorlist(2));
-    plot(timeArray, posArray(:,3), 'Color', colorlist(3));
-
-    xlim([0, endTime]);
-    title("Rocket Position in Earth Frame")
-    xlabel("Time (s)")
-    ylabel("Position [m]")
-    legend("$X$","$Y$","$Z$")
-    grid on
-    hold off
-
-
-    subplot(2,1,2)
-    hold on
-    plot(timeArray, velArray(:,1), 'Color', colorlist(4), 'LineStyle','-');
-    plot(timeArray, velArray(:,2), 'Color', colorlist(5), 'LineStyle','-');
-    plot(timeArray, velArray(:,3), 'Color', colorlist(6), 'LineStyle','-');
-    xlabel("Time (s)")
-    title("Rocket Velocity in Earth Frame")
-    ylabel("Velocity [m/s]")
-    legend("$V_x$", "$V_y$", "$V_z$");
-    grid on
-
-    %print(hfig,fname,'-dpdf','-painters','-fillpage')
-    %print(hfig,fname,'-dpng','-r00')
-
-    % Euler Angles:
-    eulerAngles = quat2eul(quatArray,"ZYX");
-    figure;
-    plot(timeArray, eulerAngles);
-    xlim([0,endTime]);
-    title("Euler Angles: 3-2-1")
-    xlabel("Time (s)")
-    ylabel("Euler Angles")
-    legend('psi', 'theta', 'phi');
-
-
-    % Angle of Attack:
-    figure;
-    plot(timeArray, outputStruct.AoA);
-    xlim([0,endTime]);
-    title("Angle of Attack")
-    xlabel("Time (s)")
-    ylabel("Angle of Attack [deg]")
-
-    % Rocket Trajectory Plot:
-    figure;
-    plot3(posArray(1:int32(endTime / settings.Timestep),3), posArray(1:int32(endTime / settings.Timestep),2), posArray(1:int32(endTime / settings.Timestep),1))
-    % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
-    % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
-    % plot3(zeros(endTime / dt), posArray(1:endTime / dt,2), posArray(1:endTime / dt,1), '--')
-    view(43,24);
-    xlabel('Dist North (m)');
-    ylabel('Dist East (m)');
-    zlabel('Height (m)');
-    title("Rocket Trajectory")
-    axis equal;
-    grid minor;
-
-    % Moment plot
-    figure;
-    plot(timeArray, moment)
-    xlabel('time (?)');
-    ylabel('moments (?)');
-    legend('x','y','z')
-    title("Rocket Moments")
+        %% Plotting:
     
-
-    if settings.RotationVis == true
-        % run the rotation visualizer script
-        playbackSpeed = 3;
-        quatArray = quatArray';
-        posArray = posArray';
-
-        RotationsVisualizer(posArray, quatArray, timeArray, endTime, settings.Timestep, playbackSpeed, 0);
-
-        %% csv outputs:
-
-        %output = horzcat(timeArray, outputStruct.mach);
-
-        %writematrix(output, 'Outputs/MachTime.csv')
+        colorlist = ["#ff595e", "#ff924c", "#ffbe0b", "#8ac926", "#1982c4", "#6a4c93", "#06402B"];
+    
+        % Earth Frame XYZ position:
+        figure;
+        fname = 'Cartesian Elements';
+    
+        subplot(2,1,1)
+        hold on
+        plot(timeArray, position_array(:,1), 'Color', colorlist(1));
+        plot(timeArray, position_array(:,2), 'Color', colorlist(2));
+        plot(timeArray, position_array(:,3), 'Color', colorlist(3));
+    
+        xlim([0, endTime]);
+        title("Rocket Position in Earth Frame")
+        xlabel("Time (s)")
+        ylabel("Position [m]")
+        legend("$X$","$Y$","$Z$")
+        grid on
+        hold off
+    
+    
+        subplot(2,1,2)
+        hold on
+        plot(timeArray, velocity_array(:,1), 'Color', colorlist(4), 'LineStyle','-');
+        plot(timeArray, velocity_array(:,2), 'Color', colorlist(5), 'LineStyle','-');
+        plot(timeArray, velocity_array(:,3), 'Color', colorlist(6), 'LineStyle','-');
+        xlabel("Time (s)")
+        title("Rocket Velocity in Earth Frame")
+        ylabel("Velocity [m/s]")
+        legend("$V_x$", "$V_y$", "$V_z$");
+        grid on
+    
+        %print(hfig,fname,'-dpdf','-painters','-fillpage')
+        %print(hfig,fname,'-dpng','-r00')
+    
+        % Euler Angles:
+        eulerAngles = quat2eul(quat_array,"ZYX");
+        figure;
+        plot(timeArray, eulerAngles);
+        xlim([0,endTime]);
+        title("Euler Angles: 3-2-1")
+        xlabel("Time (s)")
+        ylabel("Euler Angles")
+        legend('psi', 'theta', 'phi');
+    
+    
+        % Angle of Attack:
+        figure;
+        plot(timeArray, output_struct.AoA);
+        xlim([0,endTime]);
+        title("Angle of Attack")
+        xlabel("Time (s)")
+        ylabel("Angle of Attack [deg]")
+    
+        % Rocket Trajectory Plot:
+        figure;
+        plot3(position_array(1:int32(endTime / settings.Timestep),3), position_array(1:int32(endTime / settings.Timestep),2), position_array(1:int32(endTime / settings.Timestep),1))
+        % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
+        % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
+        % plot3(zeros(endTime / dt), posArray(1:endTime / dt,2), posArray(1:endTime / dt,1), '--')
+        view(43,24);
+        xlabel('Dist North (m)');
+        ylabel('Dist East (m)');
+        zlabel('Height (m)');
+        title("Rocket Trajectory")
+        axis equal;
+        grid minor;
+    
+        % Moment plot
+        figure;
+        plot(timeArray, moment)
+        xlabel('time (?)');
+        ylabel('moments (?)');
+        legend('x','y','z')
+        title("Rocket Moments")
+        
+    
+        if settings.RotationVis == true
+            % run the rotation visualizer script
+            playbackSpeed = 3;
+            quat_array = quat_array';
+            position_array = position_array';
+    
+            RotationsVisualizer(position_array, quat_array, timeArray, endTime, settings.Timestep, playbackSpeed, 0);
+    
+            %% csv outputs:
+    
+            %output = horzcat(timeArray, outputStruct.mach);
+    
+            %writematrix(output, 'Outputs/MachTime.csv')
+        end
     end
-end
+
+    end
 
 end

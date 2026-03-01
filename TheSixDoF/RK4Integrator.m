@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, windData, rocket, settings, env)
+function [out, mach, AoA, acceleration, cD, momentVector] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, windData, rocket, settings, env)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator
@@ -108,12 +108,12 @@ CoM = CoM_table(timeIndexCoM);
 %---------------- Gravity force --------------------------------------------
 
 if strcmpi(settings.Fidelity, "low")
-    g = 9.8;
+    gravity_acceleration = 9.8;
 elseif strcmpi(settings.Fidelity,"medium") || strcmpi(settings.Fidelity,"high")
-g = gravitywgs84(geoalt, env.LatLong(1), env.LatLong(2), 'Exact');
+    gravity_acceleration = gravitywgs84(geoalt, env.LatLong(1), env.LatLong(2), 'Exact');
 end
 
-gravForce = mass * g * [-1;0;0];
+gravity_force = mass * gravity_acceleration * [-1;0;0];
 
 % calculate the angle between the velocity vector and the rocket nose
 AoA = acosd((dot(freestream_velocity,bodyVectorEarth)) / (norm(freestream_velocity) * norm(bodyVectorEarth)));
@@ -209,6 +209,10 @@ drag_force = drag_direction * drag_magnitude;
 drag_force(isnan(drag_force)) = 0; % turn all NaN values to zero
 dragForceBody = RotationMatrix(drag_force, quat, 0);
 
+dragPower = dot(drag_force, freestream_velocity);
+if dragPower > 0
+    error("Drag is doing positive work: frame/sign bug.");
+end
 
 %---------------- Parachute ------------------------------------------------
 
@@ -244,15 +248,22 @@ paraDragForceBody = RotationMatrix(paraDragForce, quat, 0);
 
 %---------------- Total Forces ---------------------------------------------
 
-forceVector = gravForce + thrustForceEarth + drag_force + liftForce + paraDragForce;
+forceVector = gravity_force + thrustForceEarth + drag_force + liftForce + paraDragForce;
 
-accel = forceVector / mass;
+acceleration = forceVector / mass;
+
+if time == 0
+    initial_acceleration = acceleration(1);
+    initial_acceleration_in_gravities = initial_acceleration/gravity_acceleration;
+    initial_TWR = initial_acceleration_in_gravities + 1;
+    fprintf("\nInitital TWR: %.3f", initial_TWR)
 
 %---------------- Stability Caliber ----------------------------------------
-
+    
 % difference between CoM and cP divided by diameter of the rocket
-% fprintf("\nCoM: %.3f, cP: %.3f", CoM, cP)
-% fprintf("\nStability caliber: %.3f\n", (cP - CoM) / rocket.OuterDiameter);
+    fprintf("\nInitial CoM: %.3f, cP: %.3f", CoM, cP)
+    fprintf("\nInitial Stability caliber: %.3f\n", (cP - CoM) / rocket.OuterDiameter);
+end
 
 %---------------- Moments --------------------------------------------------
 
@@ -315,5 +326,5 @@ B = [0, -omegaX, -omegaY, -omegaZ;
 
 quatRates = 0.5 * B * quat;
 
-out = [velocity;accel;alpha;quatRates];
+out = [velocity;acceleration;alpha;quatRates];
 end

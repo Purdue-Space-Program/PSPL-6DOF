@@ -28,7 +28,14 @@ classdef Environment
                 % aqui
             end
             env.LatLong = [lat,long];
-            env.Elevation = getElevation(env);
+            
+            try
+                env.Elevation = getElevation(env);
+            catch
+                fprintf("Elevation unable to be obtained at location (probably no internet), using 0 for elevation.")
+                env.Elevation = 0;
+            end
+            
             env.Date = date;
             env.railHeight = rail_height;
         end

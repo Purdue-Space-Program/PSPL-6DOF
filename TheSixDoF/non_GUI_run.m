@@ -8,43 +8,49 @@
 %%%%%%%%%% to fix %%%%%%%%%%%%
 %%
 
-vehicle_parameters_csv = fullfile( ...
+vehicle_parameters_csv_path = fullfile( ...
     "Inputs", ...
     "Saved Rockets", ...
     "FUCK_MATLAB", ...
     "vehicle_parameters.csv");
-vehicle_parameters = readtable(vehicle_parameters_csv);
+vehicle_parameters_csv = readtable(vehicle_parameters_csv_path);
 
 % convert to struct for syntactic sugar
 vehicle_parameters = cell2struct( ...
-    num2cell(vehicle_parameters.value), ...
-    cellstr(vehicle_parameters.parameter_name), ...
+    num2cell(vehicle_parameters_csv.value), ...
+    cellstr(vehicle_parameters_csv.parameter_name), ...
     1);
 
-
+addpath(genpath("Classes"))
 engine = PropulsionSystem("engine_name");
 
-engine.Thrust = vehicle_parameters.jet_thrust;
-engine.BurnTime = vehicle_parameters.burn_time;
-engine.ExitArea = 0.01;
-engine.ExitPressure = 10;
+use_worst_case = true;
+
+if use_worst_case
+    engine.Thrust = vehicle_parameters.maximum_expected_jet_thrust;
+    engine.BurnTime = vehicle_parameters.maximum_expected_burn_time;
+else
+    engine.Thrust = vehicle_parameters.jet_thrust;
+    engine.BurnTime = vehicle_parameters.burn_time;
+end
+
+engine.ExitArea = 0.005;
+engine.ExitPressure = 103421;
 
 rocket = Rocket("Rocket A");
 
 rocket.TotalLength = vehicle_parameters.total_length; % Vehicle Length [m]
 rocket.OuterDiameter = vehicle_parameters.tank_outer_diameter; % Vehicle OD [m]
-rocket.NoseLength = 0.5; % Nose Cone Length [m]
+rocket.NoseLength = vehicle_parameters.nosecone_length; % Nose Cone Length [m]
 rocket.NoseGeometry = "Von Karman"; % Nose Cone Type
 rocket.TotalMass = vehicle_parameters.dry_mass; % total mass [kg]
 rocket.ComponentList = dictionary(string.empty(0,1), cell.empty(0,1)); % Component Dictionary
 % rocket.RASAero_data % RASAero data
-rocket.RASAero_data_file_path = "Inputs\Saved Rockets\FUCK_MATLAB\fuck_you6_converted_aero_data.csv"; % The file path of the RASAero data
+rocket.RASAero_data_file_path = "Inputs\Saved Rockets\FUCK_MATLAB\fuck_you7.csv"; % The file path of the RASAero data
 rocket.CoMOverride = vehicle_parameters.dry_COM_location_from_top; % CoM Override (Dry CoM)
 % rocket.CoPOverride % Manual CoP Override
 
-
 rocket.addComponent(engine)
-
 
 FAR_latitude = 35.3474; % [degrees]
 FAR_longitude = -117.8091; % [degrees]
@@ -78,10 +84,12 @@ end
 environment = Environment(latitude_value, longitude_value, datetime("now", "TimeZone","UTC"), rail_height);
 environment = getLocalWeather(environment);
 
-settings = IntegratorSettings("apogee", 0.1, "medium");
+settings = IntegratorSettings("apogee", 0.05, "medium");
 
 
 % selpath = uigetdir(pwd,"Set the root directory to your local 'PSPL-6DOF\TheSixDoF' folder");
 
-Main(rocket, environment, settings, rocket.Name);
-% 
+make_plots = false;
+main_output = Main(rocket, environment, settings, rocket.Name, make_plots);
+
+save("output.mat", "main_output");

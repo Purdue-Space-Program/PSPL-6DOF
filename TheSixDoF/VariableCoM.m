@@ -172,15 +172,15 @@ engineHFore = nose_height + pressurant_tank_height + mid_height + lox_tank_heigh
 
 if isprop(rocket, "CoMOverride") && ~isempty(rocket.CoMOverride)
     rocket_empty_CoM = rocket.CoMOverride; % [m]
-    disp("exists!")
+    % disp("CoM exists!")
 else
     % Calculate empty CoM measured from nose
     rocket_empty_CoM = (engineMass * engineHFore + finCanMass * finCanHFore + empFuelTMass ...
       * fuelTHFore + empLoxTMass * loxTHFore + midAFMass * midAFHFore ...
       + pressurant_tank_mass * heHFore + noseMass * noseHFore) / massDry;
-    disp("doesnt exist")
+    disp("CoM doesnt exist")
 end
-fprintf("rocket_empty_CoM %f\n", rocket_empty_CoM)
+% fprintf("rocket_empty_CoM: %f\n", rocket_empty_CoM)
 
 % Measure height to fuel and lox from nose
 heightToLox = nose_height + pressurant_tank_height + mid_height;

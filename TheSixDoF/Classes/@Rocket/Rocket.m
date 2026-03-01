@@ -73,18 +73,23 @@ classdef Rocket < handle
             arguments
                 rocket_object Rocket
             end
-
-            raw_data = readmatrix(rocket_object.RASAero_data_file_path);
+            
             %fprintf("rawData size: %d x %d\n", size(rawData, 1), size(rawData, 2));
-            if all(size(raw_data) == [7499, 15])
-                RASAero_data = [raw_data(1:300,1:5) raw_data(1:300,8) raw_data(1:300,13:15);
-                    raw_data(2501:2800,1:5) raw_data(2501:2800,8) raw_data(2501:2800,13:15);
-                    raw_data(5001:5300,1:5) raw_data(5001:5300,8) raw_data(5001:5300,13:15)];
+            if isempty(rocket_object.RASAero_data)
+                raw_data = readmatrix(rocket_object.RASAero_data_file_path);
+                if all(size(raw_data) == [7499, 15])
+                    RASAero_data = [raw_data(1:300,1:5) raw_data(1:300,8) raw_data(1:300,13:15);
+                        raw_data(2501:2800,1:5) raw_data(2501:2800,8) raw_data(2501:2800,13:15);
+                        raw_data(5001:5300,1:5) raw_data(5001:5300,8) raw_data(5001:5300,13:15)];
+                else
+                    % data has already been truncated
+                    RASAero_data = raw_data;
+                end
+                rocket_object.RASAero_data = RASAero_data;
+                disp("fuck")
             else
-                % data has already been truncated
-                RASAero_data = raw_data;
+                RASAero_data = rocket_object.RASAero_data;
             end
-
             % output_file_path = sprintf("%s_converted_aero_data.csv", rocket_object.Name);
             % writematrix(RASAero_data, output_file_path);
         end
