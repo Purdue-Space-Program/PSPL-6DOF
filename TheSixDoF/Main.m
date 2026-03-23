@@ -37,32 +37,34 @@ function Main(rocket, env, settings)
 % % Make a magnetometer:
 % mag = Sensor.Magnetometer("Mag",0.01,0,0,0);
 % 
-% % Make a gyroscope:
+% Make a gyroscope:
 % gyro = Sensor.Gyroscope("Gyro",.25,1e-4,.005,.01,0);
 
 % create a time array to span the simulation time. Use 500s or more
 % w/ recovery on.The code will self-terminate after reaching end
 % condition.
 
+components = values(rocket.ComponentList);
+
 if strcmpi('burnout', settings.EndCondition)
     time = rocket.BurnTime;
 elseif ~isnan(str2double(settings.EndCondition))
     time = round(str2double(settings.EndCondition),1);
 else
-    time = 70;
+    time = 400;
 end
 
 arrayLength = (time / settings.Timestep);
 tspan = linspace(0,time,arrayLength+1);
 
-% set the initial position (x,y,z). Accoun ts for starting elevation.
-pos = [env.Elevation;0;0];
+% set the initial position in ENU frame(x,y,z). Accounts for starting elevation.
+pos = [0;0;env.Elevation];
 
-% set the initial velocity (xdot,ydot,zdot).
+% set the initial velocity in ENU frame (xdot,ydot,zdot).
 vel = [0;0;0];
 
 % initial angle (z angle, y angle, x angle) - following 3-2-1 sequence
-angleVector = [0;0.1;0];
+angleVector = [0;-pi/2;0];
 
 % initial rotation rate (x rate, y rate, z rate)
 omega = [0;0;0];
@@ -92,7 +94,7 @@ atmosphere = env.Atmosphere;
 [totMass, totCoM, MoI] = VariableCoMMoI(rocket);
 
 % additional options for RK4 (stop after reaching final condition)
-opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, settings.EndCondition), ...
+opt = odeset('Events', @(tspan, Init) stoppingCondition(tspan, Init, settings.EndCondition, env), ...
     'RelTol', settings.relTol, 'AbsTol', settings.absTol);
 
 %---------------- Run the RK4 Integration ----------------------------------
@@ -133,13 +135,13 @@ if settings.Outputs == true
 
     % convert to lat and long for plotting on map:
     E = wgs84Ellipsoid;
-    [lats,longs, ~] = ned2geodetic(out(:,3),out(:,2),-out(:,1),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
+    [lats,longs, ~] = enu2geodetic(out(:,1),out(:,2),out(:,3),env.LatLong(1),env.LatLong(2),E.SemimajorAxis,E);
 
 
     uif = uifigure;
     g = geoglobe(uif);
     
-    geoplot3(g, lats, longs, out(:,1), 'r-', LineWidth= 1)
+    geoplot3(g, lats, longs, out(:,3), 'r-', LineWidth= 1)
     campos(g,env.LatLong(1)-0.1,env.LatLong(2)-0.1,15000)
     campitch(g,-30)
     camheading(g,45)
@@ -216,14 +218,31 @@ if settings.Outputs == true
     %print(hfig,fname,'-dpng','-r00')
 
     % Euler Angles:
-    eulerAngles = quat2eul(quatArray,"ZYX");
-    figure;
-    plot(timeArray, eulerAngles);
-    xlim([0,endTime]);
-    title("Euler Angles: 3-2-1")
-    xlabel("Time (s)")
-    ylabel("Euler Angles")
-    legend('psi', 'theta', 'phi');
+        eulerAngles = quat2eul(quatArray,"ZYX");
+        figure;
+        plot(timeArray, eulerAngles);
+        xlim([0,endTime]);
+        title("Euler Angles: 3-2-1")
+        xlabel("Time (s)")
+        ylabel("Euler Angles")
+        legend('psi', 'theta', 'phi');
+
+    gyroObj = [];
+    for i = 1:numel(components)
+        c = components{i};
+        if isa(c, 'Gyroscope')
+            gyroObj = c;
+            break
+        end
+    end
+
+
+    % Gyroscope plot
+    if ~isempty(gyroObj)
+        omegaTrue = outputStruct.omega;
+        omegaMeas = gyroObj.GyroscopeMeasurement(omegaTrue, settings.Timestep);
+        gyroObj.plotMeasurementHistory(timeArray, omegaTrue, omegaMeas);
+    end
 
 
     % Angle of Attack:
@@ -236,7 +255,7 @@ if settings.Outputs == true
 
     % Rocket Trajectory Plot:
     figure;
-    plot3(posArray(1:int32(endTime / settings.Timestep),3), posArray(1:int32(endTime / settings.Timestep),2), posArray(1:int32(endTime / settings.Timestep),1))
+    plot3(posArray(1:int32(endTime / settings.Timestep),1), posArray(1:int32(endTime / settings.Timestep),2), posArray(1:int32(endTime / settings.Timestep),3))
     % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
     % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
     % plot3(zeros(endTime / dt), posArray(1:endTime / dt,2), posArray(1:endTime / dt,1), '--')
@@ -251,7 +270,25 @@ if settings.Outputs == true
     figure;
     plot(timeArray, moment)
     legend('x','y','z')
+
     
+    accelObj = [];
+    for i = 1:numel(components)
+        c = components{i};
+        if isa(c, 'Accelerometer')
+            accelObj = c;
+            break
+        end
+    end
+    % Accelerometer plot
+    if ~isempty(accelObj)
+        accelTrue = outputStruct.accel;
+        accelMeas = accelObj.AccelerometerMeasurement(accelTrue, settings.Timestep);
+        accelObj.plotMeasurementHistory(timeArray, accelTrue, accelMeas)
+    end
+
+    
+
 
     if settings.RotationVis == true
         % run the rotation visualizer script

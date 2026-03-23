@@ -1,9 +1,9 @@
-function [value, isterminal, direction] = stoppingCondition(tspan, Init, condition)
+function [value, isterminal, direction] = stoppingCondition(tspan, Init, condition, env)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PSP FLIGHT DYNAMICS:
 %
 % Title: stoppingCondition
-% Author: Hudson Reynodls - Created: 1/28/2025
+% Author: Hudson Reynolds - Created: 1/28/2025
 %
 % Description: This function stops the rk4 integration once a certain
 % condition is met. Currently accepts apogee and full run as cases, but is
@@ -26,13 +26,12 @@ function [value, isterminal, direction] = stoppingCondition(tspan, Init, conditi
 
 if strcmpi('apogee', condition) == 1
     % if velocity is less than 0.
-    value = (Init(4) < 0);
+    value = (Init(6) < 0);
     isterminal = 1;   % Stop the integration
     direction  = 0;
 else
-    env = Env.Environment;
     % if position is less than the ground level.
-    value = (Init(1) < env.Elevation);
+    value = (Init(3) < env.Elevation);
     isterminal = 1;   % Stop the integration
     direction  = 0;
 end

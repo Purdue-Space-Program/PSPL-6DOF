@@ -56,7 +56,7 @@ burnTime = motor.BurnTime;
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
 
 %---------------- Get atmospheric Conditions (prefer Open-Meteo via env) ---
-geoalt = real(pos(1));  % AGL [m]
+geoalt = real(pos(3));  % AGL [m]
 
 
 % get the atmosphere data (update to get the environment):
@@ -80,7 +80,7 @@ windDirList = windData(:,3);
 
 windDir = windDirList(heightIndex);
 windMag = windMagList(heightIndex);
-windVector = windMag * [0;sin(windDir);cos(windDir)];
+windVector = windMag * [sin(windDir);cos(windDir);0];
 
 
 if settings.Wind == true
@@ -111,7 +111,7 @@ elseif strcmpi(settings.Fidelity,"medium") || strcmpi(settings.Fidelity,"high")
 g = gravitywgs84(geoalt, env.LatLong(1), env.LatLong(2), 'Exact');
 end
 
-gravForce = mass * g * [-1;0;0];
+gravForce = mass * g * [0;0;-1];
 
 % calculate the angle between the velocity vector and the rocket nose
 AoA = acosd((dot(freestreamVel,bodyVectorEarth)) / (norm(freestreamVel) * norm(bodyVectorEarth)));
@@ -212,7 +212,7 @@ dragForceBody = RotationMatrix(dragForce, quat, 0);
 
 persistent tDrogueOffset
 
-if vel(1) < 0
+if vel(3) < 0
 
     % initialize a new time variable for the drogue deployment which
     % increases the length of the drogue as a function of time.
@@ -285,7 +285,7 @@ coefficientLift = 5e-6 * missAlpha * 0;
 forceRoll = 3 / 2 * coefficientLift * rho * norm(vel)^2;
 rollMomentBody = (radius + finCpLocation) * forceRoll * bodyVector;
 
-momentVector = liftMomentBody + dragMomentBody + rollMomentBody + paraMomentBody;
+momentVector = liftMomentBody + dragMomentBody + rollMomentBody; %+ paraMomentBody;
 
 % use euler equations to find the final moments:
 

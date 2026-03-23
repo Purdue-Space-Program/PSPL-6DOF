@@ -32,7 +32,7 @@ drogueDia = (25/6) * constant.FT_TO_M;  % drogue  diameter [m]
 
 mainCd = 2.2;                           % cD for the main parachute
 mainDia = (97/6) * constant.FT_TO_M;    % main chute diameter [m]
-mainDeployAlt = 304.8 + env.Elevation;  % main chute deployment altitude [m]
+mainDeployAlt = 609.6 + env.Elevation;  % main chute deployment altitude [m]
 
 % define paraLength as a function of time:
 paraLength = 8*(1-exp(-.5*tDrogue));

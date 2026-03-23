@@ -40,12 +40,11 @@ patch = poseplot(qs,ps,'ENU', MeshFileName="Inputs/CMSRocketModel.stl", ScaleFac
 %zlim([0,max(posArray(1,:))]);
 view(45,25);
 axis square
-camroll(113)
 
 
-xlabel("Up-z (m)")
-ylabel("East-x (m)")
-zlabel("North-y (m)");
+xlabel("East-x (m)")
+ylabel("North-y (m)")
+zlabel("Up-z (m)");
 
 
 for i = 1:playbackSpeed:endTime/dt

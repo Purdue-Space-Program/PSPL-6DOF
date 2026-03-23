@@ -1,6 +1,10 @@
 classdef Avionics < RocketComponent
     
     properties
+        Magnetometer (1, 1) Magnetometer
+        Gyroscope (1, 1) Gyroscope
+        GNSS (1, 1) GNSS
+        Altimeter (1, 1) Altimeter
     end
 
     methods
