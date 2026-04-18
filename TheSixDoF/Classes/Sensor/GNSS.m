@@ -2,9 +2,7 @@ classdef GNSS < Sensor
     % The GNSS class is a subclass of Sensor and inherits from the
     % sensor properties. See Sensor for input clarification
 
-
     methods
-
         function gnss = GNSS(name,samplingRate,variance,resolution,bias,scaleFactor)
             arguments
                 name (1,1) string
@@ -17,55 +15,36 @@ classdef GNSS < Sensor
             gnss@Sensor(name,samplingRate,variance,resolution,bias, scaleFactor)
         end
 
-        function [posOut, velOut] = GNSSMeasurement(sensor,pos, vel, dt)
-            % GNSSMeasurement is a method to get the altitude measurement
-            % from the sensor definition. This can either be run at each
-            % timestep, or after the numerical integration.
-            %
-            % Required Inputs:
-            % sensor = Sensor definition (of type Sensor)
-            % pos = true pos (row vector) [m]
-            % vel = true vel (row vector) [m/s]
-            %
-            % Optional Inputs:
-            % dt = timestep between GNSS datapoints, must be constant.
-            % The timestep must also be smaller than the smallest sensor sampling
-            % rate to work properly.
+        function [posOut, tspan] = GNSSMeasurement(sensor,pos, T, dt)
+            % GNSSMeasurement is a method to get the position measurement
+            % from the sensor definition. This should be run after the
+            % numerical integration of the true trajectory
             arguments
-                sensor Sensor.GNSS
+                sensor GNSS
                 pos (:,3) double
-                vel (:,3) double
+                T double
                 dt double = 0 %ignore if no input
             end
-            xyVar = sensor.Variance(1);
-            zVar = sensor.Variance(2);
-            vVar = sensor.Variance(3);
 
-            len = numel(pos(:,1));
+            Var = sensor.Variance(1:3);
+            Var = reshape(Var, 1, 3);
 
-            if (dt == 0)
-                alt = zeros(1,length(height));
-                for k = 1:length(height)
-                    xyPos(k) = pos(k,1:2) + randn(1)*sqrt(xyVar);
-                    zPos(k) = pos(k,3) + randn(1)*sqrt(zVar);
-                    velEst(k, :) = vel(k, :) + randn(1, 3) * sqrt(vVar);
-                end
+            % if the sampling rate is zero, match the simulation:
+            if sensor.SamplingRate == 0
+                t_gps = 0:dt:T;
             else
-                sampleSkip = sensor.SamplingRate/dt;
-                sampleSkipArray = round(1:sampleSkip:len);
-                % initialize to Not a Number (NaN) to ignore other entries
-                xyPos = NaN(len,2);
-                zPos = NaN(len, 1);
-                velEst = NaN(len, 3);
-
-                for k = sampleSkipArray
-                    xyPos(k,:) = pos(k,1:2) + randn(1,2)*sqrt(xyVar);
-                    zPos(k,:) = pos(k,3) + randn(1)*sqrt(zVar);
-                    velEst(k, :) = vel(k, :) + randn(1, 3) * sqrt(vVar);
-                end
-                posOut = [xyPos, zPos]; % Combine the 2D and altitude positions
-                velOut = velEst; % Output the estimated velocities
+                t_gps = 0:sensor.SamplingRate:T;
             end
+
+            tspan = 0:dt:T+dt;
+
+            % get the GPS data:
+            noise = randn(length(t_gps), 3) .* sqrt(Var);
+
+            posInterp = interp1(tspan, pos, t_gps, 'linear', 'extrap');
+
+            posOut = posInterp + noise;
+
         end
     end
 end

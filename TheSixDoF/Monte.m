@@ -22,7 +22,7 @@ TRIALS = 100;
 % run Mojave:
 env = Environment();
 
-settings = IntegratorSettings("full", 0.1, "low");
+settings = IntegratorSettings("apogee", 0.1, "low");
 
 env = getLocalWeather(env);
 
