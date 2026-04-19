@@ -167,7 +167,7 @@ if settings.Outputs == true
     % [~, railMachIndex] = min(abs(machTable-railMach));
     % railCD = cdTable(railMachIndex);
 
-    apogee = max(posArray(:,1));
+    apogee = max(posArray(:,3));
 
     % fprintf("\nParameters at Max Q:\n")
     % fprintf(" Velocity: %.2f m/s\n Mach: %.3f\n Acceleration: %.3f m/s^2\n Drag Coefficient: %.4f\n",maxVel, maxqMach, maxqAccel, maxqCD);
@@ -228,7 +228,19 @@ if settings.Outputs == true
     xlabel('Dist North (m)');
     ylabel('Dist East (m)');
     zlabel('Height (m)');
-    axis equal;
+    %axis equal;
     grid minor;
 
 end
+
+
+IMU_data = struct;
+
+IMU_data.accelometer = accelIMU;
+IMU_data.accel_time = accelIMUTime;
+IMU_data.gyroscope = omegaIMU;
+IMU_data.gyro_time = omegaIMUTime;
+IMU_data.GPS = GPSpos;
+IMU_data.GPS_time = GPSposTime;
+
+save("Rocket_IMU_data.mat", "IMU_data")

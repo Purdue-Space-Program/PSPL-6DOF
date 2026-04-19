@@ -15,7 +15,7 @@ classdef GNSS < Sensor
             gnss@Sensor(name,samplingRate,variance,resolution,bias, scaleFactor)
         end
 
-        function [posOut, tspan] = GNSSMeasurement(sensor,pos, T, dt)
+        function [posOut, t_gps] = GNSSMeasurement(sensor,pos, T, dt)
             % GNSSMeasurement is a method to get the position measurement
             % from the sensor definition. This should be run after the
             % numerical integration of the true trajectory
