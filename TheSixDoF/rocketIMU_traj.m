@@ -7,7 +7,7 @@
 % Description: Runs the 6DoF with simulated inertial navigation
 %
 % Inputs: N/A
-%
+%a
 % Outputs:
 % see subfunctions for specific outputs
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -114,7 +114,8 @@ outputStruct.time = timeArray;
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
     [~, outputStruct.mach(k,1), outputStruct.AoA(k,1), outputStruct.accel(k,:), ...
-        outputStruct.cD(k,:), moment(k,:)] = RK4Integrator(timeArray(k), out(k,:), ...
+        outputStruct.accelBody(k,:), outputStruct.cD(k,:), moment(k,:), outputStruct.g(k,:)] = ...
+        RK4Integrator(timeArray(k), out(k,:), ...
         atmosphere,totCoM, totMass, MoI, windData, rocket, settings, env);
 end
 
@@ -207,7 +208,7 @@ if settings.Outputs == true
 
     % Accelerometer plot
     if ~isempty(accelObj)
-        accelTrue = outputStruct.accel;
+        accelTrue = outputStruct.accelBody;
         [accelIMU, accelIMUTime] = accelObj.AccelerometerMeasurement(accelTrue, timeArray(end),settings.Timestep);
         %accelObj.plotMeasurementHistory(timeArray, accelTrue, accelMeas)
     end
@@ -233,7 +234,6 @@ if settings.Outputs == true
 
 end
 
-
 IMU_data = struct;
 
 IMU_data.accelometer = accelIMU;
@@ -242,5 +242,10 @@ IMU_data.gyroscope = omegaIMU;
 IMU_data.gyro_time = omegaIMUTime;
 IMU_data.GPS = GPSpos;
 IMU_data.GPS_time = GPSposTime;
+
+IMU_data.init_cond = Init([1:6,10:13]); %pos, vel, quat
+IMU_data.ref_traj = posArray;
+IMU_data.ref_time = timeArray;
+IMU_data.grav = outputStruct.g;
 
 save("Rocket_IMU_data.mat", "IMU_data")

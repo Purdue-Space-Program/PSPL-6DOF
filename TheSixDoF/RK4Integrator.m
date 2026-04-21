@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, windData, rocket, settings, env)
+function [out, mach, AoA, accel, specific_force_body, cD, momentVector, g] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, windData, rocket, settings, env)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator
@@ -245,6 +245,12 @@ paraDragForceBody = RotationMatrix(paraDragForce, quat, 0);
 forceVector = gravForce + thrustForceEarth + dragForce + liftForce + paraDragForce;
 %accel:
 accel = forceVector / mass;
+
+g = gravForce/mass;
+
+specific_force_world = accel - g;
+
+specific_force_body = RotationMatrix(specific_force_world, quat, 0);
 
 %---------------- Stability Caliber ----------------------------------------
 
