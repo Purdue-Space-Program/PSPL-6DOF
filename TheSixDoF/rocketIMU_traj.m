@@ -40,12 +40,12 @@ gyro = rocket.ComponentList.values{7};
 gyro.SamplingRate = 1/100;
 gyro.Variance = .0035*pi/180*ones(3,1); % from VN-200
 gyro.Bias0 = 0;
-gyro.ScaleFactor = 1.0;
+gyro.ScaleFactor = 1.001;
 
 accel.SamplingRate = 1/100;
 accel.Variance = 1e-2*ones(3,1);
 accel.Bias0 = 1e-4;
-accel.ScaleFactor = 1;
+accel.ScaleFactor = 1.001;
 
 % add the gyro and accel to the rocket
 rocket.modifyComponent(gyro)
@@ -247,5 +247,9 @@ IMU_data.init_cond = Init([1:6,10:13]); %pos, vel, quat
 IMU_data.ref_traj = posArray;
 IMU_data.ref_time = timeArray;
 IMU_data.grav = outputStruct.g;
+
+IMU_data.accel_info = accel;
+IMU_data.gyro_info = gyro;
+IMU_data.gps_info = gps;
 
 save("Rocket_IMU_data.mat", "IMU_data")
