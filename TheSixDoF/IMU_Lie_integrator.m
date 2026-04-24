@@ -1,50 +1,17 @@
-function state = IMU_Lie_integrator(IMU_data, state, time, dt)
+function state = IMU_Lie_integrator(accel, gyro, grav, state, dt)
 % this function takes the current state and integrates the IMU measurements
 % at the given time to produce the updated state. This is the equivalent of
 % the prediction step of the Kalman filter equations.
 %
 % INPUTS:
 %
-% IMU_data - IMU struct with corrected acceleration, gyro data, etc.
-% state - 5x5 matrix of the current state estimate
-% time - time at which to start the integration
+% accel - 3x1 accelometer vector (body frame, specific force)
+% gyro - 3x1 gyro vector (body frame)
+% state - SE2(3) matrix of current state
 % dt - integration duration
-
-accel_time = IMU_data.accel_time;
-gyro_time = IMU_data.gyro_time;
 
 R0 = state(1:3,1:3);
 P0 = state(1:3,4:5);
-
-% find the acceleration and gyro data which are the closest lower value to
-% the current time (ZOH):
-
-% Persistent pointers to hold indices between function calls
-persistent a_ptr g_ptr r_ptr;
-
-% Initialize pointers if empty or if time has been reset (e.g., new simulation)
-if isempty(a_ptr) || time < IMU_data.accel_time(a_ptr)
-    a_ptr = 1; g_ptr = 1; r_ptr = 1;
-end
-
-% Efficiently increment pointers
-% This loop only executes if the time has moved past the current index
-while a_ptr < length(IMU_data.accel_time) && IMU_data.accel_time(a_ptr + 1) <= time
-    a_ptr = a_ptr + 1;
-end
-
-while g_ptr < length(IMU_data.gyro_time) && IMU_data.gyro_time(g_ptr + 1) <= time
-    g_ptr = g_ptr + 1;
-end
-
-while r_ptr < length(IMU_data.ref_time) && IMU_data.ref_time(r_ptr + 1) <= time
-    r_ptr = r_ptr + 1;
-end
-
-% Now use the pointers to index the data
-accel = IMU_data.accelometer(a_ptr, :)';
-gyro  = IMU_data.gyroscope(g_ptr, :)';
-curr_grav  = IMU_data.grav(r_ptr, :)';
 
 % integrate the state
 omegaX = gyro(1);
@@ -62,7 +29,7 @@ C2 = (theta-sin(theta)) / (theta^3);
 C3 = (theta^2/2 - theta^4/24 + cos(theta) - 1) / (theta^4);
 
 AM = zeros(3,2);
-AM(3,1) = curr_grav(3);
+AM(3,1) = grav(3);
 
 AN = [accel,zeros(3,1)];
 

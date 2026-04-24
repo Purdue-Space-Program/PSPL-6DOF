@@ -21,7 +21,10 @@ tic
 for idx = 1:numel(time)
     curr_time = time(idx);
 
-    X(:,:,idx+1) = IMU_Lie_integrator(IMU_data, X(:,:,idx),curr_time, dt);
+    [accel,gyro,grav] = ValuesfromIdx(IMU_data,curr_time);
+
+    X(:,:,idx+1) = IMU_Lie_integrator(accel, gyro, grav, X(:,:,idx), dt);
+
 end
 toc
 
