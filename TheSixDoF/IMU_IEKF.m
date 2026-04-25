@@ -1,4 +1,4 @@
-% World Frame Kalman Filter for the IMU
+% Invariant Kalman Filter for the IMU
 
 
 %% Setup:
@@ -27,7 +27,7 @@ sig_p = 0.5; sig_v = 0.01; sig_theta = 0.01;
 P = diag([sig_p*ones(1,3), sig_v*ones(1,3), sig_theta*ones(1,3)].^2);
 
 Q_body = diag([accel_cov,gyro_cov])*dt; % Process noise covariance
-R = diag(IMU_data.gps_info.Variance)*2;  % Measurement noise covariance
+R = diag(IMU_data.gps_info.Variance);  % Measurement noise covariance
 
 
 % measurement is only position, and it's world frame

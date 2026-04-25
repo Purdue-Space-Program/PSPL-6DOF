@@ -48,3 +48,14 @@ zlabel('Height (m)');
 legend('True Trajectory', 'IMU Integration')
 grid minor;
 
+
+figure;
+plot(time,truePosArray(:,1),'r')
+hold on
+plot(time,estPosLie(1,1:end-1), 'b')
+plot(IMU_data.GPS_time, IMU_data.GPS(:,1), 'go')
+
+
+xlabel('Dist North (m)');
+ylabel('Dist East (m)');
+legend('True Trajectory', 'IMU Integration')
