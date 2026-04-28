@@ -1,181 +1,204 @@
-% Invariant Kalman Filter for the IMU
+% Invariant Extended Kalman Filter (Right-Invariant) on SE_2(3)
 
+%% Setup
 
-%% Setup:
-
-% --- Load the data and set up the initial state ---
 data = load("Rocket_IMU_data.mat");
+IMU_data = data.IMU_data;
+time     = IMU_data.ref_time;
+dt       = 1/100;
+state    = IMU_data.init_cond;
 
-IMU_data = data.IMU_data; 
-time = IMU_data.ref_time;
-dt = 1/100;
-state = IMU_data.init_cond;
-
-% set up the lie group state:
-pos = state(1:3);
-vel = state(4:6);
+pos  = state(1:3);
+vel  = state(4:6);
 quat = state(7:10);
-R = quat2rotm(quat');
-X = [R,vel,pos;zeros(2,3),eye(2)];
+R0   = quat2rotm(quat');
 
+X_store        = zeros(5,5,numel(time)+1);
+X_store(:,:,1) = build_SE2_3(R0, vel(:), pos(:));
 
-% Initialize state covariance and measurement covariance
-accel_cov = IMU_data.accel_info.Variance;
-gyro_cov = IMU_data.gyro_info.Variance';
+% --- Covariances ---
+accel_cov = IMU_data.accel_info.Variance(:);
+gyro_cov  = IMU_data.gyro_info.Variance(:);
 
 sig_p = 0.5; sig_v = 0.01; sig_theta = 0.01;
-P = diag([sig_p*ones(1,3), sig_v*ones(1,3), sig_theta*ones(1,3)].^2);
+P = diag([sig_theta*ones(1,3), sig_v*ones(1,3), sig_p*ones(1,3)].^2);
 
-Q_body = diag([accel_cov,gyro_cov])*dt; % Process noise covariance
-R = diag(IMU_data.gps_info.Variance);  % Measurement noise covariance
+% Process noise — inflate generously to prevent covariance collapse
+B_c = zeros(9,6);
+B_c(1:3, 1:3) = eye(3);
+B_c(4:6, 4:6) = eye(3);
+Q_body = diag([gyro_cov; accel_cov]);
+Q = B_c * Q_body * B_c' * dt;
 
+% Add minimum process noise floor to prevent collapse
+Q = Q + diag([1e-8*ones(1,3), 1e-6*ones(1,3), 1e-4*ones(1,3)]);
 
-% measurement is only position, and it's world frame
-H = eye(3,9);
+% GPS measurement noise
+R_gps = diag(IMU_data.gps_info.Variance) * 2;
 
-% convert Q from body into error state frame:
-Fi = [zeros(3,6);eye(3) zeros(3);zeros(3) eye(3)];
+%% IEKF Main Loop
 
-Q = Fi*Q_body*Fi';
-
-
-%% Kalman Filter
-
-% Loop for IMU integration:
-
-output = struct;
-
-% initialize the error state:
-delta_x = zeros(9,1);
+output.P = zeros(9,9,numel(time));
 
 for idx = 1:numel(time)
 
-    % --- State Prediction ---
-   
-    % state prediction update, find the full state:
     curr_time = time(idx);
+    [accel, gyro, grav] = ValuesfromIdx(IMU_data, curr_time);
 
-    [accel,gyro,grav] = ValuesfromIdx(IMU_data,curr_time);
-    X(:,:,idx+1) = IMU_Lie_integrator(accel, gyro, grav, X(:,:,idx), dt);
+    % ----------------------------------------------------------------
+    % 1. PROPAGATION
+    % ----------------------------------------------------------------
 
-    % extract the rotation matrix from the full state
-    curr_R = X(1:3, 1:3, idx);
+    R_hat = X_store(1:3,1:3,idx);
 
-    % Covariance update:
+    X_store(:,:,idx+1) = IMU_Lie_integrator(accel, gyro, grav, X_store(:,:,idx), dt);
 
-    % Calculate Phi for the given rotation:
-    Phi = compute_Phi(curr_R, accel, gyro, dt);
+    % IEKF state-independent system matrix
+    F_c          = zeros(9,9);
+    F_c(4:6,1:3) = -hat3(R_hat * accel);
+    F_c(7:9,4:6) = eye(3);
 
-    P = Phi*P*Phi' + Q;
-   
-    % --- Measurement Updates ---
+    Phi = eye(9) + F_c * dt;
+    P   = Phi * P * Phi' + Q;
 
-    if any(time(idx) == IMU_data.GPS_time) && curr_time ~= 0
+    % Symmetrize to prevent numerical drift
+    P = (P + P') / 2;
 
-        gps_idx = find(IMU_data.GPS_time == time(idx));
+    % ----------------------------------------------------------------
+    % 2. MEASUREMENT UPDATE (GPS position, world frame)
+    % ----------------------------------------------------------------
 
-        z = IMU_data.GPS(gps_idx, :)';
+    gps_idx = find(abs(IMU_data.GPS_time - curr_time) < dt/2, 1);
 
-        z_hat = X(1:3, 5,end);
+    if ~isempty(gps_idx) && curr_time > 0
 
-        % Kalman Gain
-        S = H * P * H' + R;
-        K = (P * H') / S;
+        z_world    = IMU_data.GPS(gps_idx, :)';
+        p_hat_curr = X_store(1:3,5,idx+1);
+        v_hat_curr = X_store(1:3,4,idx+1);
+        R_hat_curr = X_store(1:3,1:3,idx+1);
 
-        % get the error state
+        % Innovation in world frame
+        r = z_world - p_hat_curr;   % 3x1
 
-        delta_xhat = K * (z - z_hat);
-        disp(delta_xhat)
+        % H: position block only — world frame GPS, no attitude coupling
+        H = [zeros(3,6), eye(3)];   % 3x9
 
-        % put the error back into the state
-        pos = X(1:3,5,end)+delta_xhat(1:3);
-        vel = X(1:3,4,end)+delta_xhat(4:6);
+        S = H * P * H' + R_gps;
+        K = (P * H') / S;           % 9x3
 
+        % Full error state
+        xi = K * r;                 % 9x1
 
-        dq = [1;1/2*delta_xhat(7:9)];
-        dq = dq / norm(dq);
+        delta_phi = xi(1:3);
+        delta_v   = xi(4:6);
+        delta_p   = xi(7:9);
 
-        curr_q = rotm2quat(X(1:3,1:3,end));
-        updated_q = quatmultiply(curr_q,dq');
+        % Apply corrections:
+        % - Position and velocity: additive (world frame)
+        % - Attitude: multiplicative via exp map (on SO(3))
+        X_store(1:3,5,idx+1) = p_hat_curr + delta_p;
+        X_store(1:3,4,idx+1) = v_hat_curr + delta_v;
+        X_store(1:3,1:3,idx+1) = exp_SO3(delta_phi) * R_hat_curr;
 
-        % rebuild the state matrix:
-        X(1:3, 5, end) = pos;
-        X(1:3, 4, end) = vel;
-        X(1:3, 1:3, end) = quat2rotm(updated_q);
+        % Joseph-form covariance update
+        IKH = eye(9) - K * H;
+        P   = IKH * P * IKH' + K * R_gps * K';
+        P   = (P + P') / 2;
+    end
 
-        % Update Covariance
-        P = (eye(9) - K * H) * P*(eye(9)-K*H)' + K*R*K';
-    end 
-
-    % save out the P matrix and the state:
     output.P(:,:,idx) = P;
 end
 
-% plot the position over time:
+%% ================================================================
+%  Plotting
+%% ================================================================
 
 truePosArray = IMU_data.ref_traj;
-time = IMU_data.ref_time;
-% estimated:
-estPosLie = X(3,5,:);
-estPosLie = squeeze(estPosLie);
+estPosLie    = squeeze(X_store(1:3,5,:));
+cov          = output.P;
 
-% covariance:
-cov = output.P;
+cov_xpos = squeeze(cov(7,7,:));
+cov_ypos = squeeze(cov(8,8,:));
+cov_zpos = squeeze(cov(9,9,:));
 
-cov_xpos = squeeze(cov(3,3,:));
-
-
-% Rocket Trajectory Plot:
 figure;
-plot(time,truePosArray(:,3)-estPosLie(1:end-1),'b')
+subplot(3,1,1)
+plot(time, truePosArray(:,3) - estPosLie(3,1:end-1)')
 hold on
+plot(time,  3*sqrt(cov_zpos), 'r--')
+plot(time, -3*sqrt(cov_zpos), 'r--')
+xlabel('Time (s)'); ylabel('(m)');
+legend('\delta z', '3\sigma'); title('Altitude Error')
 
-% sigma bounds:
-plot(time,3*sqrt(cov_xpos),'r--')
-plot(time,-3*sqrt(cov_xpos),'r--')
-%plot(IMU_data.GPS_time, IMU_data.GPS(:,3), 'go')
+subplot(3,1,2)
+plot(time, truePosArray(:,2) - estPosLie(2,1:end-1)')
+hold on
+plot(time,  3*sqrt(cov_ypos), 'r--')
+plot(time, -3*sqrt(cov_ypos), 'r--')
+xlabel('Time (s)'); ylabel('(m)');
+legend('\delta y', '3\sigma'); title('North Error')
 
+subplot(3,1,3)
+plot(time, truePosArray(:,1) - estPosLie(1,1:end-1)')
+hold on
+plot(time,  3*sqrt(cov_xpos), 'r--')
+plot(time, -3*sqrt(cov_xpos), 'r--')
+xlabel('Time (s)'); ylabel('(m)');
+legend('\delta x', '3\sigma'); title('East Error')
 
-xlabel('Time (s)');
-ylabel(' (m)');
-legend('Error State $\delta x$', '3-$\sigma$ bounds')
-
-
-truePosArray = IMU_data.ref_traj;
-% estimated:
-estPosLie = X(1:3,5,:);
-estPosLie = squeeze(estPosLie);
-
-% Rocket Trajectory Plot:
 figure;
 plot3(truePosArray(:,1), truePosArray(:,2), truePosArray(:,3), 'g')
 hold on
-plot3(estPosLie(1,:), estPosLie(2,:), estPosLie(3,:), 'b')
+plot3(estPosLie(1,1:end-1), estPosLie(2,1:end-1), estPosLie(3,1:end-1), 'b')
 view(43,24);
-xlabel('Dist North (m)');
-ylabel('Dist East (m)');
-zlabel('Height (m)');
-legend('True Trajectory', 'IMU Integration')
+xlabel('Dist North (m)'); ylabel('Dist East (m)'); zlabel('Height (m)');
+legend('True Trajectory','IEKF Estimate')
 grid minor;
 
+%% ================================================================
+%  Helper Functions
+%% ================================================================
 
-function Phi = compute_Phi(R, accel, gyro, dt)
+function X = build_SE2_3(R, v, p)
+    X = eye(5);
+    X(1:3,1:3) = R;
+    X(1:3,4)   = v(:);
+    X(1:3,5)   = p(:);
+end
 
-    a_cross = [0 -accel(3) accel(2);
-               accel(3) 0 -accel(1);
-               -accel(2) accel(1) 0];
+function w = hat3(v)
+    v = v(:);
+    w = [  0,   -v(3),  v(2);
+         v(3),    0,   -v(1);
+        -v(2),  v(1),    0  ];
+end
 
-    dTheta = (gyro*dt);
+function R = exp_SO3(phi)
+    phi   = phi(:);
+    angle = norm(phi);
+    if angle < 1e-8
+        R = eye(3) + hat3(phi);
+    else
+        ax = phi / angle;
+        K  = hat3(ax);
+        R  = eye(3) + sin(angle)*K + (1-cos(angle))*(K*K);
+    end
+end
 
-    theta_cross = [0 -dTheta(3) dTheta(2);
-                   dTheta(3) 0 -dTheta(1);
-                   -dTheta(2) dTheta(1) 0];
-
-    F = eye(9);
-    F(1:3,4:6) = eye(3)*dt;
-    F(4:6,7:9) = -R*a_cross*dt;
-    F(7:9,7:9) = eye(3)-theta_cross;
-
-    Phi = F;
-
+function dX = exp_SE2_3(phi, dv, dp)
+    phi = phi(:); dv = dv(:); dp = dp(:);
+    angle = norm(phi);
+    if angle < 1e-8
+        dR = eye(3) + hat3(phi);
+        V  = eye(3) + 0.5*hat3(phi);
+    else
+        ax = phi / angle;
+        K  = hat3(ax);
+        dR = eye(3) + sin(angle)*K + (1-cos(angle))*(K*K);
+        V  = eye(3) + ((1-cos(angle))/angle)*K + ((angle-sin(angle))/angle)*(K*K);
+    end
+    dX = eye(5);
+    dX(1:3,1:3) = dR;
+    dX(1:3,4)   = V * dv;
+    dX(1:3,5)   = V * dp;
 end
