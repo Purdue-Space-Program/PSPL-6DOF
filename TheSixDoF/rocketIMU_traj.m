@@ -19,7 +19,7 @@ close all
 addpath(genpath('Classes'))
 
 % % Make a GPS with measurement update:
-gps = GNSS("GPS",2, [4,4,25], .1, 0);
+gps = GNSS("GPS",1, [4,4,25,0.04,0.04,0.04], .1, 0);
 
 % -- set up the simulation ---:
 env = Environment();
@@ -38,15 +38,16 @@ accel = rocket.ComponentList.values{6};
 gyro = rocket.ComponentList.values{7};
 
 gyro.SamplingRate = 1/100;
-gyro.Variance = .0035*pi/180*ones(3,1); % from VN-200
+gyro.Variance = ones(3,1)*deg2rad(.0035) / sqrt(gyro.SamplingRate); % from VN-200
 gyro.Bias0 = 0;
 gyro.ScaleFactor = 1.001;
+gyro.BiasRandomWalkRate = 2.42e-5;
 
 accel.SamplingRate = 1/100;
-accel.Variance = 1e-3*ones(3,1);
-accel.Bias
+accel.Variance = 0.0137*ones(3,1);
 accel.Bias0 = 1e-4;
 accel.ScaleFactor = 1.001;
+accel.BiasRandomWalkRate = 3.923e-4;
 
 % add the gyro and accel to the rocket
 rocket.modifyComponent(gyro)
@@ -116,7 +117,7 @@ outputStruct.time = timeArray;
 for k = 1:numel(timeArray)
     [~, outputStruct.mach(k,1), outputStruct.AoA(k,1), outputStruct.accel(k,:), ...
         outputStruct.accelBody(k,:), outputStruct.cD(k,:), moment(k,:), ...
-        outputStruct.g(k,:), outputStruct.quat(k,:)] = ...
+        outputStruct.g(k,:)] = ...
         RK4Integrator(timeArray(k), out(k,:), ...
         atmosphere,totCoM, totMass, MoI, windData, rocket, settings, env);
 end
@@ -217,7 +218,8 @@ if settings.Outputs == true
 
     % get the GPS pings:
     posTrue = outputStruct.pos;
-    [GPSpos, GPSposTime] = gps.GNSSMeasurement(posTrue, timeArray(end),settings.Timestep);
+    velTrue = outputStruct.vel;
+    [GPSpos, GPSvel, GPSposTime] = gps.GNSSMeasurement(posTrue, velTrue, timeArray(end),settings.Timestep);
 
     % Rocket Trajectory Plot:
     figure;
@@ -243,11 +245,12 @@ IMU_data.accel_time = accelIMUTime;
 IMU_data.gyroscope = omegaIMU;
 IMU_data.gyro_time = omegaIMUTime;
 IMU_data.GPS = GPSpos;
+IMU_data.GPS_vel = GPSvel;
 IMU_data.GPS_time = GPSposTime;
 
 IMU_data.init_cond = Init([1:6,10:13]); %pos, vel, quat
 IMU_data.ref_traj = posArray;
-IMU_data.ref_quat = outputStruct.quat;
+IMU_data.ref_quat = quatArray;
 IMU_data.ref_time = timeArray;
 IMU_data.grav = outputStruct.g;
 

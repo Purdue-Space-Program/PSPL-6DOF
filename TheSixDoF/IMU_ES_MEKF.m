@@ -1,4 +1,4 @@
-% World Frame Kalman Filter for the IMU
+% Error State Multiplicative Extended Kalman Filter for the IMU
 
 
 %% Setup:
@@ -26,33 +26,18 @@ gyro_cov = IMU_data.gyro_info.Variance';
 sig_p = 0.5; sig_v = 0.01; sig_theta = 0.01;
 P = diag([sig_p*ones(1,3), sig_v*ones(1,3), sig_theta*ones(1,3)].^2);
 
-Q_body = diag([accel_cov,gyro_cov])*1/20; % Process noise covariance
+Q_body = 50*diag([accel_cov,gyro_cov])*dt; % Process noise covariance
 R = diag(IMU_data.gps_info.Variance)*2;  % Measurement noise covariance
 
 
-% measurement is only position, and it's world frame
-H = eye(3,9);
+% measurement is position and velocity, and it's world frame
+H = eye(6,9);
 
 % convert Q from body into error state frame:
 Fi = [zeros(3,6);eye(3) zeros(3);zeros(3) eye(3)];
 
 Q = Fi*Q_body*Fi';
 
-
-
-%% No correction to test:
-
-X_uncorr = X;
-
-
-for idx = 1:numel(time)
-    curr_time = time(idx);
-
-    [accel,gyro,grav] = ValuesfromIdx(IMU_data,curr_time);
-
-    X_uncorr(:,:,idx+1) = IMU_Lie_integrator(accel, gyro, grav, X_uncorr(:,:,idx), dt);
-
-end
 
 
 %% Kalman Filter
@@ -90,13 +75,19 @@ for idx = 1:numel(time)
 
         gps_idx = find(IMU_data.GPS_time == time(idx));
 
-        z = IMU_data.GPS(gps_idx, :)';
+        z = [IMU_data.GPS(gps_idx, :)';IMU_data.GPS_vel(gps_idx,:)']; 
 
-        z_hat = X(1:3, 5,end);
+        z_hat = [X(1:3, 5,end);X(1:3,4,end);];
+
+        % store innovations
+        innovations(gps_idx, :) = z-z_hat;
+
 
         % Kalman Gain
         S = H * P * H' + R;
         K = (P * H') / S;
+
+        innov_bounds(gps_idx, :) = 3 * sqrt(diag(S))';
 
         % get the error state
 
@@ -135,9 +126,6 @@ time = IMU_data.ref_time;
 estPosLie = X(1:3,5,:);
 estPosLie = squeeze(estPosLie);
 
-uncorrPosLie = X_uncorr(1:3,5,:);
-uncorrPosLie = squeeze(uncorrPosLie);
-
 % covariance:
 cov = output.P;
 
@@ -148,6 +136,7 @@ cov_xpos = squeeze(cov(1,1,:));
 
 % Rocket Trajectory Plot:
 figure;
+sgtitle('ES-MEKF Results')
 subplot(3,1,1)
 plot(time,truePosArray(:,3)-estPosLie(3,1:end-1)','b')
 hold on
@@ -155,18 +144,15 @@ hold on
 % sigma bounds:
 plot(time,3*sqrt(cov_zpos),'r--')
 plot(time,-3*sqrt(cov_zpos),'r--')
-%plot(IMU_data.GPS_time, IMU_data.GPS(:,3), 'go')
 
 xlabel('Time (s)');
 ylabel(' (m)');
-legend('Error State $\delta x$', '3-$\sigma$ bounds')
+legend('Error State $\delta z$', '3-$\sigma$ bounds')
 title('Altitude')
 
 subplot(3,1,2)
 plot(time,truePosArray(:,2)-estPosLie(2,1:end-1)','b')
 hold on
-%plot(time,truePosArray(:,3)-uncorrPosLie(1:end-1),'g')
-
 
 % sigma bounds:
 plot(time,3*sqrt(cov_ypos),'r--')
@@ -175,15 +161,13 @@ plot(time,-3*sqrt(cov_ypos),'r--')
 
 xlabel('Time (s)');
 ylabel(' (m)');
-legend('Error State $\delta x$', '3-$\sigma$ bounds')
-title('Altitude')
+legend('Error State $\delta y$', '3-$\sigma$ bounds')
+title('East')
 
 
 subplot(3,1,3)
 plot(time,truePosArray(:,1)-estPosLie(1,1:end-1)','b')
 hold on
-%plot(time,truePosArray(:,3)-uncorrPosLie(1:end-1),'g')
-
 % sigma bounds:
 plot(time,3*sqrt(cov_xpos),'r--')
 plot(time,-3*sqrt(cov_xpos),'r--')
@@ -192,12 +176,9 @@ plot(time,-3*sqrt(cov_xpos),'r--')
 xlabel('Time (s)');
 ylabel(' (m)');
 legend('Error State $\delta x$', '3-$\sigma$ bounds')
+title('North')
 
 
-
-% estimated:
-estPosLie = X(1:3,5,:);
-estPosLie = squeeze(estPosLie);
 
 % Rocket Trajectory Plot:
 figure;
@@ -211,6 +192,27 @@ zlabel('Height (m)');
 legend('True Trajectory', 'IMU Integration')
 grid minor;
 
+% Innovations:
+figure;
+subplot(2,1,1);
+plot(IMU_data.GPS_time, innovations(:, 3), 'b'); % Altitude Innovation
+hold on;
+plot(IMU_data.GPS_time, innov_bounds(:, 3), 'r--');
+plot(IMU_data.GPS_time, -innov_bounds(:, 3), 'r--');
+title('Altitude Innovation ($z - z_{hat}$)');
+ylabel('Error (m)');
+grid on;
+
+subplot(2,1,2);
+plot(IMU_data.GPS_time, innovations(:, 6), 'b'); % Vertical Velocity Innovation
+hold on;
+plot(IMU_data.GPS_time, innov_bounds(:, 6), 'r--');
+plot(IMU_data.GPS_time, -innov_bounds(:, 6), 'r--');
+title('Vertical Velocity Innovation');
+ylabel('Error (m/s)');
+xlabel('Time (s)');
+grid on;
+
 
 % compare the quats:
 estRotLie = X(1:3,1:3,:);
@@ -223,6 +225,8 @@ plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
 legend();
 
 
+
+% Compute the first order discretization of the phi matrix for the system
 function Phi = compute_Phi(R, accel, gyro, dt)
 
     a_cross = [0 -accel(3) accel(2);

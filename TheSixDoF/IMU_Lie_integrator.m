@@ -24,9 +24,13 @@ Omega = [0 -omegaZ omegaY;
 
 theta = norm(gyro);
 
+if theta ~= 0
 C1 = (1-theta^2/2-cos(theta)) / (theta^2);
 C2 = (theta-sin(theta)) / (theta^3);
 C3 = (theta^2/2 - theta^4/24 + cos(theta) - 1) / (theta^4);
+else
+C1 = 0; C2=0; C3=0;
+end
 
 AM = zeros(3,2);
 AM(3,1) = grav(3);

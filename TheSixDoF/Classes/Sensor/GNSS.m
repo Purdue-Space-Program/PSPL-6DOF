@@ -7,7 +7,7 @@ classdef GNSS < Sensor
             arguments
                 name (1,1) string
                 samplingRate (1,1) double
-                variance (1,3) double
+                variance (1,6) double
                 resolution (1,1) double
                 bias (1,1) double
                 scaleFactor (1,1) double = 0
@@ -15,19 +15,23 @@ classdef GNSS < Sensor
             gnss@Sensor(name,samplingRate,variance,resolution,bias, scaleFactor)
         end
 
-        function [posOut, t_gps] = GNSSMeasurement(sensor,pos, T, dt)
+        function [posOut, velOut, t_gps] = GNSSMeasurement(sensor,pos,vel, T, dt)
             % GNSSMeasurement is a method to get the position measurement
             % from the sensor definition. This should be run after the
             % numerical integration of the true trajectory
             arguments
                 sensor GNSS
                 pos (:,3) double
+                vel (:,3) double
                 T double
                 dt double = 0 %ignore if no input
             end
 
-            Var = sensor.Variance(1:3);
-            Var = reshape(Var, 1, 3);
+            VarPos = sensor.Variance(1:3);
+            VarPos = reshape(VarPos, 1, 3);
+
+            VarVel = sensor.Variance(4:6);
+            VarVel = reshape(VarVel, 1, 3);
 
             % if the sampling rate is zero, match the simulation:
             if sensor.SamplingRate == 0
@@ -39,11 +43,15 @@ classdef GNSS < Sensor
             tspan = 0:dt:T+dt;
 
             % get the GPS data:
-            noise = randn(length(t_gps), 3) .* sqrt(Var);
+            noisePos = randn(length(t_gps), 3) .* sqrt(VarPos);
 
             posInterp = interp1(tspan, pos, t_gps, 'linear', 'extrap');
+            posOut = posInterp + noisePos;
 
-            posOut = posInterp + noise;
+            noiseVel = randn(length(t_gps), 3) .* sqrt(VarVel);
+
+            velInterp = interp1(tspan, vel, t_gps, 'linear', 'extrap');
+            velOut = velInterp + noiseVel;
 
         end
     end

@@ -52,10 +52,10 @@ legend('True Trajectory', 'IMU Integration')
 grid minor;
 
 % compare the quats:
-figure;
-plot(estQuatLie)
-hold on
-plot(IMU_data.ref_quat)
+% figure;
+% plot(estQuatLie)
+% hold on
+% plot(IMU_data.ref_quat)
 
 
 figure;
