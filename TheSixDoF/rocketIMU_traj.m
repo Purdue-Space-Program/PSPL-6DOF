@@ -44,6 +44,7 @@ gyro.ScaleFactor = 1.001;
 
 accel.SamplingRate = 1/100;
 accel.Variance = 1e-3*ones(3,1);
+accel.Bias
 accel.Bias0 = 1e-4;
 accel.ScaleFactor = 1.001;
 
@@ -114,7 +115,8 @@ outputStruct.time = timeArray;
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
     [~, outputStruct.mach(k,1), outputStruct.AoA(k,1), outputStruct.accel(k,:), ...
-        outputStruct.accelBody(k,:), outputStruct.cD(k,:), moment(k,:), outputStruct.g(k,:)] = ...
+        outputStruct.accelBody(k,:), outputStruct.cD(k,:), moment(k,:), ...
+        outputStruct.g(k,:), outputStruct.quat(k,:)] = ...
         RK4Integrator(timeArray(k), out(k,:), ...
         atmosphere,totCoM, totMass, MoI, windData, rocket, settings, env);
 end
@@ -245,6 +247,7 @@ IMU_data.GPS_time = GPSposTime;
 
 IMU_data.init_cond = Init([1:6,10:13]); %pos, vel, quat
 IMU_data.ref_traj = posArray;
+IMU_data.ref_quat = outputStruct.quat;
 IMU_data.ref_time = timeArray;
 IMU_data.grav = outputStruct.g;
 

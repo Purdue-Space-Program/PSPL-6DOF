@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel, specific_force_body, cD, momentVector, g] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, windData, rocket, settings, env)
+function [out, mach, AoA, accel, specific_force_body, cD, momentVector, g,quat] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, windData, rocket, settings, env)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator

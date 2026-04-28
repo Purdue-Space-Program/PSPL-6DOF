@@ -26,7 +26,7 @@ gyro_cov = IMU_data.gyro_info.Variance';
 sig_p = 0.5; sig_v = 0.01; sig_theta = 0.01;
 P = diag([sig_p*ones(1,3), sig_v*ones(1,3), sig_theta*ones(1,3)].^2);
 
-Q_body = diag([accel_cov,gyro_cov])*dt; % Process noise covariance
+Q_body = diag([accel_cov,gyro_cov])*1/20; % Process noise covariance
 R = diag(IMU_data.gps_info.Variance)*2;  % Measurement noise covariance
 
 
@@ -210,6 +210,17 @@ ylabel('Dist East (m)');
 zlabel('Height (m)');
 legend('True Trajectory', 'IMU Integration')
 grid minor;
+
+
+% compare the quats:
+estRotLie = X(1:3,1:3,:);
+estQuatLie = rotm2quat(estRotLie);
+
+figure;
+plot(estQuatLie, 'DisplayName', 'Estimated Quat')
+hold on
+plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
+legend();
 
 
 function Phi = compute_Phi(R, accel, gyro, dt)

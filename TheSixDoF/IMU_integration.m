@@ -35,6 +35,9 @@ truePosArray = IMU_data.ref_traj;
 % estimated:
 estPosLie = X(1:3,5,:);
 estPosLie = squeeze(estPosLie);
+estRotLie = X(1:3,1:3,:);
+
+estQuatLie = rotm2quat(estRotLie);
 
 % Rocket Trajectory Plot:
 figure;
@@ -47,6 +50,12 @@ ylabel('Dist East (m)');
 zlabel('Height (m)');
 legend('True Trajectory', 'IMU Integration')
 grid minor;
+
+% compare the quats:
+figure;
+plot(estQuatLie)
+hold on
+plot(IMU_data.ref_quat)
 
 
 figure;
