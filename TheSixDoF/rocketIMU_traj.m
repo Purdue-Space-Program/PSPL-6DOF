@@ -43,7 +43,7 @@ gyro.Bias0 = 0;
 gyro.ScaleFactor = 1.001;
 
 accel.SamplingRate = 1/100;
-accel.Variance = 1e-2*ones(3,1);
+accel.Variance = 1e-3*ones(3,1);
 accel.Bias0 = 1e-4;
 accel.ScaleFactor = 1.001;
 

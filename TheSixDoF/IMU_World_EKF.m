@@ -39,6 +39,22 @@ Fi = [zeros(3,6);eye(3) zeros(3);zeros(3) eye(3)];
 Q = Fi*Q_body*Fi';
 
 
+
+%% No correction to test:
+
+X_uncorr = X;
+
+
+for idx = 1:numel(time)
+    curr_time = time(idx);
+
+    [accel,gyro,grav] = ValuesfromIdx(IMU_data,curr_time);
+
+    X_uncorr(:,:,idx+1) = IMU_Lie_integrator(accel, gyro, grav, X_uncorr(:,:,idx), dt);
+
+end
+
+
 %% Kalman Filter
 
 % Loop for IMU integration:
@@ -116,32 +132,69 @@ end
 truePosArray = IMU_data.ref_traj;
 time = IMU_data.ref_time;
 % estimated:
-estPosLie = X(3,5,:);
+estPosLie = X(1:3,5,:);
 estPosLie = squeeze(estPosLie);
+
+uncorrPosLie = X_uncorr(1:3,5,:);
+uncorrPosLie = squeeze(uncorrPosLie);
 
 % covariance:
 cov = output.P;
 
-cov_xpos = squeeze(cov(3,3,:));
+cov_zpos = squeeze(cov(3,3,:));
+cov_ypos = squeeze(cov(2,2,:));
+cov_xpos = squeeze(cov(1,1,:));
 
 
 % Rocket Trajectory Plot:
 figure;
-plot(time,truePosArray(:,3)-estPosLie(1:end-1),'b')
+subplot(3,1,1)
+plot(time,truePosArray(:,3)-estPosLie(3,1:end-1)','b')
 hold on
+
+% sigma bounds:
+plot(time,3*sqrt(cov_zpos),'r--')
+plot(time,-3*sqrt(cov_zpos),'r--')
+%plot(IMU_data.GPS_time, IMU_data.GPS(:,3), 'go')
+
+xlabel('Time (s)');
+ylabel(' (m)');
+legend('Error State $\delta x$', '3-$\sigma$ bounds')
+title('Altitude')
+
+subplot(3,1,2)
+plot(time,truePosArray(:,2)-estPosLie(2,1:end-1)','b')
+hold on
+%plot(time,truePosArray(:,3)-uncorrPosLie(1:end-1),'g')
+
+
+% sigma bounds:
+plot(time,3*sqrt(cov_ypos),'r--')
+plot(time,-3*sqrt(cov_ypos),'r--')
+%plot(IMU_data.GPS_time, IMU_data.GPS(:,3), 'go')
+
+xlabel('Time (s)');
+ylabel(' (m)');
+legend('Error State $\delta x$', '3-$\sigma$ bounds')
+title('Altitude')
+
+
+subplot(3,1,3)
+plot(time,truePosArray(:,1)-estPosLie(1,1:end-1)','b')
+hold on
+%plot(time,truePosArray(:,3)-uncorrPosLie(1:end-1),'g')
 
 % sigma bounds:
 plot(time,3*sqrt(cov_xpos),'r--')
 plot(time,-3*sqrt(cov_xpos),'r--')
 %plot(IMU_data.GPS_time, IMU_data.GPS(:,3), 'go')
 
-
 xlabel('Time (s)');
 ylabel(' (m)');
 legend('Error State $\delta x$', '3-$\sigma$ bounds')
 
 
-truePosArray = IMU_data.ref_traj;
+
 % estimated:
 estPosLie = X(1:3,5,:);
 estPosLie = squeeze(estPosLie);
