@@ -23,7 +23,7 @@ X = [R,vel,pos;zeros(2,3),eye(2)];
 accel_cov = IMU_data.accel_info.Variance;
 gyro_cov = IMU_data.gyro_info.Variance';
 
-sig_p = 2; sig_v = 0.01; sig_theta = 0.1;
+sig_p = 2; sig_v = 0.01; sig_theta = 0.01;
 P = diag([sig_p*ones(1,3), sig_v*ones(1,3), sig_theta*ones(1,3)].^2);
 
 Q_body = diag([accel_cov,gyro_cov])*dt; % Process noise covariance
@@ -131,7 +131,7 @@ cov_xpos = squeeze(cov(1,1,:));
 
 % Rocket Trajectory Plot:
 figure;
-sgtitle('IEKF Results')
+sgtitle('IEKF')
 subplot(3,1,1)
 plot(time,truePosArray(:,3)-estPosLie(3,1:end-1)','b')
 hold on

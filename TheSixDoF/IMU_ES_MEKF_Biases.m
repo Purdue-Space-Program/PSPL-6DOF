@@ -2,6 +2,8 @@
     
     
     %% Setup:
+
+    clear ValuesfromIdx
     
     % --- Load the data and set up the initial state ---
     data = load("Rocket_IMU_data.mat");
@@ -30,8 +32,10 @@
     P = diag([sig_p*ones(1,3), sig_v*ones(1,3), sig_theta*ones(1,3),...
         sig_accel*ones(1,3),sig_gyro*ones(1,3)].^2);
     
-    Q_body = diag([accel_cov,gyro_cov,ones(1,3)*accel_rw,ones(1,3)*gyro_rw])*dt; % Process noise covariance
-    R = 2*diag(IMU_data.gps_info.Variance);  % Measurement noise covariance
+    Q_body = diag([accel_cov,gyro_cov,ones(1,3)*accel_rw,...
+        ones(1,3)*gyro_rw])*dt; % Process noise covariance
+
+    R = diag(IMU_data.gps_info.Variance);  % Measurement noise covariance
     
     
     % measurement is position and velocity, and it's world frame
@@ -157,7 +161,7 @@
     
     % Rocket Trajectory Plot:
     figure;
-    sgtitle('ES-MEKF Results')
+    sgtitle('ES-MEKF (with Bias Estimation)')
     subplot(3,1,1)
     plot(time,truePosArray(:,3)-estPosLie(3,1:end-1)','b')
     hold on

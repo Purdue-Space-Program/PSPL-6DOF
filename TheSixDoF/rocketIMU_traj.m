@@ -19,7 +19,7 @@ close all
 addpath(genpath('Classes'))
 
 % % Make a GPS with measurement update:
-gps = GNSS("GPS",1/4, [4,4,16,0.0225,0.0225,0.0225], .1, 0);
+gps = GNSS("GPS",1/2, [4,4,16,0.0225,0.0225,0.0225], .1, 0);
 
 % -- set up the simulation ---:
 env = Environment();

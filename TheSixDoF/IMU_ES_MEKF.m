@@ -80,14 +80,14 @@ for idx = 1:numel(time)
         z_hat = [X(1:3, 5,end);X(1:3,4,end);];
 
         % store innovations
-        innovations(gps_idx, :) = z-z_hat;
+        innovation = z-z_hat;
 
 
         % Kalman Gain
         S = H * P * H' + R;
         K = (P * H') / S;
 
-        innov_bounds(gps_idx, :) = 3 * sqrt(diag(S))';
+        NIS(gps_idx) = innovation' * (S \ innovation);
 
         % get the error state
 
@@ -136,7 +136,7 @@ cov_xpos = squeeze(cov(1,1,:));
 
 % Rocket Trajectory Plot:
 figure;
-sgtitle('ES-MEKF Results')
+sgtitle('ES-MEKF')
 subplot(3,1,1)
 plot(time,truePosArray(:,3)-estPosLie(3,1:end-1)','b')
 hold on
@@ -178,6 +178,20 @@ ylabel(' (m)');
 legend('Error State $\delta x$', '3-$\sigma$ bounds')
 title('North')
 
+% plot the NIS:
+
+dof = 6; 
+alpha = 0.05; % 95% confidence
+upper_gate = chi2inv(1 - alpha/2, dof);
+lower_gate = chi2inv(alpha/2, dof);
+gps_time = IMU_data.GPS_time;
+
+figure;
+plot(gps_time, NIS, 'b.'); hold on;
+yline(upper_gate, 'r--', '95% Upper Bound');
+yline(lower_gate, 'r--', '95% Lower Bound');
+title('NIS Consistency Check');
+xlabel('Time (s)'); ylabel('NIS Value');
 
 
 % Rocket Trajectory Plot:
