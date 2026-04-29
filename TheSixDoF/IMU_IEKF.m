@@ -1,4 +1,5 @@
 % Invariant Extended Kalman Filter on SE2(3)
+clear ValuesfromIdx
 
 %% Setup:
 
@@ -9,6 +10,7 @@ IMU_data = data.IMU_data;
 time = IMU_data.ref_time;
 dt = 1/100;
 state = IMU_data.init_cond;
+
 
 % set up the lie group state:
 pos = state(1:3);
@@ -61,7 +63,7 @@ for idx = 1:numel(time)
     % Covariance update:
 
     % Calculate Phi for the given rotation:
-    Phi = compute_Phi(curr_R, accel, gyro, dt);
+    Phi = compute_Phi(accel,gyro,dt);
 
     P = Phi*P*Phi' + Q;
    
@@ -74,17 +76,18 @@ for idx = 1:numel(time)
         z = IMU_data.GPS(gps_idx, :)';
         z2 = IMU_data.GPS_vel(gps_idx,:)';
 
-        %z = [z;z2];
+        
      
         z_hat = X(1:3, 5,end);
         z_hat2 = X(1:3,4,end);
 
-        %z_hat = [z_hat;z_hat2];
+        
 
         % get the left invariant innovation
         %Vl = eye(6,9)*(inv(X(:,:,idx+1))*(z-z_hat);
 
         Vl = [curr_R' * (z-z_hat); curr_R'*(z2-z_hat2)];
+
 
         % Kalman Gain
         S = H * P * H' + R;
@@ -95,12 +98,12 @@ for idx = 1:numel(time)
         % update the state prediction:
 
         % wedge the kalman update:
-        xi = -K*Vl;
+        xi = K*Vl;
 
         % wedge xi
         Xi = se23_exp(xi);
 
-        X(:,:,idx+1) = X(:,:,idx+1) * Xi;
+        X(:,:,idx+1) = X(:,:,idx+1)*Xi;
 
         % Update Covariance
         P = (eye(9) - K * H) * P*(eye(9)-K*H)' + K*R*K';
@@ -199,54 +202,28 @@ legend();
 
 
 % Compute the exact solution Phi matrix for the system using matrix exp:
-function Phi = compute_Phi(R, accel, gyro, dt)
-
-% work on making this closed form, use expm for now:
+function Phi = compute_Phi(accel, gyro, dt)
+    % Based on your paper's image (Left-Invariant SE2(3))
+    % State Order: [pos (1:3); vel (4:6); rot (7:9)]
     
-    Omega = [0 -gyro(3) gyro(2);
-            gyro(3) 0 -gyro(1);
-            -gyro(2) gyro(1) 0];
-
-    a_cross = [0 -accel(3) accel(2);
-           accel(3) 0 -accel(1);
-           -accel(2) accel(1) 0];
-
-    A = [zeros(3) eye(3) zeros(3);
-         zeros(3) zeros(3) -R*a_cross;
-         zeros(3) zeros(3) -Omega];
-
-    Phi = expm(A*dt);
-
-
-    % rodrigues formula for lower block:
-    dTheta = (gyro*dt);
-
-    theta_cross = [0 -dTheta(3) dTheta(2);
-                   dTheta(3) 0 -dTheta(1);
-                   -dTheta(2) dTheta(1) 0];
-
-    theta = norm(gyro);
-
-    if abs(theta) < 1e-6
-        A = theta_cross;
+    O_hat = skew(gyro); % -omega^ in your paper
+    A_hat = skew(accel); % -a^ in your paper
     
-        sinc_theta = 1 - (theta^2)/6 + (theta^4)/120;
-        omc_theta2 = 1/2 - (theta^2)/24 + (theta^4)/720;
-        RL = eye(3) + sinc_theta * A + omc_theta2 * A*A;
-    else
-        A = theta_cross;
+    A = zeros(9,9);
     
-        RL = eye(3) + sin(theta)/theta * A + (1-cos(theta))/theta^2* A*A;
-    end
-
-
-    F = eye(9);
-    F(1:3,4:6) = eye(3)*dt;
-    F(4:6,7:9) = -R*a_cross*dt;
-    F(7:9,7:9) = RL;
-
-    Phi(7:9,7:9) = RL;
-
+    % Row 1 (Position dot): -omega^ * p + v
+    A(1:3, 1:3) = -O_hat; 
+    A(1:3, 4:6) = eye(3);
+    
+    % Row 2 (Velocity dot): -omega^ * v - a^ * theta
+    A(4:6, 4:6) = -O_hat;
+    A(4:6, 7:9) = -A_hat;
+    
+    % Row 3 (Rotation dot): -omega^ * theta
+    A(7:9, 7:9) = -O_hat;
+    
+    % Discretize
+    Phi = expm(A * dt);
 end
 
 

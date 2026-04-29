@@ -1,5 +1,5 @@
 % this file tests the integration of the IMU data to build a trajectory:
-data = load("Rocket_IMU_data.mat");
+data = load("Rocket_IMU_data_no_errors.mat");
 
 IMU_data = data.IMU_data; 
 
