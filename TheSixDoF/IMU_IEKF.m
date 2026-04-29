@@ -23,10 +23,10 @@ X = [R,vel,pos;zeros(2,3),eye(2)];
 accel_cov = IMU_data.accel_info.Variance;
 gyro_cov = IMU_data.gyro_info.Variance';
 
-sig_p = 4; sig_v = 0.01; sig_theta = 0.1;
+sig_p = 2; sig_v = 0.01; sig_theta = 0.1;
 P = diag([sig_p*ones(1,3), sig_v*ones(1,3), sig_theta*ones(1,3)].^2);
 
-Q_body = diag([accel_cov,2*gyro_cov])*dt; % Process noise covariance
+Q_body = diag([accel_cov,gyro_cov])*dt; % Process noise covariance
 R = diag(IMU_data.gps_info.Variance);  % Measurement noise covariance
 
 % measurement is position and vel, and it's world frame (identity)
@@ -176,28 +176,28 @@ title('North')
 
 
 % Rocket Trajectory Plot:
-figure;
-sgtitle('IEKF Results')
-plot3(truePosArray(:,1), truePosArray(:,2), truePosArray(:,3), 'g')
-hold on
-plot3(estPosLie(1,:), estPosLie(2,:), estPosLie(3,:), 'b')
-view(43,24);
-xlabel('Dist North (m)');
-ylabel('Dist East (m)');
-zlabel('Height (m)');
-legend('True Trajectory', 'IMU Integration')
-grid minor;
+% figure;
+% sgtitle('IEKF Results')
+% plot3(truePosArray(:,1), truePosArray(:,2), truePosArray(:,3), 'g')
+% hold on
+% plot3(estPosLie(1,:), estPosLie(2,:), estPosLie(3,:), 'b')
+% view(43,24);
+% xlabel('Dist North (m)');
+% ylabel('Dist East (m)');
+% zlabel('Height (m)');
+% legend('True Trajectory', 'IMU Integration')
+% grid minor;
 
 
 % compare the quats:
 estRotLie = X(1:3,1:3,:);
 estQuatLie = rotm2quat(estRotLie);
 
-figure;
-plot(estQuatLie, 'DisplayName', 'Estimated Quat')
-hold on
-plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
-legend();
+% figure;
+% plot(estQuatLie, 'DisplayName', 'Estimated Quat')
+% hold on
+% plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
+% legend();
 
 
 

@@ -23,11 +23,11 @@ X = [R,vel,pos;zeros(2,3),eye(2)];
 accel_cov = IMU_data.accel_info.Variance;
 gyro_cov = IMU_data.gyro_info.Variance';
 
-sig_p = 0.5; sig_v = 0.01; sig_theta = 0.01;
+sig_p = 2; sig_v = 0.01; sig_theta = 0.01;
 P = diag([sig_p*ones(1,3), sig_v*ones(1,3), sig_theta*ones(1,3)].^2);
 
-Q_body = 50*diag([accel_cov,gyro_cov])*dt; % Process noise covariance
-R = diag(IMU_data.gps_info.Variance)*2;  % Measurement noise covariance
+Q_body = diag([accel_cov,gyro_cov])*dt; % Process noise covariance
+R = diag(IMU_data.gps_info.Variance);  % Measurement noise covariance
 
 
 % measurement is position and velocity, and it's world frame
@@ -181,48 +181,48 @@ title('North')
 
 
 % Rocket Trajectory Plot:
-figure;
-plot3(truePosArray(:,1), truePosArray(:,2), truePosArray(:,3), 'g')
-hold on
-plot3(estPosLie(1,:), estPosLie(2,:), estPosLie(3,:), 'b')
-view(43,24);
-xlabel('Dist North (m)');
-ylabel('Dist East (m)');
-zlabel('Height (m)');
-legend('True Trajectory', 'IMU Integration')
-grid minor;
+% figure;
+% plot3(truePosArray(:,1), truePosArray(:,2), truePosArray(:,3), 'g')
+% hold on
+% plot3(estPosLie(1,:), estPosLie(2,:), estPosLie(3,:), 'b')
+% view(43,24);
+% xlabel('Dist North (m)');
+% ylabel('Dist East (m)');
+% zlabel('Height (m)');
+% legend('True Trajectory', 'IMU Integration')
+% grid minor;
 
 % Innovations:
-figure;
-subplot(2,1,1);
-plot(IMU_data.GPS_time, innovations(:, 3), 'b'); % Altitude Innovation
-hold on;
-plot(IMU_data.GPS_time, innov_bounds(:, 3), 'r--');
-plot(IMU_data.GPS_time, -innov_bounds(:, 3), 'r--');
-title('Altitude Innovation ($z - z_{hat}$)');
-ylabel('Error (m)');
-grid on;
-
-subplot(2,1,2);
-plot(IMU_data.GPS_time, innovations(:, 6), 'b'); % Vertical Velocity Innovation
-hold on;
-plot(IMU_data.GPS_time, innov_bounds(:, 6), 'r--');
-plot(IMU_data.GPS_time, -innov_bounds(:, 6), 'r--');
-title('Vertical Velocity Innovation');
-ylabel('Error (m/s)');
-xlabel('Time (s)');
-grid on;
+% figure;
+% subplot(2,1,1);
+% plot(IMU_data.GPS_time, innovations(:, 3), 'b'); % Altitude Innovation
+% hold on;
+% plot(IMU_data.GPS_time, innov_bounds(:, 3), 'r--');
+% plot(IMU_data.GPS_time, -innov_bounds(:, 3), 'r--');
+% title('Altitude Innovation ($z - z_{hat}$)');
+% ylabel('Error (m)');
+% grid on;
+% 
+% subplot(2,1,2);
+% plot(IMU_data.GPS_time, innovations(:, 6), 'b'); % Vertical Velocity Innovation
+% hold on;
+% plot(IMU_data.GPS_time, innov_bounds(:, 6), 'r--');
+% plot(IMU_data.GPS_time, -innov_bounds(:, 6), 'r--');
+% title('Vertical Velocity Innovation');
+% ylabel('Error (m/s)');
+% xlabel('Time (s)');
+% grid on;
 
 
 % compare the quats:
 estRotLie = X(1:3,1:3,:);
 estQuatLie = rotm2quat(estRotLie);
 
-figure;
-plot(estQuatLie, 'DisplayName', 'Estimated Quat')
-hold on
-plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
-legend();
+% figure;
+% plot(estQuatLie, 'DisplayName', 'Estimated Quat')
+% hold on
+% plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
+% legend();
 
 
 
