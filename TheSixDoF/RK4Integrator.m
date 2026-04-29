@@ -286,7 +286,7 @@ paraMomentBody = cross(paraMomentArm,paraDragForceBody);
 
 finCpLocation = 0.02486256; % 1/3 of the span of fins [m]
 missAlpha = 0.1; % [degrees]
-coefficientLift = 5e-6 * missAlpha * 0;
+coefficientLift = 5e-6 * missAlpha;
 
 forceRoll = 3 / 2 * coefficientLift * rho * norm(vel)^2;
 rollMomentBody = (radius + finCpLocation) * forceRoll * bodyVector;

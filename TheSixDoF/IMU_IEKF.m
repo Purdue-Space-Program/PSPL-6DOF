@@ -78,8 +78,8 @@ for idx = 1:numel(time)
 
         
      
-        z_hat = X(1:3, 5,end);
-        z_hat2 = X(1:3,4,end);
+        z_hat = X(1:3, 5,idx);
+        z_hat2 = X(1:3,4,idx);
 
         
 
