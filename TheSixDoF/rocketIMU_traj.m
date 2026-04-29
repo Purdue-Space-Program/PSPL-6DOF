@@ -45,7 +45,7 @@ gyro.BiasRandomWalkRate = 2.42e-5;
 
 accel.SamplingRate = 1/100;
 accel.Variance = 0.0137*ones(3,1);
-accel.Bias0 = 1e-4;
+accel.Bias0 = 5e-3;
 accel.ScaleFactor = 1.001;
 accel.BiasRandomWalkRate = 3.923e-4;
 
