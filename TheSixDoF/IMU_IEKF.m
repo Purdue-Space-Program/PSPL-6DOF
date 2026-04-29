@@ -74,12 +74,17 @@ for idx = 1:numel(time)
         z = IMU_data.GPS(gps_idx, :)';
         z2 = IMU_data.GPS_vel(gps_idx,:)';
 
-        z = [z;z2];
+        %z = [z;z2];
      
         z_hat = X(1:3, 5,end);
         z_hat2 = X(1:3,4,end);
 
-        z_hat = [z_hat;z_hat2];
+        %z_hat = [z_hat;z_hat2];
+
+        % get the left invariant innovation
+        %Vl = eye(6,9)*(inv(X(:,:,idx+1))*(z-z_hat);
+
+        Vl = [curr_R' * (z-z_hat); curr_R'*(z2-z_hat2)];
 
         % Kalman Gain
         S = H * P * H' + R;
@@ -87,24 +92,15 @@ for idx = 1:numel(time)
 
         % get the error state
 
-        delta_xhat = K * (z - z_hat);
-        disp(delta_xhat)
+        % update the state prediction:
 
-        % put the error back into the state
-        pos = X(1:3,5,end)+delta_xhat(1:3);
-        vel = X(1:3,4,end)+delta_xhat(4:6);
+        % wedge the kalman update:
+        xi = -K*Vl;
 
+        % wedge xi
+        Xi = se23_exp(xi);
 
-        dq = [1;1/2*delta_xhat(7:9)];
-        dq = dq / norm(dq);
-
-        curr_q = rotm2quat(X(1:3,1:3,end));
-        updated_q = quatmultiply(curr_q,dq');
-
-        % rebuild the state matrix:
-        X(1:3, 5, end) = pos;
-        X(1:3, 4, end) = vel;
-        X(1:3, 1:3, end) = quat2rotm(updated_q);
+        X(:,:,idx+1) = X(:,:,idx+1) * Xi;
 
         % Update Covariance
         P = (eye(9) - K * H) * P*(eye(9)-K*H)' + K*R*K';
@@ -251,4 +247,50 @@ function Phi = compute_Phi(R, accel, gyro, dt)
 
     Phi(7:9,7:9) = RL;
 
+end
+
+
+function X = se23_exp(xi)
+    % xi is 9x1: [omega_x; omega_y; omega_z; v_x; v_y; v_z; p_x; p_y; p_z]
+    % Note: I am assuming the standard order [rotation; velocity; position]
+    
+    phi = xi(7:9); % Rotation vector (axis-angle)
+    v   = xi(4:6); % Velocity component
+    p   = xi(1:3); % Position component
+    
+    theta = norm(phi);
+    Phi = skew(phi);
+    Phi2 = Phi * Phi;
+    
+    % Initialize Rotation and V matrix (Left Jacobian of SO3)
+    if theta < 1e-6
+        % Taylor series for small angles to avoid division by zero
+        R = eye(3) + Phi + 0.5 * Phi2;
+        V = eye(3) + 0.5 * Phi + (1/6) * Phi2;
+    else
+        % Rodrigues' Rotation Formula
+        R = eye(3) + (sin(theta)/theta) * Phi + ((1-cos(theta))/theta^2) * Phi2;
+        
+        % Left Jacobian of SO(3)
+        V = eye(3) + ((1-cos(theta))/theta^2) * Phi + ((theta-sin(theta))/theta^3) * Phi2;
+    end
+    
+    % Transform velocity and position
+    Va = V * v;
+    Vb = V * p;
+    
+    % Construct the 5x5 SE2(3) matrix
+    % [ R  Va  Vb ]
+    % [ 0   1   0 ]
+    % [ 0   0   1 ]
+    X = [R,          Va, Vb;
+         zeros(1,3), 1,  0;
+         zeros(1,3), 0,  1];
+end
+
+function s = skew(v)
+    % Helper for the 3x3 skew-symmetric matrix
+    s = [ 0,    -v(3),  v(2);
+          v(3),  0,    -v(1);
+         -v(2),  v(1),  0];
 end
