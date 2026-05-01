@@ -1,10 +1,6 @@
 % Error State Multiplicative Extended Kalman Filter for the IMU
 
-
-%% Setup:
-
-% --- Load the data and set up the initial state ---
-data = load("Rocket_IMU_data.mat");
+function out = IMU_ES_MEKF(data)
 
 IMU_data = data.IMU_data; 
 time = IMU_data.ref_time;
@@ -44,7 +40,7 @@ Q = Fi*Q_body*Fi';
 
 % Loop for IMU integration:
 
-output = struct;
+out = struct;
 
 % initialize the error state:
 delta_x = zeros(9,1);
@@ -115,7 +111,7 @@ for idx = 1:numel(time)
     end 
 
     % save out the P matrix and the state:
-    output.P(:,:,idx) = P;
+    out.P(:,:,idx) = P;
 end
 
 % plot the position over time:
@@ -127,11 +123,14 @@ estPosLie = X(1:3,5,:);
 estPosLie = squeeze(estPosLie);
 
 % covariance:
-cov = output.P;
+cov = out.P;
 
 cov_zpos = squeeze(cov(3,3,:));
 cov_ypos = squeeze(cov(2,2,:));
 cov_xpos = squeeze(cov(1,1,:));
+
+    out.error = truePosArray-estPosLie(:,1:end-1)';
+    out.cov_xyz = squeeze(cov(1:3,1:3,:));
 
 
 % Rocket Trajectory Plot:
@@ -237,6 +236,8 @@ estQuatLie = rotm2quat(estRotLie);
 % hold on
 % plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
 % legend();
+
+end
 
 
 

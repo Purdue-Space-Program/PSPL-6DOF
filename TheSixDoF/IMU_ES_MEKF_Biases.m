@@ -1,4 +1,6 @@
     % Error State Multiplicative Extended Kalman Filter with Bias estimation
+
+    function out = IMU_ES_MEKF_Biases(data)
     
     
     %% Setup:
@@ -6,7 +8,6 @@
     clear ValuesfromIdx
     
     % --- Load the data and set up the initial state ---
-    data = load("Rocket_IMU_data.mat");
     
     IMU_data = data.IMU_data; 
     time = IMU_data.ref_time;
@@ -53,7 +54,7 @@
     
     % Loop for IMU integration:
     
-    output = struct;
+    out = struct;
     
     % initialize the error state:
     
@@ -137,7 +138,7 @@
         end 
     
         % save out the P matrix and the state:
-        output.P(:,:,idx) = P;
+        out.P(:,:,idx) = P;
     end
     
     % plot the position over time:
@@ -149,7 +150,7 @@
     estPosLie = squeeze(estPosLie);
     
     % covariance:
-    cov = output.P;
+    cov = out.P;
     
     cov_zpos = squeeze(cov(3,3,:));
     cov_ypos = squeeze(cov(2,2,:));
@@ -157,6 +158,9 @@
     
     cov_accel = squeeze(cov(10,10,:));
     cov_gyro = squeeze(cov(13,13,:));
+
+    out.error = truePosArray-estPosLie(:,1:end-1)';
+    out.cov_xyz = squeeze(cov(1:3,1:3,:));
     
     
     % Rocket Trajectory Plot:
@@ -246,6 +250,8 @@
     hold on
     plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
     legend();
+
+    end
     
     
     

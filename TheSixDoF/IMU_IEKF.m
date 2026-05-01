@@ -1,10 +1,10 @@
 % Invariant Extended Kalman Filter on SE2(3)
+
+function out = IMU_IEKF(data)
+
 clear ValuesfromIdx
 
-%% Setup:
-
 % --- Load the data and set up the initial state ---
-data = load("Rocket_IMU_data.mat");
 
 IMU_data = data.IMU_data; 
 time = IMU_data.ref_time;
@@ -42,7 +42,7 @@ Q = Fi*Q_body*Fi';
 
 % Loop for IMU integration:
 
-output = struct;
+out = struct;
 
 % initialize the error state:
 delta_x = zeros(9,1);
@@ -63,7 +63,7 @@ for idx = 1:numel(time)
     % Covariance update:
 
     % Calculate Phi for the given rotation:
-    Phi = compute_Phi(accel,gyro,dt);
+    Phi = compute_Phi_IEKF(accel,gyro,dt);
 
     P = Phi*P*Phi' + Q;
    
@@ -75,8 +75,6 @@ for idx = 1:numel(time)
 
         z = IMU_data.GPS(gps_idx, :)';
         z2 = IMU_data.GPS_vel(gps_idx,:)';
-
-        
      
         z_hat = X(1:3, 5,idx);
         z_hat2 = X(1:3,4,idx);
@@ -110,7 +108,7 @@ for idx = 1:numel(time)
     end 
 
     % save out the P matrix and the state:
-    output.P(:,:,idx) = P;
+    out.P(:,:,idx) = P;
 end
 
 % plot the position over time:
@@ -122,11 +120,16 @@ estPosLie = X(1:3,5,:);
 estPosLie = squeeze(estPosLie);
 
 % covariance:
-cov = output.P;
+cov = out.P;
 
 cov_zpos = squeeze(cov(3,3,:));
 cov_ypos = squeeze(cov(2,2,:));
 cov_xpos = squeeze(cov(1,1,:));
+
+% save the outputs:
+
+out.error = truePosArray-estPosLie(:,1:end-1)';
+out.cov_xyz = squeeze(cov(1:3,1:3,:));
 
 
 % Rocket Trajectory Plot:
@@ -199,15 +202,16 @@ estQuatLie = rotm2quat(estRotLie);
 % plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
 % legend();
 
+end
 
 
 % Compute the exact solution Phi matrix for the system using matrix exp:
-function Phi = compute_Phi(accel, gyro, dt)
-    % Based on your paper's image (Left-Invariant SE2(3))
+function Phi = compute_Phi_IEKF(accel, gyro, dt)
+    % (Left-Invariant SE2(3))
     % State Order: [pos (1:3); vel (4:6); rot (7:9)]
     
-    O_hat = skew(gyro); % -omega^ in your paper
-    A_hat = skew(accel); % -a^ in your paper
+    O_hat = skew(gyro); % -omega^ 
+    A_hat = skew(accel); % -a^
     
     A = zeros(9,9);
     
@@ -228,8 +232,7 @@ end
 
 
 function X = se23_exp(xi)
-    % xi is 9x1: [omega_x; omega_y; omega_z; v_x; v_y; v_z; p_x; p_y; p_z]
-    % Note: I am assuming the standard order [rotation; velocity; position]
+    % xi is 9x1: [p_x; p_y; p_z; v_x; v_y; v_z; omega_x; omega_y; omega_z;]
     
     phi = xi(7:9); % Rotation vector (axis-angle)
     v   = xi(4:6); % Velocity component
@@ -239,7 +242,6 @@ function X = se23_exp(xi)
     Phi = skew(phi);
     Phi2 = Phi * Phi;
     
-    % Initialize Rotation and V matrix (Left Jacobian of SO3)
     if theta < 1e-6
         % Taylor series for small angles to avoid division by zero
         R = eye(3) + Phi + 0.5 * Phi2;
