@@ -23,10 +23,10 @@ X = [R,vel,pos;zeros(2,3),eye(2)];
 accel_cov = IMU_data.accel_info.Variance;
 gyro_cov = IMU_data.gyro_info.Variance';
 
-sig_p = 2; sig_v = 0.01; sig_theta = 0.01;
+sig_p = 2; sig_v = 0.15; sig_theta = 0.2;
 P = diag([sig_p*ones(1,3), sig_v*ones(1,3), sig_theta*ones(1,3)].^2);
 
-Q_body = diag([accel_cov,gyro_cov])*dt; % Process noise covariance
+Q_body = 10*diag([accel_cov,gyro_cov])*dt; % Process noise covariance
 R = diag(IMU_data.gps_info.Variance);  % Measurement noise covariance
 
 % measurement is position and vel, and it's world frame (identity)
@@ -58,7 +58,7 @@ for idx = 1:numel(time)
     X(:,:,idx+1) = IMU_Lie_integrator(accel, gyro, grav, X(:,:,idx), dt);
 
     % extract the rotation matrix from the full state
-    curr_R = X(1:3, 1:3, idx);
+    curr_R = X(1:3, 1:3, idx+1);
 
     % Covariance update:
 
@@ -129,78 +129,9 @@ cov_xpos = squeeze(cov(1,1,:));
 % save the outputs:
 
 out.error = truePosArray-estPosLie(:,1:end-1)';
+out.state = estPosLie(:,1:end-1)';
 out.cov_xyz = squeeze(cov(1:3,1:3,:));
 
-
-% Rocket Trajectory Plot:
-figure;
-sgtitle('IEKF')
-subplot(3,1,1)
-plot(time,truePosArray(:,3)-estPosLie(3,1:end-1)','b')
-hold on
-
-% sigma bounds:
-plot(time,3*sqrt(cov_zpos),'r--')
-plot(time,-3*sqrt(cov_zpos),'r--')
-
-xlabel('Time (s)');
-ylabel(' (m)');
-legend('Error State $\delta z$', '3-$\sigma$ bounds')
-title('Altitude')
-
-subplot(3,1,2)
-plot(time,truePosArray(:,2)-estPosLie(2,1:end-1)','b')
-hold on
-
-% sigma bounds:
-plot(time,3*sqrt(cov_ypos),'r--')
-plot(time,-3*sqrt(cov_ypos),'r--')
-%plot(IMU_data.GPS_time, IMU_data.GPS(:,3), 'go')
-
-xlabel('Time (s)');
-ylabel(' (m)');
-legend('Error State $\delta y$', '3-$\sigma$ bounds')
-title('East')
-
-
-subplot(3,1,3)
-plot(time,truePosArray(:,1)-estPosLie(1,1:end-1)','b')
-hold on
-% sigma bounds:
-plot(time,3*sqrt(cov_xpos),'r--')
-plot(time,-3*sqrt(cov_xpos),'r--')
-%plot(IMU_data.GPS_time, IMU_data.GPS(:,3), 'go')
-
-xlabel('Time (s)');
-ylabel(' (m)');
-legend('Error State $\delta x$', '3-$\sigma$ bounds')
-title('North')
-
-
-
-% Rocket Trajectory Plot:
-% figure;
-% sgtitle('IEKF Results')
-% plot3(truePosArray(:,1), truePosArray(:,2), truePosArray(:,3), 'g')
-% hold on
-% plot3(estPosLie(1,:), estPosLie(2,:), estPosLie(3,:), 'b')
-% view(43,24);
-% xlabel('Dist North (m)');
-% ylabel('Dist East (m)');
-% zlabel('Height (m)');
-% legend('True Trajectory', 'IMU Integration')
-% grid minor;
-
-
-% compare the quats:
-estRotLie = X(1:3,1:3,:);
-estQuatLie = rotm2quat(estRotLie);
-
-% figure;
-% plot(estQuatLie, 'DisplayName', 'Estimated Quat')
-% hold on
-% plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
-% legend();
 
 end
 
@@ -210,8 +141,13 @@ function Phi = compute_Phi_IEKF(accel, gyro, dt)
     % (Left-Invariant SE2(3))
     % State Order: [pos (1:3); vel (4:6); rot (7:9)]
     
-    O_hat = skew(gyro); % -omega^ 
-    A_hat = skew(accel); % -a^
+    O_hat = [ 0,    -gyro(3),  gyro(2);
+          gyro(3),  0,    -gyro(1);
+         -gyro(2),  gyro(1),  0]; % -omega^ 
+
+    A_hat = [ 0,    -accel(3),  accel(2);
+          accel(3),  0,    -accel(1);
+         -accel(2),  accel(1),  0]; % -a^
     
     A = zeros(9,9);
     
@@ -227,7 +163,8 @@ function Phi = compute_Phi_IEKF(accel, gyro, dt)
     A(7:9, 7:9) = -O_hat;
     
     % Discretize
-    Phi = expm(A * dt);
+    %Phi = expm(A * dt);
+    Phi = eye(9)+A*dt;
 end
 
 

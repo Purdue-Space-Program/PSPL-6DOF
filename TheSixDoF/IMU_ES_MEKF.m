@@ -2,6 +2,8 @@
 
 function out = IMU_ES_MEKF(data)
 
+clear ValuesfromIdx
+
 IMU_data = data.IMU_data; 
 time = IMU_data.ref_time;
 dt = 1/100;
@@ -19,10 +21,10 @@ X = [R,vel,pos;zeros(2,3),eye(2)];
 accel_cov = IMU_data.accel_info.Variance;
 gyro_cov = IMU_data.gyro_info.Variance';
 
-sig_p = 2; sig_v = 0.01; sig_theta = 0.01;
+sig_p = 2; sig_v = 0.15; sig_theta = 0.5;
 P = diag([sig_p*ones(1,3), sig_v*ones(1,3), sig_theta*ones(1,3)].^2);
 
-Q_body = diag([accel_cov,gyro_cov])*dt; % Process noise covariance
+Q_body = 10*diag([accel_cov,gyro_cov])*dt; % Process noise covariance
 R = diag(IMU_data.gps_info.Variance);  % Measurement noise covariance
 
 
@@ -130,112 +132,9 @@ cov_ypos = squeeze(cov(2,2,:));
 cov_xpos = squeeze(cov(1,1,:));
 
     out.error = truePosArray-estPosLie(:,1:end-1)';
+    out.state = estPosLie(:,1:end-1)';
     out.cov_xyz = squeeze(cov(1:3,1:3,:));
 
-
-% Rocket Trajectory Plot:
-figure;
-sgtitle('ES-MEKF')
-subplot(3,1,1)
-plot(time,truePosArray(:,3)-estPosLie(3,1:end-1)','b')
-hold on
-
-% sigma bounds:
-plot(time,3*sqrt(cov_zpos),'r--')
-plot(time,-3*sqrt(cov_zpos),'r--')
-
-xlabel('Time (s)');
-ylabel(' (m)');
-legend('Error State $\delta z$', '3-$\sigma$ bounds')
-title('Altitude')
-
-subplot(3,1,2)
-plot(time,truePosArray(:,2)-estPosLie(2,1:end-1)','b')
-hold on
-
-% sigma bounds:
-plot(time,3*sqrt(cov_ypos),'r--')
-plot(time,-3*sqrt(cov_ypos),'r--')
-%plot(IMU_data.GPS_time, IMU_data.GPS(:,3), 'go')
-
-xlabel('Time (s)');
-ylabel(' (m)');
-legend('Error State $\delta y$', '3-$\sigma$ bounds')
-title('East')
-
-
-subplot(3,1,3)
-plot(time,truePosArray(:,1)-estPosLie(1,1:end-1)','b')
-hold on
-% sigma bounds:
-plot(time,3*sqrt(cov_xpos),'r--')
-plot(time,-3*sqrt(cov_xpos),'r--')
-%plot(IMU_data.GPS_time, IMU_data.GPS(:,3), 'go')
-
-xlabel('Time (s)');
-ylabel(' (m)');
-legend('Error State $\delta x$', '3-$\sigma$ bounds')
-title('North')
-
-% plot the NIS:
-
-dof = 6; 
-alpha = 0.05; % 95% confidence
-upper_gate = chi2inv(1 - alpha/2, dof);
-lower_gate = chi2inv(alpha/2, dof);
-gps_time = IMU_data.GPS_time;
-
-figure;
-plot(gps_time, NIS, 'b.'); hold on;
-yline(upper_gate, 'r--', '95% Upper Bound');
-yline(lower_gate, 'r--', '95% Lower Bound');
-title('NIS Consistency Check');
-xlabel('Time (s)'); ylabel('NIS Value');
-
-
-% Rocket Trajectory Plot:
-% figure;
-% plot3(truePosArray(:,1), truePosArray(:,2), truePosArray(:,3), 'g')
-% hold on
-% plot3(estPosLie(1,:), estPosLie(2,:), estPosLie(3,:), 'b')
-% view(43,24);
-% xlabel('Dist North (m)');
-% ylabel('Dist East (m)');
-% zlabel('Height (m)');
-% legend('True Trajectory', 'IMU Integration')
-% grid minor;
-
-% Innovations:
-% figure;
-% subplot(2,1,1);
-% plot(IMU_data.GPS_time, innovations(:, 3), 'b'); % Altitude Innovation
-% hold on;
-% plot(IMU_data.GPS_time, innov_bounds(:, 3), 'r--');
-% plot(IMU_data.GPS_time, -innov_bounds(:, 3), 'r--');
-% title('Altitude Innovation ($z - z_{hat}$)');
-% ylabel('Error (m)');
-% grid on;
-% 
-% subplot(2,1,2);
-% plot(IMU_data.GPS_time, innovations(:, 6), 'b'); % Vertical Velocity Innovation
-% hold on;
-% plot(IMU_data.GPS_time, innov_bounds(:, 6), 'r--');
-% plot(IMU_data.GPS_time, -innov_bounds(:, 6), 'r--');
-% title('Vertical Velocity Innovation');
-% ylabel('Error (m/s)');
-% xlabel('Time (s)');
-% grid on;
-
-
-% compare the quats:
-estRotLie = X(1:3,1:3,:);
-estQuatLie = rotm2quat(estRotLie);
-
-% figure;
-% plot(estQuatLie, 'DisplayName', 'Estimated Quat')
-% hold on
-% plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
-% legend();
 
 end
 

@@ -29,11 +29,11 @@
     gyro_rw = IMU_data.gyro_info.BiasRandomWalkRate;
     
     
-    sig_p = 2; sig_v = 0.01; sig_theta = 0.01; sig_accel = 0.1; sig_gyro = 0.1;
+    sig_p = 2; sig_v = 0.01; sig_theta = 0.2; sig_accel = 0.1; sig_gyro = 0.1;
     P = diag([sig_p*ones(1,3), sig_v*ones(1,3), sig_theta*ones(1,3),...
         sig_accel*ones(1,3),sig_gyro*ones(1,3)].^2);
     
-    Q_body = diag([accel_cov,gyro_cov,ones(1,3)*accel_rw,...
+    Q_body = 10*diag([accel_cov,gyro_cov,ones(1,3)*accel_rw,...
         ones(1,3)*gyro_rw])*dt; % Process noise covariance
 
     R = diag(IMU_data.gps_info.Variance);  % Measurement noise covariance
@@ -160,52 +160,9 @@
     cov_gyro = squeeze(cov(13,13,:));
 
     out.error = truePosArray-estPosLie(:,1:end-1)';
+    out.state = estPosLie(:,1:end-1)';
     out.cov_xyz = squeeze(cov(1:3,1:3,:));
     
-    
-    % Rocket Trajectory Plot:
-    figure;
-    sgtitle('ES-MEKF (with Bias Estimation)')
-    subplot(3,1,1)
-    plot(time,truePosArray(:,3)-estPosLie(3,1:end-1)','b')
-    hold on
-    
-    % sigma bounds:
-    plot(time,3*sqrt(cov_zpos),'r--')
-    plot(time,-3*sqrt(cov_zpos),'r--')
-    
-    xlabel('Time (s)');
-    ylabel(' (m)');
-    legend('Error State $\delta z$', '3-$\sigma$ bounds')
-    title('Altitude')
-    
-    subplot(3,1,2)
-    plot(time,truePosArray(:,2)-estPosLie(2,1:end-1)','b')
-    hold on
-    
-    % sigma bounds:
-    plot(time,3*sqrt(cov_ypos),'r--')
-    plot(time,-3*sqrt(cov_ypos),'r--')
-    %plot(IMU_data.GPS_time, IMU_data.GPS(:,3), 'go')
-    
-    xlabel('Time (s)');
-    ylabel(' (m)');
-    legend('Error State $\delta y$', '3-$\sigma$ bounds')
-    title('East')
-    
-    
-    subplot(3,1,3)
-    plot(time,truePosArray(:,1)-estPosLie(1,1:end-1)','b')
-    hold on
-    % sigma bounds:
-    plot(time,3*sqrt(cov_xpos),'r--')
-    plot(time,-3*sqrt(cov_xpos),'r--')
-    %plot(IMU_data.GPS_time, IMU_data.GPS(:,3), 'go')
-    
-    xlabel('Time (s)');
-    ylabel(' (m)');
-    legend('Error State $\delta x$', '3-$\sigma$ bounds')
-    title('North')
     
     % Rocket Trajectory Plot:
     % figure;
@@ -241,15 +198,15 @@
     % grid on;
     
     
-    % compare the quats:
-    estRotLie = X(1:3,1:3,:);
-    estQuatLie = rotm2quat(estRotLie);
-    
-    figure;
-    plot(estQuatLie, 'DisplayName', 'Estimated Quat')
-    hold on
-    plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
-    legend();
+    % % compare the quats:
+    % estRotLie = X(1:3,1:3,:);
+    % estQuatLie = rotm2quat(estRotLie);
+    % 
+    % figure;
+    % plot(estQuatLie, 'DisplayName', 'Estimated Quat')
+    % hold on
+    % plot(IMU_data.ref_quat, 'DisplayName', 'True Quat')
+    % legend();
 
     end
     

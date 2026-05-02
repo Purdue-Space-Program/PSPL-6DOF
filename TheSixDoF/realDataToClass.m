@@ -1,6 +1,7 @@
 % take in the real IMU data:
 
-data = readmatrix("standstill.csv");
+data = readmatrix("manard.csv");
+
 
 IMU_time_ns = data(:,3);
 
@@ -38,7 +39,7 @@ gps_time = IMU_time(changeIdx);
 
 % convert the gps lat long alt to ENU
 
-gps_enu = lla2enu(gps_lla,gps_lla(30,:), 'ellipsoid');
+gps_enu = lla2enu(gps_lla,gps_lla(1,:), 'ellipsoid');
 
 % convert velocity to ENU frame:
 gps_v_enu(:,1) = gps_v_ned(:,2);
@@ -70,9 +71,8 @@ accel.Bias0 = 0;
 accel.ScaleFactor = 1.001;
 accel.BiasRandomWalkRate = 3.923e-4;
 
-grav = zeros(numel(time),3);
+grav = zeros(numel(IMU_time),3);
 grav(:,3) = -9.81;
-
 
 
 %% Put data into struct
@@ -96,7 +96,8 @@ IMU_data.gyro_info = gyro;
 IMU_data.gps_info = gps;
 
 IMU_data.ref_traj = zeros(numel(IMU_time),3);
+IMU_data.GPS_lla = gps_lla;
 
-save("Standstill_IMU.mat", "IMU_data")
+save("menard.mat", "IMU_data")
 
 
