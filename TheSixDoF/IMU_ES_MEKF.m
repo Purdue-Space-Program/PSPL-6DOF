@@ -90,7 +90,6 @@ for idx = 1:numel(time)
         % get the error state
 
         delta_xhat = K * (z - z_hat);
-        disp(delta_xhat)
 
         % put the error back into the state
         pos = X(1:3,5,end)+delta_xhat(1:3);

@@ -1,14 +1,17 @@
-data = load("menard.mat");
+data = load("Rocket_IMU_data.mat");
 
 tic;
 mekf = IMU_ES_MEKF(data);
 toc;
 
 tic;
+mekf_bias = IMU_ES_MEKF_Biases(data);
+toc;
+
+tic;
 iekf = IMU_IEKF(data);
 toc;
 
-mekf_bias = IMU_ES_MEKF_Biases(data);
 
 % plot the results:
 
