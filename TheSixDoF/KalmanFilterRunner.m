@@ -31,7 +31,7 @@ subplot(3,1,1)
 plot(time,mekf.error(:,3), Color=colors(1), DisplayName='MEKF')
 hold on
 plot(time,iekf.error(:,3),Color=colors(2), DisplayName='IEKF')
-%plot(time,mekf_bias.error(:,3),Color=colors(3), DisplayName='MEKF with bias')
+plot(time,mekf_bias.error(:,3),Color=colors(3), DisplayName='MEKF with bias')
 
 % sigma bounds:
 plot(time,3*sqrt(cov_zpos),'r--', DisplayName='3-$\sigma$ bounds')
@@ -46,7 +46,7 @@ subplot(3,1,2)
 plot(time,mekf.error(:,2), Color=colors(1), DisplayName='MEKF')
 hold on
 plot(time,iekf.error(:,2),Color=colors(2), DisplayName='IEKF')
-%plot(time,mekf_bias.error(:,2),Color=colors(3), DisplayName='MEKF with bias')
+plot(time,mekf_bias.error(:,2),Color=colors(3), DisplayName='MEKF with bias')
 
 % sigma bounds:
 plot(time,3*sqrt(cov_ypos),'r--', DisplayName='3-$\sigma$ bounds')
@@ -62,7 +62,7 @@ subplot(3,1,3)
 plot(time,mekf.error(:,1), Color=colors(1), DisplayName='MEKF')
 hold on
 plot(time,iekf.error(:,1),Color=colors(2), DisplayName='IEKF')
-%plot(time,mekf_bias.error(:,1),Color=colors(3), DisplayName='MEKF with bias')
+plot(time,mekf_bias.error(:,1),Color=colors(3), DisplayName='MEKF with bias')
 
 % sigma bounds:
 plot(time,3*sqrt(cov_xpos),'r--', DisplayName='3-$\sigma$ bounds')
@@ -88,7 +88,7 @@ geoplot(iekf_lla(:,1), iekf_lla(:,2), Color=colors(2), DisplayName='IEKF')
 hold on
 geoplot(mekf_lla(:,1), mekf_lla(:,2), Color=colors(1), DisplayName='MEKF')
 geoplot(mekf_bias_lla(:,1), mekf_bias_lla(:,2), Color=colors(3), DisplayName='MEKF with Bias')
-geoplot(data.IMU_data.GPS_lla(:,1),data.IMU_data.GPS_lla(:,2), 'go')
+geoplot(data.IMU_data.GPS_lla(1:10:end,1),data.IMU_data.GPS_lla(1:10:end,2), 'go', DisplayName='GPS')
 
 
 legend(Location='northeastoutside')

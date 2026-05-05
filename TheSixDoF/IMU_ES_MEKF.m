@@ -75,7 +75,7 @@ for idx = 1:numel(time)
 
         z = [IMU_data.GPS(gps_idx, :)';IMU_data.GPS_vel(gps_idx,:)']; 
 
-        z_hat = [X(1:3, 5,end);X(1:3,4,end);];
+        z_hat = [X(1:3, 5,idx);X(1:3,4,idx);];
 
         % store innovations
         innovation = z-z_hat;
