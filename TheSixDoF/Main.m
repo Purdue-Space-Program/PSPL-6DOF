@@ -1,4 +1,4 @@
-function Main(rocket, env, settings)
+function outputStruct = Main(rocket, env, settings)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: MainRK4
@@ -64,7 +64,8 @@ pos = [0;0;env.Elevation];
 vel = [0;0;0];
 
 % initial angle (z angle, y angle, x angle) - following 3-2-1 sequence
-angleVector = [0;-pi/2;0];
+% 1 deg yaw perturbation to excite attitude dynamics
+angleVector = [1*pi/180; -pi/2; 0];
 
 % initial rotation rate (x rate, y rate, z rate)
 omega = [0;0;0];
@@ -109,29 +110,26 @@ toc;
 outputStruct = struct;
 outputStruct.time = timeArray;
 
+% Always parse the state vector so the struct is useful even without plots
+out = real(out);
+outputStruct.pos   = out(:,1:3);
+outputStruct.vel   = out(:,4:6);
+outputStruct.omega = out(:,7:9);
+outputStruct.quat  = out(:,10:13);
+
 % output additional arrays from the integrator
 for k = 1:numel(timeArray)
     [~, outputStruct.mach(k,1), outputStruct.AoA(k,1), outputStruct.accel(k,:), ...
         outputStruct.cD(k,:), moment(k,:)] = RK4Integrator(timeArray(k), out(k,:), ...
         atmosphere,totCoM, totMass, MoI, windData, rocket, settings, env);
 end
-
+outputStruct.AoA = real(outputStruct.AoA);
 
 if settings.Outputs == true
-    % make the outputs real (long monte carlo runs can generate complex values)
-    out = real(out);
-    outputStruct.AoA = real(outputStruct.AoA);
-
-    % parse rk4 outputs:
-    posArray = out(:,1:3);
-    velArray = out(:,4:6);
-    omega = out(:,7:9);
-    quatArray = out(:,10:13);
-
-    outputStruct.pos = posArray;
-    outputStruct.vel = velArray;
-    outputStruct.omega = omega;
-    outputStruct.quat = quatArray;
+    posArray  = outputStruct.pos;
+    velArray  = outputStruct.vel;
+    omega     = outputStruct.omega;
+    quatArray = outputStruct.quat;
 
     % convert to lat and long for plotting on map:
     E = wgs84Ellipsoid;

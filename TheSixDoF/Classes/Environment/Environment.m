@@ -25,7 +25,13 @@ classdef Environment
                 date (1,1) datetime = datetime("now", "TimeZone", "UTC")
             end
             env.LatLong = [lat,long];
-            env.Elevation = getElevation(env);
+            try
+                env.Elevation = getElevation(env);
+            catch ME
+                warning('Environment:elevationFailed', ...
+                    'getElevation failed (%s). Set env.Elevation manually.', ME.message);
+                env.Elevation = 0;
+            end
             env.Date = date;
         end
 
@@ -89,15 +95,24 @@ classdef Environment
             % adjust the current weather:
             currentWeatherData.time = datetime("now", "TimeZone", "UTC");
 
-            % Auto-convert all py.numpy arrays or lists to MATLAB doubles
+            % Convert all Python types to native MATLAB types
             f = fieldnames(hourlyWeatherData);
             for i = 1:numel(f)
                 val = hourlyWeatherData.(f{i});
                 if isa(val, 'py.numpy.ndarray')
                     hourlyWeatherData.(f{i}) = double(val);
                 elseif isa(val, 'py.list')
-                    hourlyWeatherData.(f{i}) = double(py.array.array('d', val));
+                    try
+                        hourlyWeatherData.(f{i}) = double(py.array.array('d', val));
+                    catch
+                        % list has non-numeric elements — convert element-wise
+                        c = cell(val);
+                        hourlyWeatherData.(f{i}) = cellfun(@(x) double(x), c);
+                    end
+                elseif isa(val, 'py.float') || isa(val, 'py.int')
+                    hourlyWeatherData.(f{i}) = double(val);
                 end
+                % py.str and other non-numeric types: leave as-is
             end
 
             hourlyWeatherData.date = datetime(hourlyWeatherData.date, 'ConvertFrom', 'posixtime', 'TimeZone', 'UTC');

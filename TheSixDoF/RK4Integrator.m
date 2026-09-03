@@ -56,7 +56,7 @@ burnTime = motor.BurnTime;
 bodyVectorEarth = RotationMatrix(bodyVector, quat, 1); % Body vector in inertial frame
 
 %---------------- Get atmospheric Conditions (prefer Open-Meteo via env) ---
-geoalt = real(pos(3));  % AGL [m]
+geoalt = max(real(pos(3)), 0);  % AMSL [m], clamped so gravitywgs84 doesn't warn on trial steps
 
 
 % get the atmosphere data (update to get the environment):
