@@ -87,13 +87,7 @@ classdef Environment
 
             hourlyWeatherData = mod.getHourlyWeather(lat,lon);
 
-            currentWeatherData = mod.getCurrentWeather(lat,lon);
-
             hourlyWeatherData = struct(hourlyWeatherData);
-            currentWeatherData = struct(currentWeatherData);
-
-            % adjust the current weather:
-            currentWeatherData.time = datetime("now", "TimeZone", "UTC");
 
             % Convert all Python types to native MATLAB types
             f = fieldnames(hourlyWeatherData);
@@ -133,67 +127,41 @@ classdef Environment
 
             surfGust = hourlyWeatherData.wind_gusts_10m(closestIndex);
 
-            % Get all field names in the struct
-            fields = fieldnames(hourlyWeatherData);
+            % Extract each pressure level explicitly by constructing field names.
+            % This avoids two bugs in the field-search approach:
+            %   1) MATLAB struct fields are alphabetically ordered, so
+            %      contains()-based loops don't match presLevels order.
+            %   2) contains(fields,'temperature_') also matches temperature_2m,
+            %      giving one extra element and breaking all downstream indexing.
+            presLevelsHPa = [1000, 925, 850, 700, 500, 300, 200, 100, 50];
+            nLev = numel(presLevelsHPa);
 
-            % Keep only the geopotential height fields
-            ghFields = fields(contains(fields, 'geopotential_height_'));
+            geoHeight_raw  = zeros(1, nLev);
+            windSpeed_raw  = zeros(1, nLev);
+            windDir_raw    = zeros(1, nLev);
+            tempKelvin_raw = zeros(1, nLev);
 
-            % define the pressure level fields:
-            presLevels = [1000e2, 975e2, 950e2, 925e2, 900e2, 850e2, 800e2, 700e2, 600e2, ...
-            500e2, 400e2, 300e2, 250e2, 200e2, 150e2, 100e2, 70e2, 50e2, 30e2]';
-
-            geoHeight(1) = env.Elevation;
-
-            % Loop and extract the value at that index
-            for idx = 1:numel(ghFields)
-                f = ghFields{idx};
-                geoHeight(idx) = hourlyWeatherData.(f)(closestIndex);
+            for idx = 1:nLev
+                p = presLevelsHPa(idx);
+                geoHeight_raw(idx)  = hourlyWeatherData.(sprintf('geopotential_height_%dhPa', p))(closestIndex);
+                windSpeed_raw(idx)  = hourlyWeatherData.(sprintf('wind_speed_%dhPa',          p))(closestIndex);
+                windDir_raw(idx)    = hourlyWeatherData.(sprintf('wind_direction_%dhPa',       p))(closestIndex);
+                tempKelvin_raw(idx) = hourlyWeatherData.(sprintf('temperature_%dhPa',          p))(closestIndex) + 273.15;
             end
 
-            FieldsFilter = geoHeight >= env.Elevation;
+            % Keep only levels at or above site elevation, sorted ascending
+            keep = geoHeight_raw >= env.Elevation;
+            geoHeight  = geoHeight_raw(keep);
+            windSpeed  = windSpeed_raw(keep);
+            windDir    = windDir_raw(keep);
+            tempKelvin = tempKelvin_raw(keep);
+            presLevels = (presLevelsHPa(keep) * 100)';
 
-            presLevels = presLevels(FieldsFilter);
-
-            % remove any of the geoheights which are less than the site elevation
-            geoHeight(geoHeight < env.Elevation) = [];
-
-            % use the fields filter to go through the rest of the data and pull the
-            % appropriate values:
-
-            % wind speed data:
-            windSpeedFields = fields(contains(fields, 'wind_speed_'));
-
-            windSpeedFields = windSpeedFields(FieldsFilter);
-
-            % Loop and extract the value at that index
-            for idx = 1:numel(windSpeedFields)
-                f = windSpeedFields{idx};
-                windSpeed(idx) = hourlyWeatherData.(f)(closestIndex);
-            end
-
-            % wind dir data:
-            windDirFields = fields(contains(fields, 'wind_direction_'));
-
-            windDirFields = windDirFields(FieldsFilter);
-
-            % Loop and extract the value at that index
-            for idx = 1:numel(windDirFields)
-                f = windDirFields{idx};
-                windDir(idx) = hourlyWeatherData.(f)(closestIndex);
-            end
-
-            % temp data
-
-            tempFields = fields(contains(fields, 'temperature_'));
-
-            tempFields = tempFields(FieldsFilter);
-
-            % Loop and extract the value at that index
-            for idx = 1:numel(tempFields)
-                f = tempFields{idx};
-                tempKelvin(idx) = hourlyWeatherData.(f)(closestIndex) + 273.15;
-            end
+            [geoHeight, sIdx] = sort(geoHeight);
+            windSpeed  = windSpeed(sIdx);
+            windDir    = windDir(sIdx);
+            tempKelvin = tempKelvin(sIdx);
+            presLevels = presLevels(sIdx);
 
             % interpolate the data for more fine grain height increments:
             geoHeightInterp = linspace(geoHeight(1),geoHeight(end),1000);

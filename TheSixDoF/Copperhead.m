@@ -16,11 +16,13 @@ PSI2PA = 6894.76;
 Pa_SL  = 101325;
 
 %% ── Aero data ────────────────────────────────────────────────────────────
+% NOTE: r01p01 (index 5) uses r01p02.csv as a geometric approximation — no r01p01 RASAero run yet
 aeroPaths = { ...
     'Inputs/RASAero/r01p02.csv', ...
     'Inputs/RASAero/r01p03.csv', ...
     'Inputs/RASAero/r02p01.csv', ...
-    'Inputs/RASAero/r02p02.csv' };
+    'Inputs/RASAero/r02p02.csv', ...
+    'Inputs/RASAero/r01p02.csv' };
 
 %% ── Regen engine params (Ouroboros) ─────────────────────────────────────
 regen.totalMassFlow = (4.30 + 3.91) * LBM2KG;          % kg/s
@@ -38,12 +40,13 @@ abla.exitPres  = 11 * PSI2PA;
 F_SL_a         = 1350 * LBF2N;
 abla.thrust    = F_SL_a - (abla.exitPres - Pa_SL) * abla.exitArea;
 
-%% ── 4 configurations ─────────────────────────────────────────────────────
+%% ── 5 configurations ─────────────────────────────────────────────────────
 %
-%  cfg(1): r01p02 — Regen,    LOx 32.25in / Eth 39.92in
-%  cfg(2): r01p03 — Regen,    LOx 34.14in / Eth 43.67in
-%  cfg(3): r02p01 — Ablative, LOx 32.25in / Eth 39.92in
-%  cfg(4): r02p02 — Ablative, LOx 34.14in / Eth 43.67in
+%  cfg(1): r01p02 — Regen,    LOx 32.25in / Eth 39.92in / LowerAF 39in
+%  cfg(2): r01p03 — Regen,    LOx 34.14in / Eth 43.67in / LowerAF 39in
+%  cfg(3): r02p01 — Ablative, LOx 32.25in / Eth 39.92in / LowerAF 39in
+%  cfg(4): r02p02 — Ablative, LOx 34.14in / Eth 43.67in / LowerAF 39in
+%  cfg(5): r01p01 — Regen,    LOx 36.50in / Eth 32.50in / LowerAF 41in
 
 cfgs(1).name          = 'r01p02';
 cfgs(1).loxLen        = 32.25;   cfgs(1).loxShellMass = 13;
@@ -93,15 +96,31 @@ cfgs(4).exitArea      = abla.exitArea;
 cfgs(4).exitPres      = abla.exitPres;
 cfgs(4).totalMassFlow = abla.totalMassFlow;
 
+cfgs(5).name          = 'r01p01';
+cfgs(5).loxLen        = 36.50;   cfgs(5).loxShellMass = 16.5;
+cfgs(5).ethLen        = 32.50;   cfgs(5).ethShellMass = 16;
+cfgs(5).lowerAFLen    = 41.00;
+cfgs(5).midAvionics   = 15;
+cfgs(5).raceway       = 5;
+cfgs(5).pumps         = 16;
+cfgs(5).chamber       = 22;
+cfgs(5).thrust        = regen.thrust;
+cfgs(5).exitArea      = regen.exitArea;
+cfgs(5).exitPres      = regen.exitPres;
+cfgs(5).totalMassFlow = regen.totalMassFlow;
+
 %% ── Propellant masses [kg] ───────────────────────────────────────────────
-propMasses(1).lox     = 70.80 * LBM2KG;   propMasses(1).ethanol = 64.30 * LBM2KG;   % r01p02 — shorter tanks
-propMasses(2).lox     = 84.50 * LBM2KG;   propMasses(2).ethanol = 76.85 * LBM2KG;   % r01p03 — longer tanks
-propMasses(3).lox     = 70.80 * LBM2KG;   propMasses(3).ethanol = 64.30 * LBM2KG;   % r02p01 — shorter tanks
-propMasses(4).lox     = 84.50 * LBM2KG;   propMasses(4).ethanol = 76.85 * LBM2KG;   % r02p02 — longer tanks
+propMasses(1).lox     = 70.80 * LBM2KG;   propMasses(1).ethanol = 64.30 * LBM2KG;   % r01p02
+propMasses(2).lox     = 84.50 * LBM2KG;   propMasses(2).ethanol = 76.85 * LBM2KG;   % r01p03
+propMasses(3).lox     = 70.80 * LBM2KG;   propMasses(3).ethanol = 64.30 * LBM2KG;   % r02p01
+propMasses(4).lox     = 84.50 * LBM2KG;   propMasses(4).ethanol = 76.85 * LBM2KG;   % r02p02
+propMasses(5).lox     = 84.50 * LBM2KG;   propMasses(5).ethanol = 64.30 * LBM2KG;   % r01p01
 
 %% ── Build and run ────────────────────────────────────────────────────────
-% Set to 1-4: r01p02, r01p03, r02p01, r02p02
-RUN = 4;
-
-rocket = buildCopperhead(cfgs(RUN), propMasses(RUN), aeroPaths{RUN});
-runSim(rocket, aeroPaths{RUN});
+% Runs 1-4 are the primary configs (r01p02, r01p03, r02p01, r02p02).
+% Run 5 (r01p01) is the baseline — change to [5] to run it alone.
+for RUN = 1:4
+    rocket = buildCopperhead(cfgs(RUN), propMasses(RUN), aeroPaths{RUN});
+    runSim(rocket, aeroPaths{RUN});
+    clear RK4Integrator
+end

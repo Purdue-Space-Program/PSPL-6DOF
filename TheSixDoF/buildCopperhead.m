@@ -7,6 +7,7 @@ function rocket = buildCopperhead(cfg, propMasses, aeroPath)
 %    .loxShellMass   LOx tank empty shell mass
 %    .ethLen         Ethanol tank length
 %    .ethShellMass   Ethanol tank empty shell mass
+%    .lowerAFLen     Lower airframe length (default 39 in if not set)
 %    .midAvionics    Mid avionics mass
 %    .raceway        Raceway mass
 %    .pumps          Pumps mass (0 for ablative)
@@ -34,7 +35,11 @@ L.upperAF = 23.50 * IN2M;
 L.lox     = cfg.loxLen * IN2M;
 L.midAF   = 19.50 * IN2M;
 L.eth     = cfg.ethLen * IN2M;
-L.lowerAF = 39.00 * IN2M;
+if isfield(cfg, 'lowerAFLen') && ~isempty(cfg.lowerAFLen)
+    L.lowerAF = cfg.lowerAFLen * IN2M;
+else
+    L.lowerAF = 39.00 * IN2M;
+end
 L.inj     =  1.50 * IN2M;
 L.chamber = 16.00 * IN2M;
 

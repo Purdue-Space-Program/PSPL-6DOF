@@ -47,16 +47,11 @@ end
 if canRunSim
     env = Environment(35.3474, -117.8091);
     env.Elevation = 627.91;
-
-    % ISA atmosphere — no network call required
-    alt = (0:200:80000)';
-    [T, a, P, rho] = atmosisa(alt);
-    env.Atmosphere = [alt, T, a, P, rho];
-
-    % Simple wind profile: 8 m/s from south below 3km, tapering to 15 m/s at 10km
-    windU = min(8 + (alt / 10000) * 7, 15);   % N-S component [m/s]
-    windV = zeros(size(alt));                   % E-W component
-    env.Wind = [alt, windU, windV];
+    env.Date      = datetime('now', 'TimeZone', 'UTC');
+    env = env.getLocalWeather();
+    fprintf('  [Weather] Wind @ 3 km: %.1f m/s  |  Wind @ 10 km: %.1f m/s\n', ...
+        norm(interp1(env.Wind(:,1), env.Wind(:,2:3),  3000, 'linear', 'extrap')), ...
+        norm(interp1(env.Wind(:,1), env.Wind(:,2:3), 10000, 'linear', 'extrap')));
 
     s = IntegratorSettings('apogee', 0.1, 'medium');
     s.Outputs     = true;
@@ -80,12 +75,12 @@ fprintf(fid, 'Generated: %s\n\n', datestr(now, 'yyyy-mm-dd HH:MM'));
 fprintf(fid, '── GEOMETRY ─────────────────────────────────\n');
 fprintf(fid, '  Total length : %.4f m  (%.2f in)\n', rocket.TotalLength, rocket.TotalLength/0.0254);
 fprintf(fid, '  Outer dia    : %.4f m  (%.2f in)\n', rocket.OuterDiameter, rocket.OuterDiameter/0.0254);
-fprintf(fid, '  Wet mass     : %.3f kg\n\n', rocket.TotalMass);
+fprintf(fid, '  Wet mass     : %.3f kg  (%.2f lbm)\n\n', rocket.TotalMass, rocket.TotalMass/0.45359237);
 
 if ~isempty(massProps)
     fprintf(fid, '── MASS PROPERTIES ──────────────────────────\n');
-    fprintf(fid, '  Initial CoM_x (from nose) : %.4f m\n', massProps.CoM(1,2));
-    fprintf(fid, '  Burnout CoM_x (from nose) : %.4f m\n', massProps.CoM(end,2));
+    fprintf(fid, '  Initial CoM_x (from nose) : %.4f m  (%.2f in)\n', massProps.CoM(1,2), massProps.CoM(1,2)/0.0254);
+    fprintf(fid, '  Burnout CoM_x (from nose) : %.4f m  (%.2f in)\n', massProps.CoM(end,2), massProps.CoM(end,2)/0.0254);
     fprintf(fid, '  Initial Ixx               : %.4f kg·m²\n', massProps.MoI(1,2));
     fprintf(fid, '  Initial Iyy               : %.4f kg·m²\n', massProps.MoI(1,3));
     fprintf(fid, '  Initial Izz               : %.4f kg·m²\n', massProps.MoI(1,4));
@@ -113,10 +108,11 @@ if ~isempty(simOut)
     t_maxQ      = simOut.time(maxQIdx);
 
     fprintf(fid, '── 6DoF RESULTS ─────────────────────────────\n');
-    fprintf(fid, '  Apogee AGL     : %.1f m\n',   max(simOut.pos(:,3)) - elev);
-    fprintf(fid, '  Max velocity   : %.2f m/s\n', max(speeds));
+    apogee_m  = max(simOut.pos(:,3)) - elev;
+    fprintf(fid, '  Apogee AGL     : %.1f m  (%.0f ft)\n', apogee_m, apogee_m/0.3048);
+    fprintf(fid, '  Max velocity   : %.2f m/s  (%.0f ft/s)\n', max(speeds), max(speeds)/0.3048);
     fprintf(fid, '  Max Mach       : %.3f\n',     max(simOut.mach));
-    fprintf(fid, '  Max-Q          : %.1f Pa  (t = %.2f s)\n', maxQ, t_maxQ);
+    fprintf(fid, '  Max-Q          : %.1f Pa  (%.2f psi)  (t = %.2f s)\n', maxQ, maxQ/6894.76, t_maxQ);
     fprintf(fid, '  AoA at Max-Q   : %.4f deg\n', AoA_at_maxQ);
 else
     fprintf(fid, '[6DoF not run — fill in engine params and provide RASAero CSV]\n');

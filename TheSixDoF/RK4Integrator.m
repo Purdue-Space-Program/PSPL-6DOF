@@ -73,14 +73,13 @@ P = env.Atmosphere(atmosIdx,4);
 %---------------- Wind -----------------------------------------------------
 
 windAlt = windData(:,1);
-windMagList = windData(:,2);
-windDirList = windData(:,3);
 
 [~, heightIndex] = min(abs(windAlt-geoalt));
 
-windDir = windDirList(heightIndex);
-windMag = windMagList(heightIndex);
-windVector = windMag * [sin(windDir);cos(windDir);0];
+% env.Wind stores [alt, windNorth, windEast] (m/s components, NEU frame)
+windNorth  = windData(heightIndex, 2);
+windEast   = windData(heightIndex, 3);
+windVector = [windNorth; windEast; 0];
 
 
 if settings.Wind == true

@@ -1,0 +1,24 @@
+r01p01
+Generated: 2026-09-02 22:04
+
+── GEOMETRY ─────────────────────────────────
+  Total length : 6.5405 m  (257.50 in)
+  Outer dia    : 0.2245 m  (8.84 in)
+  Wet mass     : 172.501 kg  (380.30 lbm)
+
+── MASS PROPERTIES ──────────────────────────
+  Initial CoM_x (from nose) : 4.0026 m  (157.58 in)
+  Burnout CoM_x (from nose) : 4.0924 m  (161.12 in)
+  Initial Ixx               : 1.1409 kg·m²
+  Initial Iyy               : 376.7717 kg·m²
+  Initial Izz               : 376.7717 kg·m²
+  Burn time                 : 18.12 s
+
+  Full CoM/MoI time series → Outputs/r01p01_MassProps.csv
+
+── 6DoF RESULTS ─────────────────────────────
+  Apogee AGL     : 14687.4 m  (48187 ft)
+  Max velocity   : 615.06 m/s  (2018 ft/s)
+  Max Mach       : 1.871
+  Max-Q          : 125079.6 Pa  (18.14 psi)  (t = 18.10 s)
+  AoA at Max-Q   : 0.0061 deg
