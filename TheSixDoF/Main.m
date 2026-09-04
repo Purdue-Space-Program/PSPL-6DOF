@@ -109,6 +109,7 @@ toc;
 % create a struct which contains all of the output information:
 outputStruct = struct;
 outputStruct.time = timeArray;
+outputStruct.figHandles = {};
 
 % Always parse the state vector so the struct is useful even without plots
 out = real(out);
@@ -181,10 +182,11 @@ if settings.Outputs == true
     %% Plotting:
 
     colorlist = ["#ff595e", "#ff924c", "#ffbe0b", "#8ac926", "#1982c4", "#6a4c93", "#06402B"];
+    figHandles = {};
 
     % Earth Frame XYZ position:
-    figure;
-    fname = 'Cartesian Elements';
+    fh = figure; fh.Name = 'CartesianElements';
+    figHandles{end+1} = fh;
 
     subplot(2,1,1)
     hold on
@@ -217,7 +219,7 @@ if settings.Outputs == true
 
     % Euler Angles:
         eulerAngles = quat2eul(quatArray,"ZYX");
-        figure;
+        fh = figure; fh.Name = 'EulerAngles'; figHandles{end+1} = fh;
         plot(timeArray, eulerAngles);
         xlim([0,endTime]);
         title("Euler Angles: 3-2-1")
@@ -240,11 +242,12 @@ if settings.Outputs == true
         omegaTrue = outputStruct.omega;
         omegaMeas = gyroObj.GyroscopeMeasurement(omegaTrue, settings.Timestep);
         gyroObj.plotMeasurementHistory(timeArray, omegaTrue, omegaMeas);
+        fh = gcf; fh.Name = 'Gyroscope'; figHandles{end+1} = fh;
     end
 
 
     % Angle of Attack:
-    figure;
+    fh = figure; fh.Name = 'AngleOfAttack'; figHandles{end+1} = fh;
     plot(timeArray, outputStruct.AoA);
     xlim([0,endTime]);
     title("Angle of Attack")
@@ -252,7 +255,7 @@ if settings.Outputs == true
     ylabel("Angle of Attack [deg]")
 
     % Rocket Trajectory Plot:
-    figure;
+    fh = figure; fh.Name = 'Trajectory3D'; figHandles{end+1} = fh;
     plot3(posArray(1:int32(endTime / settings.Timestep),1), posArray(1:int32(endTime / settings.Timestep),2), posArray(1:int32(endTime / settings.Timestep),3))
     % plot3(posArray(1:endTime / dt,3), posArray(1:endTime / dt,2), zeros(endTime / dt), '--')
     % plot3(posArray(1:endTime / dt,3), zeros(endTime / dt), posArray(1:endTime / dt,1), '--')
@@ -265,7 +268,7 @@ if settings.Outputs == true
     grid minor;
 
     % moment plot
-    figure;
+    fh = figure; fh.Name = 'Moments'; figHandles{end+1} = fh;
     plot(timeArray, moment)
     legend('x','y','z')
 
@@ -283,10 +286,13 @@ if settings.Outputs == true
         accelTrue = outputStruct.accel;
         accelMeas = accelObj.AccelerometerMeasurement(accelTrue, settings.Timestep);
         accelObj.plotMeasurementHistory(timeArray, accelTrue, accelMeas)
+        fh = gcf; fh.Name = 'Accelerometer'; figHandles{end+1} = fh;
     end
 
     
 
+
+    outputStruct.figHandles = figHandles;
 
     if settings.RotationVis == true
         % run the rotation visualizer script

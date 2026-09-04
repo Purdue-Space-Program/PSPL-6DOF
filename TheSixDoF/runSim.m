@@ -120,6 +120,21 @@ end
 
 fclose(fid);
 fprintf('  Results → %s\n', outPath)
+
+%% ── Save figures ─────────────────────────────────────────────────────────
+if ~isempty(simOut) && isfield(simOut, 'figHandles') && ~isempty(simOut.figHandles)
+    figDir = fullfile(outDir, char(rocket.Name));
+    if ~isfolder(figDir); mkdir(figDir); end
+    for k = 1:numel(simOut.figHandles)
+        fh = simOut.figHandles{k};
+        if ~isvalid(fh); continue; end
+        fname = fh.Name;
+        if isempty(fname); fname = sprintf('fig%d', k); end
+        exportgraphics(fh, fullfile(figDir, [fname '.png']), 'Resolution', 150);
+    end
+    fprintf('  Figures  → %s/\n', figDir)
+end
+
 end
 
 function s = yn(b)
