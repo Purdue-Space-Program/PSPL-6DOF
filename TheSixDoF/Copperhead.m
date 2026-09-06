@@ -6,8 +6,9 @@ clear; clc;
 addpath(genpath(fileparts(mfilename('fullpath'))));
 
 % Point MATLAB at the venv that has openmeteo_requests etc.
-if ~strcmp(pyenv().Version, '/home/prady/.venvs/sixdof/bin/python3')
-    pyenv('Version', '/home/prady/.venvs/sixdof/bin/python3');
+sixdofPython = fullfile(getenv('HOME'), '.venvs', 'sixdof', 'bin', 'python3');
+if ~strcmp(pyenv().Version, sixdofPython)
+    pyenv('Version', sixdofPython);
 end
 
 LBM2KG = 0.45359237;
