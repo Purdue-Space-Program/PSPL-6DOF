@@ -7,9 +7,9 @@ name = "pspl-6dof"
 version = "0.1.0"
 description = "Python dependencies for the PSP Liquids six-degree-of-freedom simulator"
 readme = "README.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.11,<3.12"
 dependencies = [
-    "numpy==2.5.2",
+    "numpy==2.4.5",
     "openmeteo-requests==1.7.5",
     "pandas==3.0.5",
     "requests-cache==1.3.3",

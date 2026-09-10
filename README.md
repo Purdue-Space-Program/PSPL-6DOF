@@ -21,7 +21,7 @@ To get started with this tool, please clone this repository to your local machin
  - Mapping Toolbox
  - Navigation Toolbox
  
-  Python 3.13 with the following packages is also required:
+  Python 3.11 with the following packages is also required:
 - openmeteo_requests
 - pandas
 - requests_cache
@@ -31,7 +31,7 @@ To get started with this tool, please clone this repository to your local machin
 Create the project-local virtual environment and install the Python dependencies from the repository root with:
 
 ```bash
-python3.13 -m venv .venv
+python3.11 -m venv .venv
 .venv/bin/python -m pip install .
 ```
 
