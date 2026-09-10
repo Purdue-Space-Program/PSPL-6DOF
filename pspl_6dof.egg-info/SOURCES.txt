@@ -1,0 +1,7 @@
+README.md
+pyproject.toml
+pspl_6dof.egg-info/PKG-INFO
+pspl_6dof.egg-info/SOURCES.txt
+pspl_6dof.egg-info/dependency_links.txt
+pspl_6dof.egg-info/requires.txt
+pspl_6dof.egg-info/top_level.txt

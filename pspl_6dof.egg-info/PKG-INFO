@@ -1,3 +1,15 @@
+Metadata-Version: 2.4
+Name: pspl-6dof
+Version: 0.1.0
+Summary: Python dependencies for the PSP Liquids six-degree-of-freedom simulator
+Requires-Python: <3.14,>=3.13
+Description-Content-Type: text/markdown
+Requires-Dist: numpy==2.5.2
+Requires-Dist: openmeteo-requests==1.7.5
+Requires-Dist: pandas==3.0.5
+Requires-Dist: requests-cache==1.3.3
+Requires-Dist: retry-requests==2.0.0
+
 # PSP Liquids 6-DOF  Guide
 
 This document details the use and the implementation of the 6-DoF model for PSP Liquids. This code is meant to be versatile and to be able to model a variety of rockets, from small scale solids to large scale liquid systems. The primary use case of the code is to run the modeling for the PSP Liquids launch vehicles, but is more generally capable. This represents over 4000 lines of code and several years of combined effort.

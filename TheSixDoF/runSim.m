@@ -114,6 +114,11 @@ if ~isempty(simOut)
     fprintf(fid, '  Max Mach       : %.3f\n',     max(simOut.mach));
     fprintf(fid, '  Max-Q          : %.1f Pa  (%.2f psi)  (t = %.2f s)\n', maxQ, maxQ/6894.76, t_maxQ);
     fprintf(fid, '  AoA at Max-Q   : %.4f deg\n', AoA_at_maxQ);
+
+    % Write Mach vs time CSV
+    machCsvPath = fullfile(outDir, char(rocket.Name) + "_Mach.csv");
+    writematrix([simOut.time, simOut.mach], machCsvPath);
+    fprintf(fid, '  Mach vs time   → %s\n', machCsvPath);
 else
     fprintf(fid, '[6DoF not run — fill in engine params and provide RASAero CSV]\n');
 end

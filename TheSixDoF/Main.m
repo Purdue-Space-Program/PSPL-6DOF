@@ -254,6 +254,15 @@ if settings.Outputs == true
     xlabel("Time (s)")
     ylabel("Angle of Attack [deg]")
 
+    % Mach Number vs Time:
+    fh = figure; fh.Name = 'MachNumber'; figHandles{end+1} = fh;
+    plot(timeArray, outputStruct.mach, 'Color', colorlist(1));
+    xlim([0, endTime]);
+    title("Mach Number vs Time")
+    xlabel("Time (s)")
+    ylabel("Mach Number")
+    grid on
+
     % Rocket Trajectory Plot:
     fh = figure; fh.Name = 'Trajectory3D'; figHandles{end+1} = fh;
     plot3(posArray(1:int32(endTime / settings.Timestep),1), posArray(1:int32(endTime / settings.Timestep),2), posArray(1:int32(endTime / settings.Timestep),3))

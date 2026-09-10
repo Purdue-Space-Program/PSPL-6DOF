@@ -5,8 +5,9 @@
 clear; clc;
 addpath(genpath(fileparts(mfilename('fullpath'))));
 
-% Point MATLAB at the venv that has openmeteo_requests etc.
-sixdofPython = fullfile(getenv('HOME'), '.venvs', 'sixdof', 'bin', 'python3');
+% Point MATLAB at the project-local venv that has openmeteo_requests etc.
+projectRoot = fileparts(fileparts(mfilename('fullpath')));
+sixdofPython = fullfile(projectRoot, '.venv', 'bin', 'python3');
 if ~strcmp(pyenv().Version, sixdofPython)
     pyenv('Version', sixdofPython);
 end
