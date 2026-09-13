@@ -1,5 +1,5 @@
 r01p03
-Generated: 2026-09-13 15:00
+Generated: 2026-09-13 14:52
 
 ── GEOMETRY ─────────────────────────────────
   Total length : 6.9167 m  (272.31 in)
@@ -16,10 +16,4 @@ Generated: 2026-09-13 15:00
 
   Full CoM/MoI time series → Outputs\r01p03_MassProps.csv
 
-── 6DoF RESULTS ─────────────────────────────
-  Apogee AGL     : 17128.8 m  (56197 ft)
-  Max velocity   : 629.46 m/s  (2065 ft/s)
-  Max Mach       : 1.930
-  Max-Q          : 122704.1 Pa  (17.80 psi)  (t = 19.60 s)
-  AoA at Max-Q   : 0.0080 deg
-  Mach vs time   → Outputs\r01p03_Mach.csv
+[6DoF not run — fill in engine params and provide RASAero CSV]

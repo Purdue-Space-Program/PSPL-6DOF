@@ -7,10 +7,25 @@ addpath(genpath(fileparts(mfilename('fullpath'))));
 
 % Point MATLAB at the project-local venv that has openmeteo_requests etc.
 projectRoot = fileparts(fileparts(mfilename('fullpath')));
-sixdofPython = fullfile(projectRoot, '.venv', 'bin', 'python3');
-if ~strcmp(pyenv().Version, sixdofPython)
-    pyenv('Version', sixdofPython);
+sixdofPython = fullfile(projectRoot, 'venv', 'Scripts', 'python.exe');
+
+pe = pyenv;
+if pe.Status == "Loaded"
+    if ~strcmp(pe.Executable, sixdofPython)
+        % If already loaded, you must restart MATLAB to switch InProcess,
+        % or terminate the OutOfProcess host if applicable.
+        if pe.ExecutionMode == "OutOfProcess" && ~isempty(pe.ProcessID)
+            pe.terminate();
+            pyenv(Version=sixdofPython, ExecutionMode="OutOfProcess");
+        else
+            error("Python is already loaded in-process. Restart MATLAB and then set pyenv(Version='%s').", sixdofPython);
+        end
+    end
+else
+    pyenv(Version=sixdofPython);
 end
+
+disp(pyenv)
 
 LBM2KG = 0.45359237;
 LBF2N  = 4.44822;
