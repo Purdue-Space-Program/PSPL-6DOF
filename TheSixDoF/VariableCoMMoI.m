@@ -55,8 +55,8 @@ if numComponents > 0
     end
 
     % Specific initializations
-    numelTime = 1000;
-    timeSpan = linspace(0,burnTime,numelTime)'; % Array for burn time
+    timeSpan = linspace(0,burnTime,burnTime*100)'; % Array for burn time
+    numelTime = burnTime*100;     % Number of elements of time array
     CoMX = zeros(numelTime,1);
     CoMY = CoMX;
     CoMZ = CoMX;
@@ -152,29 +152,26 @@ if numComponents > 0
         % Fins
         elseif isa(values{idx},'Fins')
 
-            finObj  = values{idx};
-            mass    = finObj.Mass;
-            finMass = mass .* ones(numelTime, 1);
+            % Object values
+            finObj = values{idx};
+            rootChord = finObj.RootChord;
+            tipChord = finObj.TipChord;
+            mass = finObj.Mass;
 
-            com  = finObj.getDistributedCoM();
-            CoMX = (CoM(:,2).*countedMass + com(1).*finMass) ./ (countedMass + finMass);
-            CoMY = (CoM(:,3).*countedMass + com(2).*finMass) ./ (countedMass + finMass);
-            CoMZ = (CoM(:,4).*countedMass + com(3).*finMass) ./ (countedMass + finMass);
-            CoM  = [timeSpan, CoMX, CoMY, CoMZ];
+            finMass = mass.*ones(numelTime,1);
             countedMass = countedMass + finMass;
 
-        % Generic component: point mass or user-defined distributed mass
-        else
-            compObj  = values{idx};
-            mass     = compObj.Mass;
-            compMass = mass .* ones(numelTime, 1);
+        %         Count (1,1) int8 {mustBeMember(Count, [3, 4])} = 3 % Fin Count
+        % 
+        % % add the properties for the airfoil later with mustBeMeber
+        % 
+        % Airfoil (1,1) string % Airfoil
+        % Span (1,1) double % Span [m]
+        % RootChord (1,1) double % Root Chord Length [m]
+        % TipChord (1,1) double % Tip Chord Length [m]
+        % Sweep (1,1) double % Sweep [m]
+        % Thickness (1,1) double % Thickness [m]
 
-            com  = compObj.getDistributedCoM();
-            CoMX = (CoM(:,2).*countedMass + com(1).*compMass) ./ (countedMass + compMass);
-            CoMY = (CoM(:,3).*countedMass + com(2).*compMass) ./ (countedMass + compMass);
-            CoMZ = (CoM(:,4).*countedMass + com(3).*compMass) ./ (countedMass + compMass);
-            CoM  = [timeSpan, CoMX, CoMY, CoMZ];
-            countedMass = countedMass + compMass;
         end
     end
 
@@ -260,7 +257,7 @@ if numComponents > 0
 
         % Solid motor
         elseif isa(values{idx},'SolidMotor')
-
+            
             % Object Values
             motorObj = values{i};
             burnTime = motorObj.BurnTime;
@@ -293,21 +290,6 @@ if numComponents > 0
             MoIZ = MoI(:,4) + (MotorMoIZ + propellantMass.*(abs(CoM(:,2)-propellantX).^2+CoM(:,3).^2));
             MoI = [timeSpan, MoIX, MoIY, MoIZ];
 
-        % Generic component: point mass or user-defined distributed mass
-        else
-            compObj = values{idx};
-            m   = compObj.Mass;
-            com = compObj.getDistributedCoM();
-            [IxxOwn, IyyOwn, IzzOwn] = compObj.getOwnMoI(radiusTot);
-
-            dx = com(1) - CoM(:,2);
-            dy = com(2) - CoM(:,3);
-            dz = com(3) - CoM(:,4);
-
-            MoIX = MoI(:,2) + (IxxOwn + m.*(dy.^2 + dz.^2));
-            MoIY = MoI(:,3) + (IyyOwn + m.*(dx.^2 + dz.^2));
-            MoIZ = MoI(:,4) + (IzzOwn + m.*(dx.^2 + dy.^2));
-            MoI  = [timeSpan, MoIX, MoIY, MoIZ];
         end
     end
 
@@ -323,7 +305,8 @@ MoIZ = MoI(:,4) + (structMoIZ + structureMass.*(abs(lengthTot/2-CoM(:,2)).^2+CoM
 MoI = [timeSpan, MoIX, MoIY, MoIZ];
 
 %---Inertia Time Derivative------------------------------------------------
-MoIDot = zeros(size(MoI));   % placeholder — not yet implemented
+for idx=1:length()
+end
 
 % Calculations for rocket without components
 elseif numComponents == 0
