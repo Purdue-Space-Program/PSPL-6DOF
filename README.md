@@ -28,6 +28,27 @@ To get started with this tool, please clone this repository to your local machin
 - retry_requests
 - numpy
 
+You will need to use a virtual environment (venv) in order to install the python dependencies.
+
+Start with:
+```
+git clone https://github.com/Purdue-Space-Program/PSPL-6DOF.git
+cd PSPL-6DOF
+python3 -m venv .venv
+```
+
+You will need to then activate the venv. This is different depending on operating system.
+
+On Linux/MacOS:
+```
+source .venv/bin/activate
+```
+
+On Windows Powershell:
+```
+.venv\Scripts\Activate.ps1
+```
+
 The required packages may be installed with:
 
 ```
