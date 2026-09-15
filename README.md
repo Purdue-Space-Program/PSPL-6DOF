@@ -52,8 +52,7 @@ On Windows Powershell:
 The required packages may be installed with:
 
 ```
-pip install openmeteo-requests
-pip install requests-cache retry-requests numpy pandas
+pip install -r requirements.txt
 ```
 
 More information about the install and use of the OpenMeteo packages can be found at [OpenMeteo](https://open-meteo.com/en/docs).
