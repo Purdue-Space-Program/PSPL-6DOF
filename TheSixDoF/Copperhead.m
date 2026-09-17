@@ -135,7 +135,7 @@ propMasses(5).lox     = 84.50 * LBM2KG;   propMasses(5).ethanol = 64.30 * LBM2KG
 %% ── Build and run ────────────────────────────────────────────────────────
 % Set RUN to a scalar to run one config, or a vector to run multiple.
 % Config 5 (r01p01) is the baseline — excluded by default.
-RUN = 1:4;
+RUN = 5;
 for r = RUN
     rocket = buildCopperhead(cfgs(r), propMasses(r), aeroPaths{r});
     runSim(rocket, aeroPaths{r});
