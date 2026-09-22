@@ -1,9 +1,8 @@
-# Accessed: 2026-02-28_17-09-42 (format: YYYY-MM-DD_HH-MM-SS)
-# Accessed by: vehicle_main.py
+# Accessed: 2026-09-21_23-15-42 (format: YYYY-MM-DD_HH-MM-SS),  Accessed by: Vehicle_Level/vehicle_main.py
 parameter_name,value
 yield_FoS,1.5
 ultimate_FoS,2.0
-proof_factor,1.5
+hydroproof_factor,1.4
 fuel_name,isopropyl alcohol
 oxidizer_name,oxygen
 pressurant_name,nitrogen
@@ -28,9 +27,13 @@ chamber_inner_diameter,0.12446
 chamber_throat_diameter,0.0470408
 maximum_expected_burn_time,3.3962499999999998
 maximum_expected_jet_thrust,3668.40899619095
-tank_pressure,2930273.0
-oxidizer_tank_pressure,2930273.0
-fuel_tank_pressure,2930273.0
+nominal_tank_pressure,2413166.0
+maximum_allowable_regulator_droop_factor,
+maximum_tank_pressure_to_account_for_droop,
+maximum_allowable_tank_pressure,
+hydroproof_tank_pressure,
+oxidizer_tank_pressure,2413166.0
+fuel_tank_pressure,2413166.0
 tank_outer_diameter,0.15239999999999998
 tank_inner_diameter,0.14604999999999999
 tank_wall_thickness,0.0031749999999999973
@@ -51,26 +54,28 @@ engine_length,0.2585466
 injector_length,0.025654
 lower_length,0.508
 tank_bulkhead_length,0.030987999999999998
-mid_length,0.127
+mid_length,0.2032
 upper_length,0.8382
 recovery_bay_length,0.762
 nosecone_length,0.381
-COPV_volume,0.0047
-COPV_starting_pressure,29647468.0
+COPV_volume,0.003
+COPV_starting_pressure,22752708.0
 root_chord,0.4064
 tip_chord,0.15239999999999998
 sweep_length,0.254
 wingspan,0.18796
 number_of_fins,3
 fin_top,0.6906006
+one_DoF_off_the_rail_time,
 one_DoF_off_the_rail_TWR,7.43
-one_DoF_off_the_rail_acceleration,63.0783
+one_DoF_off_the_rail_acceleration,63.05675949999999
 one_DoF_off_the_rail_velocity,27.64
-one_DoF_max_Q_acceleration,68.2776
+one_DoF_max_Q_acceleration,68.254284
 one_DoF_max_Q_mach,0.395
 one_DoF_max_Q_velocity,135.485
 one_DoF_total_impulse,6340
 one_DoF_estimated_apogee,819.9119737628168
+six_DoF_off_the_rail_time,
 six_DoF_off_the_rail_TWR,
 six_DoF_off_the_rail_acceleration,
 six_DoF_off_the_rail_velocity,
@@ -81,16 +86,17 @@ six_DoF_max_Q_horizontal_velocity,
 six_DoF_apogee_horizontal_velocity,
 six_DoF_total_impulse,
 six_DoF_estimated_apogee,
-wet_mass,44.621392822074846
-dry_mass,41.000005012474844
-total_length,3.2925766000000003
-dry_COM_location_from_bottom,1.1123976552744939
-dry_COM_location_from_top,2.1801789447255064
-wet_COM_location_from_bottom,1.1081877061597434
-wet_COM_location_from_top,2.184388893840257
+wet_mass,47.51553774058722
+dry_mass,43.89414993098722
+total_length,3.3687766000000003
+dry_COM_location_from_bottom,1.240166462505326
+dry_COM_location_from_top,2.1286101374946744
+wet_COM_location_from_bottom,1.2294347687352785
+wet_COM_location_from_top,2.139341831264722
 upper_strut_max_load,
 mid_strut_max_load,
 lower_strut_max_load,
 fuel_tank_max_load,
 oxygen_tank_max_load,
 copv_tube_max_load,
+parachute_mass,1.30124205

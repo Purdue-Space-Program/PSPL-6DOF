@@ -170,6 +170,7 @@ if settings.Outputs == true
     [~, off_the_rail_index] = min(abs(position_array(1:50,1) - env.railHeight - position_array(1,1)));
     off_the_rail_velocity = out(off_the_rail_index,4);
     off_the_rail_acceleration = output_struct.acceleration(off_the_rail_index,1);
+    off_the_rail_time = output_struct.time(off_the_rail_index);
 
     rail_Mach = output_struct.mach(off_the_rail_index);
     [~, rail_Mach_index] = min(abs(machTable-rail_Mach));
@@ -181,6 +182,7 @@ if settings.Outputs == true
 
 
     main_output = struct();
+    main_output.off_the_rail_time = off_the_rail_time;
     main_output.max_Q_horizontal_velocity = max_Q_horizontal_velocity;
     main_output.max_Q_vertical_velocity = max_Q_vertical_velocity;
     main_output.max_Q_Mach = max_Q_Mach;

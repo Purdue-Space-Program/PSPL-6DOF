@@ -84,7 +84,7 @@ end
 environment = Environment(latitude_value, longitude_value, datetime("now", "TimeZone","UTC"), rail_height);
 environment = getLocalWeather(environment);
 
-settings = IntegratorSettings("apogee", 0.05, "medium");
+settings = IntegratorSettings("apogee", 0.01, "medium");
 
 
 % selpath = uigetdir(pwd,"Set the root directory to your local 'PSPL-6DOF\TheSixDoF' folder");
