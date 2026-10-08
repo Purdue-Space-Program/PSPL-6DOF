@@ -1,4 +1,4 @@
-function [out, mach, AoA, accel, cD, momentVector] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, windData, rocket, settings, env)
+function [out, mach, AoA, accel, specific_force_body, cD, momentVector, g] = RK4Integrator(time, input, atmosphere, totCoM, totMass, InertMatrix, windData, rocket, settings, env)
 % PSP FLIGHT DYNAMICS:
 %
 % Title: RK4Integrator
@@ -246,6 +246,12 @@ forceVector = gravForce + thrustForceEarth + dragForce + liftForce + paraDragFor
 %accel:
 accel = forceVector / mass;
 
+g = gravForce/mass;
+
+specific_force_world = accel - g;
+
+specific_force_body = RotationMatrix(specific_force_world, quat, 0);
+
 %---------------- Stability Caliber ----------------------------------------
 
 % difference between CoM and cP divided by diameter of the rocket
@@ -280,7 +286,7 @@ paraMomentBody = cross(paraMomentArm,paraDragForceBody);
 
 finCpLocation = 0.02486256; % 1/3 of the span of fins [m]
 missAlpha = 0.1; % [degrees]
-coefficientLift = 5e-6 * missAlpha * 0;
+coefficientLift = 5e-6 * missAlpha *0;
 
 forceRoll = 3 / 2 * coefficientLift * rho * norm(vel)^2;
 rollMomentBody = (radius + finCpLocation) * forceRoll * bodyVector;
