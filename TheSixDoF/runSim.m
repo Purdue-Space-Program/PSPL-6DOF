@@ -101,11 +101,26 @@ if ~isempty(simOut)
 
     % Dynamic pressure at each timestep
     speeds   = vecnorm(simOut.vel, 2, 2);
+    simOut.maxVel = max(speeds);
     rho_isa  = interp1(env.Atmosphere(:,1), env.Atmosphere(:,5), simOut.pos(:,3), 'linear', 'extrap');
     q_flight = 0.5 * rho_isa .* speeds.^2;
     [maxQ, maxQIdx] = max(q_flight);
+    simOut.maxQ = maxQ;
+    rho_at_maxQ = rho_isa(simOut.maxqIndex);
+    simOut.rho_at_maxQ = rho_at_maxQ;
     AoA_at_maxQ = simOut.AoA(maxQIdx);
+    simOut.aoa_at_maxQ = AoA_at_maxQ;
     t_maxQ      = simOut.time(maxQIdx);
+    accel_at_maxQ = vecnorm(simOut.accel(maxQIdx - 1,:));
+    %maxqAccelBody = RotationMatrix(simOut.accel(maxQIdx - 1).', simOut.quat(maxQIdx - 1).', 0);
+    disp("here");
+    disp([0 1 2]);
+    disp(simOut.quat(maxQIdx - 1));
+    simOut.accel_at_maxQ = accel_at_maxQ;
+    figure(100)
+    plot(simOut.time, simOut.accel)
+    xlabel("Time [s]")
+    ylabel("Acceleration (m/s^2)")
 
     fprintf(fid, '── 6DoF RESULTS ─────────────────────────────\n');
     apogee_m  = max(simOut.pos(:,3)) - elev;
@@ -114,6 +129,11 @@ if ~isempty(simOut)
     fprintf(fid, '  Max Mach       : %.3f\n',     max(simOut.mach));
     fprintf(fid, '  Max-Q          : %.1f Pa  (%.2f psi)  (t = %.2f s)\n', maxQ, maxQ/6894.76, t_maxQ);
     fprintf(fid, '  AoA at Max-Q   : %.4f deg\n', AoA_at_maxQ);
+    fprintf(fid, '  Accel at Max-Q Index: %.4f m/s^2\n', accel_at_maxQ);
+    fprintf(fid, '  Accel at Max-Q Main: %.4f m/s^2\n', simOut.maxqAccel);
+    fprintf(fid, '  MaxQ Index calc: %.0f\n', maxQIdx);
+    fprintf(fid, '  Air Density MaxQ: %.4f\n', rho_at_maxQ);
+    %fprintf(fid, '  Acceleration vector Max Q: [%g, %g, %g]\n', maxqAccelBody(1), maxqAccelBody(2), maxqAccelBody(3));
 
     % Write Mach vs time CSV
     machCsvPath = fullfile(outDir, char(rocket.Name) + "_Mach.csv");
@@ -139,6 +159,7 @@ if ~isempty(simOut) && isfield(simOut, 'figHandles') && ~isempty(simOut.figHandl
     end
     fprintf('  Figures  → %s/\n', figDir)
 end
+save('outputData.mat', 'simOut');
 
 end
 

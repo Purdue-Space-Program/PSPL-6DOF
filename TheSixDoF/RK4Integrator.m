@@ -211,6 +211,7 @@ dragForceBody = RotationMatrix(dragForce, quat, 0);
 
 persistent tDrogueOffset
 
+
 if vel(3) < 0
 
     % initialize a new time variable for the drogue deployment which

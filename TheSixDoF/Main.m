@@ -153,12 +153,16 @@ if settings.Outputs == true
     [maxVel, maxIndex] = max(out(:,4));
     maxqAccel = outputStruct.accel(maxIndex,1);
     maxqpos = posArray(maxIndex,1);
+    outputStruct.maxqIndex = maxIndex;
+    outputStruct.maxqAccel = maxqAccel;
 
     machTable = rasData(1:300,1);
     cdTable = rasData(1:300,3);
     maxqMach = outputStruct.mach(maxIndex);
+    outputStruct.maxqMach = maxqMach;
     [~, maxqMachIndex] = min(abs(machTable-maxqMach));
     maxqCD = cdTable(maxqMachIndex);
+    outputStruct.maxqCD = maxqCD;
 
     % [~, railIndex] = min(abs(posArray(1:100,1)-env.railHeight));
     % railVel = out(railIndex,4);

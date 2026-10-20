@@ -2,7 +2,7 @@
 % Runs all 4 Copperhead configurations.
 % Run from repo root:  >> cd TheSixDoF;  Copperhead
 
-clear; clc;
+clear; clc; close all;
 addpath(genpath(fileparts(mfilename('fullpath'))));
 
 % Point MATLAB at the project-local venv that has openmeteo_requests etc.
@@ -65,8 +65,8 @@ abla.thrust    = F_SL_a - (abla.exitPres - Pa_SL) * abla.exitArea;
 %  cfg(5): r01p01 — Regen,    LOx 36.50in / Eth 32.50in / LowerAF 41in
 
 cfgs(1).name          = 'r01p02';
-cfgs(1).loxLen        = 32.25;   cfgs(1).loxShellMass = 22.5;
-cfgs(1).ethLen        = 39.92;   cfgs(1).ethShellMass = 24;
+cfgs(1).loxLen        = 32.25;   cfgs(1).loxShellMass = 19;
+cfgs(1).ethLen        = 39.92;   cfgs(1).ethShellMass = 21.5;
 cfgs(1).midAvionics   = 15;
 cfgs(1).raceway       = 5;
 cfgs(1).pumps         = 16;
@@ -77,8 +77,8 @@ cfgs(1).exitPres      = regen.exitPres;
 cfgs(1).totalMassFlow = regen.totalMassFlow;
 
 cfgs(2).name          = 'r01p03';
-cfgs(2).loxLen        = 38.14;   cfgs(2).loxShellMass = 19;
-cfgs(2).ethLen        = 47.67;   cfgs(2).ethShellMass = 21.5;
+cfgs(2).loxLen        = 38.14;   cfgs(2).loxShellMass = 22.5;
+cfgs(2).ethLen        = 47.67;   cfgs(2).ethShellMass = 24;
 cfgs(2).midAvionics   = 15;
 cfgs(2).raceway       = 5;
 cfgs(2).pumps         = 16;
@@ -89,8 +89,8 @@ cfgs(2).exitPres      = regen.exitPres;
 cfgs(2).totalMassFlow = regen.totalMassFlow;
 
 cfgs(3).name          = 'r02p01';
-cfgs(3).loxLen        = 32.25;   cfgs(3).loxShellMass = 22.5;
-cfgs(3).ethLen        = 39.92;   cfgs(3).ethShellMass = 24;
+cfgs(3).loxLen        = 32.25;   cfgs(3).loxShellMass = 19;
+cfgs(3).ethLen        = 39.92;   cfgs(3).ethShellMass = 21.5;
 cfgs(3).midAvionics   = 5;
 cfgs(3).raceway       = 2;
 cfgs(3).pumps         = 0;
@@ -101,8 +101,8 @@ cfgs(3).exitPres      = abla.exitPres;
 cfgs(3).totalMassFlow = abla.totalMassFlow;
 
 cfgs(4).name          = 'r02p02';
-cfgs(4).loxLen        = 38.14;   cfgs(4).loxShellMass = 19;
-cfgs(4).ethLen        = 47.67;   cfgs(4).ethShellMass = 21.5;
+cfgs(4).loxLen        = 38.14;   cfgs(4).loxShellMass = 22.5 + 10;
+cfgs(4).ethLen        = 47.67;   cfgs(4).ethShellMass = 24 + 10;
 cfgs(4).midAvionics   = 5;
 cfgs(4).raceway       = 2;
 cfgs(4).pumps         = 0;
@@ -135,7 +135,7 @@ propMasses(5).lox     = 84.50 * LBM2KG;   propMasses(5).ethanol = 64.30 * LBM2KG
 %% ── Build and run ────────────────────────────────────────────────────────
 % Set RUN to a scalar to run one config, or a vector to run multiple.
 % Config 5 (r01p01) is the baseline — excluded by default.
-RUN = 5;
+RUN = 4;
 for r = RUN
     rocket = buildCopperhead(cfgs(r), propMasses(r), aeroPaths{r});
     runSim(rocket, aeroPaths{r});

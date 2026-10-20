@@ -3,7 +3,7 @@ Purdue Space Program - Liquids
 StructuresDOF (Determination Of Forces) - main script
 Matthew Lewton, edited by Sishir Mahavadi
 %}
-
+Copperhead;
 %% INPUTS 
 
 % VEHICLE DESIGN INPUTS
@@ -34,16 +34,28 @@ CPnose = convlength(179.1, "in", "m"); % [in] hardcoded from RasAero
 
 % TRAJ INPUTS
 
-V = 1.991e+03; % [ft/s] (velocity at max Q)
+loadedData = load('outputData.mat');
+simOut = loadedData.simOut;
+V = simOut.maxVel / 0.3048; % [ft/s]
+%V = 1.991e+03; % [ft/s] (velocity at max Q)
+fprintf("Velocity ft/s: %g\n", V)
 velWind = 61;  %[mph] %(Max expected wind gust)
-mach = 1.88;   % [mach] (Mach number at max Q)
+%mach = 1.88; % [mach] (Mach number at max Q)
+mach = max(simOut.mach);   % [mach] (Mach number at max Q)
+fprintf("Mach: %g\n", mach)
 
-a = 4.54; % [g] (Acceleration at Max Q)
+%a = 4.54; % [g] (Acceleration at Max Q)
+a = simOut.accel_at_maxQ / 9.81; % [g] (Acceleration at Max Q) (weird)
+fprintf("Acceleration at Max Q [g]: %g\n", a)
 ag = a;
-Thrust = 1800; % [lbf] engine thrust at max q
-CD = .46; % Coefficeint of drag at mach 1.67
+Thrust = 1500; % [lbf] engine thrust at max q
+%CD = .46; % Coefficeint of drag at mach 1.67
+CD = simOut.maxqCD;
+fprintf("Max Q CD: %g\n", CD)
 %rho = 0.8055; % [kg/m^3] Density of air at Burnout @ 19000 ft
-[~,~,~,rho] = atmosisa(4794);
+%[~,~,~,rho] = atmosisa(4794);
+rho = simOut.rho_at_maxQ;
+fprintf("Rho: %g\n", rho)
 %rho = 0.61;
 %Q = 1.1795e5; % [Pa] Dynamic pressure at burnout from traj array
 Q = 0.5 * rho * (convvel(V, "ft/s", "m/s"))^2;
@@ -67,6 +79,7 @@ finHeight = convlength(finHeight, "in", "m"); % [m] convert to m
 %PDistFinMisalign = PDistFinMisalign / 180 * pi; % [rad] convert to rad
 
 V = convvel(V, "ft/s", "m/s"); % [m/s] convert to m/s
+fprintf("Velocity m/s: %g\n", V)
 velWind = convvel(velWind, "mph", "m/s"); % [m/s] convert to m/s
 OD = convlength(OD, "in", "m"); % [m] convert to m
 
@@ -97,7 +110,9 @@ S = pi * power(OD/2, 2); % [m^2]
 
 AOA = atan(velWind/V); % [rad] rocket's angle of attack
 %AOA = deg2rad(3);
+%AOA = simOut.aoa_at_maxQ; (weird)
 AOAd = rad2deg(AOA); % [deg] rocket's angle of attack
+fprintf("Angle of attack [deg]: %g\n", AOAd)
 machAdj = 1 / sqrt(mach ^ 2 - 1); %(Divide coefficients calcualted before with Barrowman equations to account for compressible flow)
 
 % Nose
@@ -245,10 +260,10 @@ fprintf("\nVehicle Parameters:\nTotal Length: %.2f in\nTotal Mass: %.2f lbs\nCOM
 
 %fprintf("\nRotational Torq: %f lbf-ft\n", rotTorq)
 
-grapherPSP(1, "Internal Shear Force Along Vehicle Length at Burnout", Lengths, Shear, "Distance from Aft [in]", "Shear Force [lbf]")
+grapherPSP(21, "Internal Shear Force Along Vehicle Length at Burnout", Lengths, Shear, "Distance from Aft [in]", "Shear Force [lbf]")
 
-grapherPSP(2, "Internal Bending Moment Along Vehicle Length at Burnout", Lengths, Bending, "Distance from Aft [in]", "Bending Moment [ft-lb]")
+grapherPSP(22, "Internal Bending Moment Along Vehicle Length at Burnout", Lengths, Bending, "Distance from Aft [in]", "Bending Moment [ft-lb]")
 
-grapherPSP(3, "Axial Compressive Force Along Vehicle Length at Burnout", FcLengths, Fc, "Distance from Aft [in]", "Compressive Force [lbf]")
+grapherPSP(23, "Axial Compressive Force Along Vehicle Length at Burnout", FcLengths, Fc, "Distance from Aft [in]", "Compressive Force [lbf]")
  
-grapherPSP(4, "Mass Distribution Along Vehicle Length at Burnout", Lengths, aftZero, "Distance from Aft [in]", "Linear Density [lbs/in]")
+grapherPSP(24, "Mass Distribution Along Vehicle Length at Burnout", Lengths, aftZero, "Distance from Aft [in]", "Linear Density [lbs/in]")
