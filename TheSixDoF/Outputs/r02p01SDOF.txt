@@ -1,0 +1,79 @@
+r02p01 SDOF
+Generated: 2026-10-22 00:39
+
+Inputs:
+Velocity m/s: 614.946 (2017.54 ft/s)
+Mach: 1.90895
+Acceleration at Max Q [g]: 4.17755
+Max Q CD: 0.457171
+Rho: 1.12942
+Angle of attack [deg]: 2.53909
+
+Vehicle Parameters:
+Total Length: 244.49 in
+Total Mass: 219.60 lbs
+COM Location: 153.34 in
+CP Location: 179.10 in
+Stability Margin: 2.91 cal
+
+Max Shear: 186.06 lbf
+Max Bending Moment: 378.90 ft-lbs
+Vertical Acceleration: 4.18 Gs
+Lateral Acceleration: 69.42 ft/s^2
+Rotational Acceleration: 2.42 rad/s^2
+AOA: 2.54 deg
+--------------
+Nose Cone Bottom:
+Distance from aft: 209.65 in
+Axial: 808.07 lbf
+Shear: -78.26 lbf
+Bending Moment 118.06 ft-lbs
+--------------
+Rec Bay Bottom:
+Distance from aft: 181.10 in
+Axial: 871.24 lbf
+Shear: -55.52 lbf
+Bending Moment 277.84 ft-lbs
+--------------
+He Tube Bottom:
+Distance from aft: 158.66 in
+Axial: 939.01 lbf
+Shear: -28.66 lbf
+Bending Moment 357.35 ft-lbs
+--------------
+Upper Bottom:
+Distance from aft: 139.17 in
+Axial: 1013.88 lbf
+Shear: 3.37 lbf
+Bending Moment 378.66 ft-lbs
+--------------
+Lox Tank Bottom:
+Distance from aft: 103.15 in
+Axial: 1096.83 lbf
+Shear: 42.72 lbf
+Bending Moment 310.11 ft-lbs
+--------------
+Mid Bottom:
+Distance from aft: 83.07 in
+Axial: 1172.48 lbf
+Shear: 81.27 lbf
+Bending Moment 207.37 ft-lbs
+--------------
+Fuel Tank Bottom:
+Distance from aft: 49.02 in
+Axial: 1246.42 lbf
+Shear: 122.81 lbf
+Bending Moment -81.43 ft-lbs
+--------------
+Fin Can Bottom:
+Distance from aft: 10.04 in
+Axial: 1497.08 lbf
+Shear: -95.26 lbf
+Bending Moment -41.22 ft-lbs
+--------------
+Engine Bottom:
+Distance from aft: 0.20 in
+Axial: -1.00 lbf
+Shear: -1.91 lbf
+Bending Moment -0.03 ft-lbs
+--------------
