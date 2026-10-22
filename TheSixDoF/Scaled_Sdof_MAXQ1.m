@@ -38,24 +38,19 @@ loadedData = load('outputData.mat');
 simOut = loadedData.simOut;
 V = simOut.maxVel / 0.3048; % [ft/s]
 %V = 1.991e+03; % [ft/s] (velocity at max Q)
-fprintf("Velocity ft/s: %g\n", V)
 velWind = 61;  %[mph] %(Max expected wind gust)
 %mach = 1.88; % [mach] (Mach number at max Q)
 mach = max(simOut.mach);   % [mach] (Mach number at max Q)
-fprintf("Mach: %g\n", mach)
 
 %a = 4.54; % [g] (Acceleration at Max Q)
 a = simOut.accel_at_maxQ / 9.81; % [g] (Acceleration at Max Q) (weird)
-fprintf("Acceleration at Max Q [g]: %g\n", a)
 ag = a;
 Thrust = 1500; % [lbf] engine thrust at max q
 %CD = .46; % Coefficeint of drag at mach 1.67
 CD = simOut.maxqCD;
-fprintf("Max Q CD: %g\n", CD)
 %rho = 0.8055; % [kg/m^3] Density of air at Burnout @ 19000 ft
 %[~,~,~,rho] = atmosisa(4794);
 rho = simOut.rho_at_maxQ;
-fprintf("Rho: %g\n", rho)
 %rho = 0.61;
 %Q = 1.1795e5; % [Pa] Dynamic pressure at burnout from traj array
 Q = 0.5 * rho * (convvel(V, "ft/s", "m/s"))^2;
@@ -112,7 +107,6 @@ AOA = atan(velWind/V); % [rad] rocket's angle of attack
 %AOA = deg2rad(3);
 %AOA = simOut.aoa_at_maxQ; (weird)
 AOAd = rad2deg(AOA); % [deg] rocket's angle of attack
-fprintf("Angle of attack [deg]: %g\n", AOAd)
 machAdj = 1 / sqrt(mach ^ 2 - 1); %(Divide coefficients calcualted before with Barrowman equations to account for compressible flow)
 
 % Nose
@@ -245,20 +239,40 @@ rotForce = convforce(rotForce, "N", "lbf"); % [lbf]
 rotTorq =  convlength(convforce(rotTorq, "N", "lbf"), "m", "ft"); % [lbf/ft]
 
 %% DISPLAY OUTPUTS
-fprintf("\nVehicle Parameters:\nTotal Length: %.2f in\nTotal Mass: %.2f lbs\nCOM Location: %.2f in\nCP Location: %.2f in\nStability Margin: %.2f cal\n\nMax Shear: %.2f lbf\nMax Bending Moment: %.2f ft-lbs\nVertical Acceleration: %.2f Gs\nLateral Acceleration: %.2f ft/s^2\nRotational Acceleration: %.2f rad/s^2\nAOA: %.2f deg\n--------------\n", totLen, totMass, COMnose, CPnose, (CPnose-COMnose)/OD, max(abs(Shear)), max(abs(Bending)), ag, ayn, R, AOAd);
+outDir = 'Outputs';
+if ~isfolder(outDir); mkdir(outDir); end
+outPath = fullfile(outDir, char(rocket.Name) + "SDOF.txt");
+
+fid = fopen(outPath, 'w');
+fprintf(fid, '%s\n', rocket.Name + " SDOF");
+fprintf(fid, 'Generated: %s\n\n', datestr(now, 'yyyy-mm-dd HH:MM'));
+
+fprintf(fid, "Inputs:\n")
+fprintf(fid, "Velocity m/s: %g (%g ft/s)\n", V, V / 0.3048)
+fprintf(fid, "Mach: %g\n", mach)
+fprintf(fid, "Acceleration at Max Q [g]: %g\n", ag)
+fprintf(fid, "Max Q CD: %g\n", CD)
+fprintf(fid, "Rho: %g\n", rho)
+fprintf(fid, "Angle of attack [deg]: %g\n", AOAd)
+
+fprintf(fid, "\nVehicle Parameters:\nTotal Length: %.2f in\nTotal Mass: %.2f lbs\nCOM Location: %.2f in\nCP Location: %.2f in\nStability Margin: %.2f cal\n\nMax Shear: %.2f lbf\nMax Bending Moment: %.2f ft-lbs\nVertical Acceleration: %.2f Gs\nLateral Acceleration: %.2f ft/s^2\nRotational Acceleration: %.2f rad/s^2\nAOA: %.2f deg\n--------------\n", totLen, totMass, COMnose, CPnose, (CPnose-COMnose)/OD, max(abs(Shear)), max(abs(Bending)), ag, ayn, R, AOAd);
 
 % Display forces at sensors
  for i = 1:numel(SensLoc)
     loc = floor(convlength(SensLoc(i), "in", "m") / elemLen) +1 ;
     
     try
-        fprintf("%s:\nDistance from aft: %.2f in\nAxial: %.2f lbf\nShear: %.2f lbf\nBending Moment %.2f ft-lbs\n--------------\n", SensLabels(i), Lengths(loc), Fc(floor(convlength(SensLoc(i) - engine(1), "in", "m") / elemLen) +1), Shear(loc), Bending(loc))
+        fprintf(fid, "%s:\nDistance from aft: %.2f in\nAxial: %.2f lbf\nShear: %.2f lbf\nBending Moment %.2f ft-lbs\n--------------\n", SensLabels(i), Lengths(loc), Fc(floor(convlength(SensLoc(i) - engine(1), "in", "m") / elemLen) +1), Shear(loc), Bending(loc))
     catch
-        fprintf("%s:\nDistance from aft: %.2f in\nAxial: %.2f lbf\nShear: %.2f lbf\nBending Moment %.2f ft-lbs\n--------------\n", SensLabels(i), Lengths(loc), -1, Shear(loc), Bending(loc)) %engine bottom is invalid compression output
+        fprintf(fid, "%s:\nDistance from aft: %.2f in\nAxial: %.2f lbf\nShear: %.2f lbf\nBending Moment %.2f ft-lbs\n--------------\n", SensLabels(i), Lengths(loc), -1, Shear(loc), Bending(loc)) %engine bottom is invalid compression output
     end
  end
 
-%fprintf("\nRotational Torq: %f lbf-ft\n", rotTorq)
+ fclose(fid);
+ fprintf('  Results → %s\n', outPath)
+ save(rocket.Name + "_SDOF.mat", "Shear", "Bending", "Fc", "FcLengths")
+
+ %fprintf("\nRotational Torq: %f lbf-ft\n", rotTorq)
 
 grapherPSP(21, "Internal Shear Force Along Vehicle Length at Burnout", Lengths, Shear, "Distance from Aft [in]", "Shear Force [lbf]")
 

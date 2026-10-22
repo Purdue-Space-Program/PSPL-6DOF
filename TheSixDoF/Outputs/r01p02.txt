@@ -1,5 +1,5 @@
 r01p02
-Generated: 2026-10-20 18:15
+Generated: 2026-10-22 00:43
 
 ── GEOMETRY ─────────────────────────────────
   Total length : 6.5702 m  (258.67 in)
@@ -17,13 +17,13 @@ Generated: 2026-10-20 18:15
   Full CoM/MoI time series → Outputs\r01p02_MassProps.csv
 
 ── 6DoF RESULTS ─────────────────────────────
-  Apogee AGL     : 13611.5 m  (44657 ft)
-  Max velocity   : 557.87 m/s  (1830 ft/s)
-  Max Mach       : 1.717
-  Max-Q          : 113187.2 Pa  (16.42 psi)  (t = 16.40 s)
-  AoA at Max-Q   : 0.0013 deg
-  Accel at Max-Q Index: 37.6997 m/s^2
-  Accel at Max-Q Main: 0.0079 m/s^2
+  Apogee AGL     : 14117.8 m  (46318 ft)
+  Max velocity   : 557.10 m/s  (1828 ft/s)
+  Max Mach       : 1.715
+  Max-Q          : 111354.9 Pa  (16.15 psi)  (t = 16.40 s)
+  AoA at Max-Q   : 0.0056 deg
+  Accel at Max-Q Index: 37.7581 m/s^2
+  Accel at Max-Q Main: 0.0016 m/s^2
   MaxQ Index calc: 165
-  Air Density MaxQ: 1.0925
+  Air Density MaxQ: 1.1293
   Mach vs time   → Outputs\r01p02_Mach.csv
